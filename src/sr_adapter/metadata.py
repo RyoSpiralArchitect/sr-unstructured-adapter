@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 
 def _count_lines(text: str) -> int:
@@ -36,7 +36,12 @@ def _count_words(text: str) -> int:
     return count
 
 
-def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object]) -> Dict[str, object]:
+def collect_metadata(
+    path: Path,
+    text: Optional[str],
+    mime: str,
+    extra: Dict[str, object],
+) -> Dict[str, object]:
     """Gather metadata for the given file."""
 
     stat = path.stat()
