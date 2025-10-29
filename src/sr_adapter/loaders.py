@@ -114,35 +114,38 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
         raise RuntimeError("openpyxl is not available")
 
     workbook = load_workbook(path, data_only=True)
-    sheet_names = list(workbook.sheetnames)
-    rendered_sheets: List[str] = []
-    populated_cells = 0
+    try:
+        sheet_names = list(workbook.sheetnames)
+        rendered_sheets: List[str] = []
+        populated_cells = 0
 
-    for sheet in workbook.worksheets:
-        rows: List[str] = []
-        for row in sheet.iter_rows(values_only=True):
-            if all(value is None for value in row):
-                continue
-            rendered_row = []
-            for value in row:
-                if value is None:
-                    rendered_row.append("")
-                else:
-                    rendered_row.append(str(value))
-                    populated_cells += 1
-            rows.append("\t".join(rendered_row))
+        for sheet in workbook.worksheets:
+            rows: List[str] = []
+            for row in sheet.iter_rows(values_only=True):
+                if all(value is None for value in row):
+                    continue
+                rendered_row = []
+                for value in row:
+                    if value is None:
+                        rendered_row.append("")
+                    else:
+                        rendered_row.append(str(value))
+                        populated_cells += 1
+                rows.append("\t".join(rendered_row))
 
-        if rows:
-            rendered_sheets.append(f"# {sheet.title}\n" + "\n".join(rows))
+            if rows:
+                rendered_sheets.append(f"# {sheet.title}\n" + "\n".join(rows))
 
-    text = "\n\n".join(rendered_sheets)
-    extra: Dict[str, object] = {
-        "extracted_as_text": bool(text),
-        "workbook_sheet_count": len(sheet_names),
-        "workbook_sheet_names": sheet_names,
-        "workbook_cell_values": populated_cells,
-    }
-    return text, extra
+        text = "\n\n".join(rendered_sheets)
+        extra: Dict[str, object] = {
+            "extracted_as_text": bool(text),
+            "workbook_sheet_count": len(sheet_names),
+            "workbook_sheet_names": sheet_names,
+            "workbook_cell_values": populated_cells,
+        }
+        return text, extra
+    finally:
+        workbook.close()
 
 
 def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:

@@ -4,6 +4,13 @@ import base64
 import json
 from pathlib import Path
 
+import pytest
+
+_docx_pkg = pytest.importorskip("docx", reason="python-docx is required for DOCX smoke tests")
+_openpyxl_pkg = pytest.importorskip(
+    "openpyxl", reason="openpyxl is required for XLSX smoke tests"
+)
+
 from docx import Document as DocxDocument
 from openpyxl import Workbook
 
