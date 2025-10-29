@@ -7,6 +7,35 @@ from pathlib import Path
 from typing import Dict
 
 
+def _count_lines(text: str) -> int:
+    """Return the number of logical lines in *text*."""
+
+    if not text:
+        return 0
+
+    line_count = text.count("\n")
+    if not text.endswith("\n"):
+        line_count += 1
+    return line_count
+
+
+def _count_words(text: str) -> int:
+    """Return the number of whitespace-delimited tokens in *text*."""
+
+    count = 0
+    in_word = False
+    for char in text:
+        if char.isspace():
+            if in_word:
+                count += 1
+                in_word = False
+        else:
+            in_word = True
+    if in_word:
+        count += 1
+    return count
+
+
 def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object]) -> Dict[str, object]:
     """Gather metadata for the given file."""
 
@@ -16,13 +45,16 @@ def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object])
         "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
     }
 
-    if text:
+    if text is not None:
         metadata.update(
             {
-                "line_count": text.count("\n") + 1,
+                "line_count": _count_lines(text),
                 "char_count": len(text),
             }
         )
+
+        if mime.startswith("text/"):
+            metadata["word_count"] = _count_words(text)
 
     if mime.startswith("text/"):
         metadata.setdefault("encoding", "utf-8")
