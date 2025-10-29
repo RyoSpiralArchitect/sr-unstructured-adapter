@@ -50,6 +50,8 @@ def collect_metadata(
         "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
     }
 
+    treat_as_text = mime.startswith("text/") or bool(extra.get("extracted_as_text"))
+
     if text is not None:
         metadata.update(
             {
@@ -58,10 +60,10 @@ def collect_metadata(
             }
         )
 
-        if mime.startswith("text/"):
+        if treat_as_text:
             metadata["word_count"] = _count_words(text)
 
-    if mime.startswith("text/"):
+    if treat_as_text:
         metadata.setdefault("encoding", "utf-8")
 
     metadata.update(extra)

@@ -4,6 +4,7 @@ Turn chaotic files into a predictable JSON payload that downstream tools love.
 
 ## Features
 - Normalises paths, MIME types, and metadata for any file.
+- Extracts clean text and rich metadata from HTML, DOCX, PDF, and XLSX sources.
 - Pretty prints JSON sources and captures schema hints (top-level keys, type).
 - Captures text statistics such as line, character, and word counts.
 - Generates chat-ready message chunks for LLM ingestion.
