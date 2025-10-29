@@ -17,6 +17,7 @@ def test_payload_basic(tmp_path: Path) -> None:
     assert payload_dict["text"] == "hello"
     assert payload_dict["meta"]["size"] == 5
     assert payload_dict["meta"]["line_count"] == 1
+    assert payload_dict["meta"]["word_count"] == 1
 
 
 def test_json_payload_includes_schema(tmp_path: Path) -> None:
@@ -29,6 +30,7 @@ def test_json_payload_includes_schema(tmp_path: Path) -> None:
     assert payload.meta["json_valid"] is True
     assert payload.meta["json_top_level_type"] == "dict"
     assert payload.meta["json_top_level_keys"] == ["a", "b"]
+    assert "word_count" not in payload.meta
 
 
 def test_to_llm_messages_chunking(tmp_path: Path) -> None:
