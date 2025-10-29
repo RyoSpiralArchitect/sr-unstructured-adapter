@@ -1,0 +1,23 @@
+name: call_log
+patterns:
+  - when: '^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}]'
+    as: meta
+    attrs:
+      kind: timestamp
+    confidence: 0.9
+  - when: '^(Caller|Agent):'
+    as: header
+    confidence: 0.8
+  - when: '^[-*] '
+    as: list
+    confidence: 0.7
+fallback:
+  as: paragraph
+  confidence: 0.5
+llm:
+  enable: true
+  min_conf: 0.55
+  prompt: |
+    You are a classifier for call logs. Label each line as one of:
+    [meta, header, paragraph, list, code, kv, other].
+    Return JSON lines with {type, text}.
