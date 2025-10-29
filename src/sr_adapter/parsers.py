@@ -5,8 +5,13 @@ from __future__ import annotations
 import csv
 import json
 import re
+import zipfile
 from pathlib import Path
 from typing import Iterable, List
+
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses
 
 from bs4 import BeautifulSoup
 from docx import Document as DocxDocument
@@ -14,6 +19,12 @@ from openpyxl import load_workbook
 from pypdf import PdfReader
 
 from .schema import Block, clone_model
+
+
+try:
+    import extract_msg
+except Exception:  # pragma: no cover - optional dependency guard
+    extract_msg = None  # type: ignore[assignment]
 
 
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
@@ -213,10 +224,10 @@ def parse_xlsx(path: str | Path) -> List[Block]:
     source = Path(path)
     workbook = load_workbook(filename=str(source), read_only=True, data_only=True)
     sheet = workbook.active
-    rows = [
-        ["" if cell.value is None else str(cell.value) for cell in row]
-        for row in sheet.iter_rows(values_only=True)
-    ]
+    rows: List[List[str]] = []
+    for row in sheet.iter_rows(values_only=True):
+        values = ["" if value is None else str(value) for value in row]
+        rows.append(values)
     text = "\n".join([", ".join(row) for row in rows])
     workbook.close()
     return [
@@ -241,4 +252,103 @@ def parse_json(path: str | Path) -> List[Block]:
             confidence=0.6,
         )
     ]
+
+
+def parse_email(path: str | Path) -> List[Block]:
+    source = Path(path)
+    suffix = source.suffix.lower()
+
+    if suffix == ".msg" and extract_msg is not None:
+        message = extract_msg.Message(str(source))
+        try:
+            blocks: List[Block] = []
+            if message.subject:
+                blocks.append(
+                    _new_block("title", message.subject.strip(), source, confidence=0.9)
+                )
+
+            address_lines = []
+            if message.sender:
+                address_lines.append(f"From: {message.sender}")
+            if message.to:
+                tos = [addr.strip() for addr in message.to.split(";") if addr.strip()]
+                if tos:
+                    address_lines.append(f"To: {', '.join(tos)}")
+            if message.cc:
+                ccs = [addr.strip() for addr in message.cc.split(";") if addr.strip()]
+                if ccs:
+                    address_lines.append(f"Cc: {', '.join(ccs)}")
+            if address_lines:
+                blocks.append(
+                    _new_block("kv", "\n".join(address_lines), source, confidence=0.7)
+                )
+
+            if message.body:
+                for chunk in _split_paragraphs(message.body):
+                    blocks.append(
+                        _new_block("paragraph", chunk.strip(), source, confidence=0.55)
+                    )
+            for attachment in message.attachments:
+                name = attachment.longFilename or attachment.shortFilename or "attachment"
+                blocks.append(_new_block("attachment", name, source, confidence=0.4))
+            return blocks or [_new_block("other", "", source, confidence=0.1)]
+        finally:
+            message.close()
+
+    with source.open("rb") as handle:
+        message = BytesParser(policy=policy.default).parse(handle)
+
+    blocks = []
+
+    subject = (message.get("subject") or "").strip()
+    if subject:
+        blocks.append(_new_block("title", subject, source, confidence=0.9))
+
+    address_lines = []
+    for header in ("from", "to", "cc"):
+        values = [addr for _, addr in getaddresses([message.get(header, "")]) if addr]
+        if values:
+            address_lines.append(f"{header.title()}: {', '.join(values)}")
+    if address_lines:
+        blocks.append(_new_block("kv", "\n".join(address_lines), source, confidence=0.7))
+
+    for part in message.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        disposition = part.get_content_disposition()
+        if disposition == "attachment":
+            filename = part.get_filename() or "attachment"
+            blocks.append(_new_block("attachment", filename, source, confidence=0.4))
+            continue
+        if part.get_content_type().startswith("text/"):
+            content = part.get_content().strip()
+            for chunk in _split_paragraphs(content):
+                blocks.append(_new_block("paragraph", chunk.strip(), source, confidence=0.55))
+
+    return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
+def parse_zip(path: str | Path) -> List[Block]:
+    source = Path(path)
+    blocks: List[Block] = []
+
+    with zipfile.ZipFile(source) as archive:
+        for member in archive.infolist():
+            if member.is_dir():
+                continue
+            description = f"{member.filename} ({member.file_size} bytes)"
+            blocks.append(_new_block("attachment", description, source, confidence=0.45))
+            suffix = Path(member.filename).suffix.lower()
+            if member.file_size <= 64 * 1024 and suffix in {".txt", ".log", ".csv", ".tsv"}:
+                with archive.open(member) as handle:
+                    content = handle.read().decode("utf-8", errors="ignore")
+                for chunk in _split_paragraphs(content):
+                    blocks.append(_new_block("paragraph", chunk.strip(), source, confidence=0.5))
+
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
+
+
+def parse_image(path: str | Path) -> List[Block]:
+    source = Path(path)
+    return [_new_block("image", source.name, source, confidence=0.3)]
 

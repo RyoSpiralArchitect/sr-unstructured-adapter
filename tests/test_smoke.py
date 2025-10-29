@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import base64
 import json
+import zipfile
 from pathlib import Path
 
 import pytest
 
-_docx_pkg = pytest.importorskip("docx", reason="python-docx is required for DOCX smoke tests")
+_docx_pkg = pytest.importorskip(
+    "docx", reason="python-docx is required for DOCX smoke tests"
+)
 _openpyxl_pkg = pytest.importorskip(
     "openpyxl", reason="openpyxl is required for XLSX smoke tests"
 )
@@ -21,26 +24,33 @@ def test_payload_basic(tmp_path: Path) -> None:
     path = tmp_path / "a.txt"
     path.write_text("hello", encoding="utf-8")
 
-    payload_dict = to_unified_payload(path)
+    payload = build_payload(path)
+    assert str(payload.source).endswith("a.txt")
+    assert payload.mime.startswith("text/")
+    assert payload.text == "hello"
+    assert payload.meta["size"] == 5
+    assert payload.meta["line_count"] == 1
+    assert payload.meta["word_count"] == 1
 
-    assert payload_dict["source"].endswith("a.txt")
-    assert payload_dict["mime"].startswith("text/")
-    assert payload_dict["text"] == "hello"
-    assert payload_dict["meta"]["size"] == 5
-    assert payload_dict["meta"]["line_count"] == 1
-    assert payload_dict["meta"]["word_count"] == 1
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "text"
+    assert unified["meta"]["word_count"] == 1
+    assert unified["confidence"] > 0
+    assert unified["validation"]["warnings"] == []
 
 
 def test_payload_counts_ignore_trailing_newlines(tmp_path: Path) -> None:
     path = tmp_path / "multiline.txt"
     path.write_text("first line\nsecond line\n", encoding="utf-8")
 
-    payload_dict = to_unified_payload(path)
-    meta = payload_dict["meta"]
+    payload = build_payload(path)
+    assert payload.meta["line_count"] == 2
+    assert payload.meta["word_count"] == 4
+    assert payload.meta["char_count"] == len("first line\nsecond line\n")
 
-    assert meta["line_count"] == 2
-    assert meta["word_count"] == 4
-    assert meta["char_count"] == len("first line\nsecond line\n")
+    unified = to_unified_payload(path)
+    assert unified["meta"]["line_count"] == 2
+    assert unified["meta"]["word_count"] == 4
 
 
 def test_json_payload_includes_schema(tmp_path: Path) -> None:
@@ -88,6 +98,9 @@ def test_html_payload_extracts_text(tmp_path: Path) -> None:
     assert "Heading One" in payload.meta["html_headings"]
     assert payload.meta["word_count"] >= 3
 
+    unified = to_unified_payload(path)
+    assert any(block["type"] == "header" for block in unified["text_blocks"])
+
 
 def test_docx_payload_includes_tables(tmp_path: Path) -> None:
     path = tmp_path / "report.docx"
@@ -104,6 +117,9 @@ def test_docx_payload_includes_tables(tmp_path: Path) -> None:
     assert payload.meta["docx_paragraphs"] >= 1
     assert payload.meta["docx_tables"] == 1
     assert payload.meta["word_count"] >= 3
+
+    unified = to_unified_payload(path)
+    assert any(table["rows"] for table in unified["tables"])
 
 
 def test_xlsx_payload_renders_cells(tmp_path: Path) -> None:
@@ -123,10 +139,19 @@ def test_xlsx_payload_renders_cells(tmp_path: Path) -> None:
     assert payload.meta["workbook_cell_values"] == 4
     assert payload.meta["word_count"] >= 2
 
+    unified = to_unified_payload(path)
+    assert any(table["rows"] for table in unified["tables"])
+
 
 def test_pdf_payload_reports_pages(tmp_path: Path) -> None:
     pdf_bytes = base64.b64decode(
-        "JVBERi0xLjMKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwgL0xlbmd0aCAxMTIgPj4Kc3RyZWFtCkJUIC9GMSAyNCBUZiA1MCAxNTAgVGQKKEhlbGxvIFBERikgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvTmFtZSAvRjEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdIC9Db250ZW50cyA0IDAgUiAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiA+PgplbmRvYmoKMiAwIG9iago8PCAvVHlwZSAvUGFnZXMgL0tpZHMgWyAzIDAgUiBdIC9Db3VudCAxID4+CmVuZG9iagoxIDAgb2JqCjw8IC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUiA+PgplbmRvYmoKeHJlZg0KMCA2DQowMDAwMDAwMDAwIDY1NTM1IGYgDQowMDAwMDAwMDEwIDAwMDAwIG4gDQowMDAwMDAwMDYwIDAwMDAwIG4gDQowMDAwMDAwMTE3IDAwMDAwIG4gDQowMDAwMDAwMjIwIDAwMDAwIG4gDQowMDAwMDAwMzAzIDAwMDAwIG4gDQp0cmFpbGVyDQo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+DQplbmR0cmFpbGVyDQpzdGFydHhyZWYNCjM0OQ0KJSVFT0YN"
+        "JVBERi0xLjMKJcTl8uXrp/Og0MTGCjQgMCBvYmoKPDwgL0xlbmd0aCAxMTIgPj4Kc3RyZWFtCkJUIC9GMSAyNCBUZiA1MCAxNTAgVGQKKEhlbGxvIFBERik"
+        "gVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvTmFtZSAvRjEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4"
+        "KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdIC9Db250ZW50cyA0IDAgUiAvUmVzb3VyY2V"
+        "zIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiA+PgplbmRvYmoKMiAwIG9iago8PCAvVHlwZSAvUGFnZXMgL0tpZHMgWyAzIDAgUiBdIC9Db3VudCAxID4+CmVuZG9"
+        "iagoxIDAgb2JqCjw8IC9UeXBlIC9DYXRhbG9nIC9QYWdlcyAyIDAgUiA+PgplbmRvYmoKeHJlZg0KMCA2DQowMDAwMDAwMDAwIDY1NTM1IGYgDQowMDAwMDAwMDEwIDA"
+        "wMDAwIG4gDQowMDAwMDAwMDYwIDAwMDAwIG4gDQowMDAwMDAwMTE3IDAwMDAwIG4gDQowMDAwMDAwMjIwIDAwMDAwIG4gDQowMDAwMDAwMzAzIDAwMDAwIG4gDQp0cmF"
+        "pbGVyDQo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+DQplbmR0cmFpbGVyDQpzdGFydHhyZWYNCjM0OQ0KJSVFT0YN"
     )
     path = tmp_path / "hello.pdf"
     path.write_bytes(pdf_bytes)
@@ -137,3 +162,48 @@ def test_pdf_payload_reports_pages(tmp_path: Path) -> None:
     assert payload.meta["pdf_page_count"] == 1
     assert payload.meta["pdf_has_text"] is True
     assert payload.meta["word_count"] >= 2
+
+    unified = to_unified_payload(path)
+    assert any(block["type"] == "paragraph" for block in unified["text_blocks"])
+
+
+def test_email_payload_includes_entities(tmp_path: Path) -> None:
+    path = tmp_path / "message.eml"
+    message = (
+        "From: Sender <sender@example.com>\n"
+        "To: receiver@example.com\n"
+        "Subject: Invoice\n"
+        "Date: Wed, 02 Aug 2023 12:00:00 +0000\n"
+        "Content-Type: text/plain; charset=utf-8\n"
+        "\n"
+        "Hello team,\n"
+        "Total due: $1,234.56\n"
+    )
+    path.write_text(message, encoding="utf-8")
+
+    payload = build_payload(path)
+    assert payload.meta["email_subject"] == "Invoice"
+    assert payload.meta["email_to"] == ["receiver@example.com"]
+
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "email"
+    assert any(party["role"] == "from" for party in unified["parties"])
+    assert any(amount["value"] == "1234.56" for amount in unified["amounts"])
+    assert any(date["origin"] == "meta.email_date" for date in unified["dates"])
+
+
+def test_zip_payload_surfaces_entries(tmp_path: Path) -> None:
+    path = tmp_path / "bundle.zip"
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("logs/app.log", "2024-01-01 started\n")
+        archive.writestr("data.csv", "name,value\nalpha,10\n")
+        archive.writestr("nested/archive.zip", b"PK\x03\x04")
+
+    payload = build_payload(path)
+    assert payload.meta["zip_entry_count"] == 3
+    assert payload.meta["zip_contains_nested"] is True
+
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "zip"
+    assert any(att["name"] == "data.csv" for att in unified["attachments"])
+    assert any(block["type"] == "attachment" for block in unified["text_blocks"])

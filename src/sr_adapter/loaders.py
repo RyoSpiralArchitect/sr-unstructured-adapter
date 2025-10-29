@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import base64
 import json
+import zipfile
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses, parsedate_to_datetime
 from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -25,6 +29,16 @@ try:
 except Exception:  # pragma: no cover - dependency import guard
     PdfReader = None  # type: ignore[assignment]
 
+try:
+    import extract_msg
+except Exception:  # pragma: no cover - dependency import guard
+    extract_msg = None  # type: ignore[assignment]
+
+try:  # Pillow is optional – only used for richer image metadata when available.
+    from PIL import Image
+except Exception:  # pragma: no cover - dependency import guard
+    Image = None  # type: ignore[assignment]
+
 _TEXT_EXTENSIONS = {
     ".csv",
     ".log",
@@ -37,10 +51,21 @@ _TEXT_EXTENSIONS = {
 _HTML_EXTENSIONS = {".html", ".htm", ".xhtml"}
 _DOCX_EXTENSIONS = {".docx"}
 _XLSX_EXTENSIONS = {".xlsx"}
+_EMAIL_EXTENSIONS = {".eml", ".msg"}
+_ZIP_EXTENSIONS = {".zip"}
+_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp"}
 
 _HTML_MIMES = {"text/html", "application/xhtml+xml"}
 _DOCX_MIMES = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
 _XLSX_MIMES = {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+_EMAIL_MIMES = {"message/rfc822", "application/vnd.ms-outlook"}
+_ZIP_MIMES = {"application/zip"}
+_IMAGE_MIMES = {
+    "image/png",
+    "image/jpeg",
+    "image/tiff",
+    "image/bmp",
+}
 
 
 def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -148,6 +173,160 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
         workbook.close()
 
 
+def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
+    with path.open("rb") as handle:
+        message = BytesParser(policy=policy.default).parse(handle)
+
+    text_parts: List[str] = []
+    attachments: List[Dict[str, object]] = []
+    for part in message.walk():
+        maintype = part.get_content_maintype()
+        disposition = part.get_content_disposition()
+        if maintype == "multipart":
+            continue
+        if disposition == "attachment":
+            payload = part.get_payload(decode=True) or b""
+            attachments.append(
+                {
+                    "filename": part.get_filename() or "",
+                    "mime": part.get_content_type(),
+                    "size": len(payload),
+                }
+            )
+            continue
+        if part.get_content_type().startswith("text/"):
+            text_parts.append(part.get_content().strip())
+
+    text = "\n\n".join(part for part in text_parts if part).strip()
+
+    extra: Dict[str, object] = {"extracted_as_text": bool(text), "email_attachments": attachments}
+
+    subject = (message.get("subject") or "").strip()
+    if subject:
+        extra["email_subject"] = subject
+
+    addresses = getaddresses([message.get("from", "")])
+    if addresses:
+        extra["email_from"] = [addr for _, addr in addresses if addr]
+
+    tos = getaddresses([message.get("to", "")])
+    if tos:
+        extra["email_to"] = [addr for _, addr in tos if addr]
+
+    ccs = getaddresses([message.get("cc", "")])
+    if ccs:
+        extra["email_cc"] = [addr for _, addr in ccs if addr]
+
+    date_header = message.get("date")
+    if date_header:
+        try:
+            parsed = parsedate_to_datetime(date_header)
+        except (TypeError, ValueError):  # pragma: no cover - malformed date guard
+            parsed = None
+        if parsed is not None:
+            extra["email_date"] = parsed.isoformat()
+
+    return text, extra
+
+
+def _read_msg(path: Path) -> Tuple[str, Dict[str, object]]:
+    if extract_msg is None:  # pragma: no cover - defensive guard
+        raise RuntimeError("extract_msg is not available")
+
+    message = extract_msg.Message(str(path))
+    try:
+        text = (message.body or "").strip()
+        attachments_meta: List[Dict[str, object]] = []
+        for attachment in message.attachments:
+            attachments_meta.append(
+                {
+                    "filename": attachment.longFilename or attachment.shortFilename or "",
+                    "mime": getattr(attachment, "mimeType", ""),
+                    "size": getattr(attachment, "size", 0),
+                }
+            )
+
+        extra: Dict[str, object] = {
+            "extracted_as_text": bool(text),
+            "email_subject": message.subject or "",
+            "email_from": [message.sender] if message.sender else [],
+            "email_to": [addr.strip() for addr in (message.to or "").split(";") if addr.strip()],
+            "email_cc": [addr.strip() for addr in (message.cc or "").split(";") if addr.strip()],
+            "email_attachments": attachments_meta,
+        }
+
+        if message.date:
+            try:
+                extra["email_date"] = message.date.isoformat()  # type: ignore[attr-defined]
+            except AttributeError:  # pragma: no cover - fallback when date is str
+                extra["email_date"] = str(message.date)
+
+        return text, extra
+    finally:
+        message.close()
+
+
+def _read_zip(path: Path) -> Tuple[str, Dict[str, object]]:
+    with zipfile.ZipFile(path) as archive:
+        members = archive.infolist()
+        lines: List[str] = []
+        entries: List[Dict[str, object]] = []
+        contains_nested = False
+        text_snippets: List[str] = []
+
+        for member in members:
+            member_path = member.filename
+            lines.append(f"{member_path} ({member.file_size} bytes)")
+            entries.append(
+                {
+                    "name": member_path,
+                    "size": member.file_size,
+                    "compressed": member.compress_size,
+                }
+            )
+            if member_path.lower().endswith(".zip"):
+                contains_nested = True
+            if member.file_size <= 64 * 1024 and not member.is_dir():
+                if Path(member_path).suffix.lower() in _TEXT_EXTENSIONS | {".json", ".csv", ".tsv", ".log"}:
+                    with archive.open(member) as handle:
+                        try:
+                            snippet = handle.read().decode("utf-8", errors="ignore")
+                        except OSError:
+                            continue
+                        text_snippets.append(snippet.strip())
+
+    summary_text = "\n".join(lines)
+    combined_snippet = "\n\n".join(filter(None, text_snippets))
+    text = "\n\n".join(filter(None, [summary_text, combined_snippet]))
+
+    extra: Dict[str, object] = {
+        "extracted_as_text": bool(text_snippets),
+        "zip_entry_count": len(members),
+        "zip_entries": entries,
+    }
+    if contains_nested:
+        extra["zip_contains_nested"] = True
+    return text, extra
+
+
+def _read_image(path: Path) -> Tuple[str, Dict[str, object]]:
+    meta: Dict[str, object] = {"extracted_as_text": False}
+    if Image is not None:
+        try:
+            with Image.open(path) as img:
+                meta.update(
+                    {
+                        "image_format": img.format,
+                        "image_width": img.width,
+                        "image_height": img.height,
+                        "image_mode": img.mode,
+                    }
+                )
+        except Exception:  # pragma: no cover - image parsing fallback
+            pass
+    return "", meta
+
+
 def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     """Return a textual representation and extra metadata for *path*.
 
@@ -198,6 +377,35 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     if mime in _XLSX_MIMES or suffix in _XLSX_EXTENSIONS:
         text, xlsx_extra = _read_xlsx(path)
         extra.update(xlsx_extra)
+        return text, extra
+
+    if mime in _EMAIL_MIMES or suffix in _EMAIL_EXTENSIONS:
+        try:
+            if suffix == ".msg" or mime == "application/vnd.ms-outlook":
+                text, email_extra = _read_msg(path)
+            else:
+                text, email_extra = _read_eml(path)
+        except RuntimeError:
+            # Surface binary preview when specialised reader is unavailable.
+            blob = path.read_bytes()
+            extra.update(
+                {
+                    "binary_preview_bytes": min(len(blob), 32),
+                    "binary_preview_base64": base64.b64encode(blob[:32]).decode("ascii"),
+                }
+            )
+            return "", extra
+        extra.update(email_extra)
+        return text, extra
+
+    if mime in _ZIP_MIMES or suffix in _ZIP_EXTENSIONS:
+        text, zip_extra = _read_zip(path)
+        extra.update(zip_extra)
+        return text, extra
+
+    if mime in _IMAGE_MIMES or suffix in _IMAGE_EXTENSIONS:
+        text, image_extra = _read_image(path)
+        extra.update(image_extra)
         return text, extra
 
     if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:

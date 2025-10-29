@@ -10,12 +10,15 @@ from .normalize import normalize_blocks
 from .parsers import (
     parse_csv,
     parse_docx,
+    parse_email,
     parse_html,
+    parse_image,
     parse_json,
     parse_md,
     parse_pdf,
     parse_txt,
     parse_xlsx,
+    parse_zip,
 )
 from .recipe import apply_recipe
 from .schema import Block, Document
@@ -31,6 +34,9 @@ PARSERS: Dict[str, callable] = {
     "pdf": parse_pdf,
     "docx": parse_docx,
     "xlsx": parse_xlsx,
+    "email": parse_email,
+    "zip": parse_zip,
+    "image": parse_image,
 }
 
 
