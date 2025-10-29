@@ -1,13 +1,7 @@
-"""Tools for transforming unstructured files into unified payloads."""
+"""Tools for transforming unstructured files into normalized block documents."""
 
-from .adapter import build_payload, stream_payloads, to_unified_payload
-from .messages import to_llm_messages
-from .models import Payload
+from .pipeline import convert, convert_many
+from .schema import Block, Document, Span
+from .sniff import detect_type
 
-__all__ = [
-    "Payload",
-    "build_payload",
-    "stream_payloads",
-    "to_unified_payload",
-    "to_llm_messages",
-]
+__all__ = ["Block", "Document", "Span", "convert", "convert_many", "detect_type"]

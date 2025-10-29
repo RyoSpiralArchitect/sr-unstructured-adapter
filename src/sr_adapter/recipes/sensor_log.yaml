@@ -1,0 +1,27 @@
+name: sensor_log
+patterns:
+  - when: "^sensor_id:"
+    as: kv
+    confidence: 0.75
+  - when: "^timestamp:"
+    as: meta
+    attrs:
+      kind: timestamp
+    confidence: 0.8
+  - when: "^[-]{3,}$"
+    as: meta
+    attrs:
+      kind: separator
+    confidence: 0.6
+  - when: "^(WARN|ERROR|INFO)"
+    as: header
+    confidence: 0.7
+fallback:
+  as: paragraph
+  confidence: 0.55
+llm:
+  enable: true
+  min_conf: 0.5
+  prompt: |
+    You are classifying sensor log entries. Use the block types
+    [meta, header, paragraph, list, table, code, kv, other].

@@ -5,10 +5,14 @@ description = "Transform unstructured files into a unified JSON payload"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "SpiralReality"}]
-dependencies = []
+dependencies = [
+    "pydantic>=1.10,<3",
+    "PyYAML>=6.0",
+    "pdfminer.six>=20221105",
+]
 
 [project.scripts]
-sr-adapter = "sr_adapter.adapter:main"
+sr-adapt = "sr_adapter.cli:main"
 
 [build-system]
 requires = ["setuptools", "wheel"]

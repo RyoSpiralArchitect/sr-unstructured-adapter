@@ -1,0 +1,7 @@
+name: default
+patterns: []
+fallback:
+  confidence: 0.6
+llm:
+  enable: false
+  min_conf: 0.4
