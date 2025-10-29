@@ -75,7 +75,7 @@ def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
     )
 
     document = convert(log, recipe="call_log")
-    assert document.meta["type"] == "text"
+    assert document.meta["type"] == "log"
     assert len(document.blocks) >= 3
     assert document.blocks[0].type == "meta"
     assert document.blocks[1].type == "header"
@@ -107,6 +107,6 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     lines = out.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     payload = json.loads(lines[0])
-    assert payload["meta"]["type"] == "text"
+    assert payload["meta"]["type"] == "log"
     assert any(block["type"] == "kv" for block in payload["blocks"])
 

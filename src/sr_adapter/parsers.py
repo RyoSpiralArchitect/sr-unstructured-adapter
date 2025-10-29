@@ -18,6 +18,7 @@ from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
+from .logs import parse_log_line
 from .schema import Block, clone_model
 
 
@@ -173,6 +174,61 @@ def parse_csv(path: str | Path) -> List[Block]:
             confidence=0.8,
         )
     ]
+
+
+def parse_log(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    blocks: List[Block] = []
+    pending: List[str] = []
+
+    def _flush_pending() -> None:
+        if not pending:
+            return
+        for chunk in pending:
+            blocks.append(_new_block("paragraph", chunk, source, confidence=0.45))
+        pending.clear()
+
+    for line in text.splitlines():
+        entry = parse_log_line(line)
+        if entry is None:
+            stripped = line.strip()
+            if stripped:
+                pending.append(stripped)
+            continue
+
+        _flush_pending()
+
+        attrs = {}
+        if entry.timestamp:
+            attrs["timestamp"] = entry.timestamp
+            if entry.raw_timestamp and entry.raw_timestamp != entry.timestamp:
+                attrs["raw_timestamp"] = entry.raw_timestamp
+        elif entry.raw_timestamp:
+            attrs["raw_timestamp"] = entry.raw_timestamp
+        if entry.level:
+            attrs["level"] = entry.level
+
+        message = entry.message or entry.raw.strip()
+        blocks.append(
+            Block(
+                type="log",
+                text=message,
+                attrs=attrs,
+                source=str(source),
+                confidence=0.7 if entry.has_structured_fields else 0.5,
+            )
+        )
+
+    _flush_pending()
+
+    if not blocks:
+        stripped = text.strip()
+        if stripped:
+            return [_new_block("paragraph", stripped, source, confidence=0.3)]
+        return [_new_block("other", "", source, confidence=0.1)]
+
+    return blocks
 
 
 def parse_pdf(path: str | Path) -> List[Block]:

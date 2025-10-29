@@ -66,6 +66,32 @@ def test_json_payload_includes_schema(tmp_path: Path) -> None:
     assert "word_count" not in payload.meta
 
 
+def test_log_payload_summarizes_entries(tmp_path: Path) -> None:
+    path = tmp_path / "events.log"
+    path.write_text(
+        "\n".join(
+            [
+                "2024-01-01 10:00:00 INFO service starting",
+                "2024-01-01 10:01:00 WARN cache miss detected",
+                "2024-01-01 10:02:00 ERROR critical failure",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    payload = build_payload(path)
+
+    assert payload.meta["log_line_count"] == 3
+    assert payload.meta["log_levels"] == ["ERROR", "INFO", "WARN"]
+    assert payload.meta["log_first_timestamp"].startswith("2024-01-01T10:00:00")
+    assert payload.meta["log_last_timestamp"].startswith("2024-01-01T10:02:00")
+
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "log"
+    assert any(block["type"] == "log" for block in unified["text_blocks"])
+    assert "Log file contains high-severity entries." in unified["validation"]["warnings"]
+
+
 def test_to_llm_messages_chunking(tmp_path: Path) -> None:
     path = tmp_path / "big.txt"
     path.write_text("a" * 5000, encoding="utf-8")

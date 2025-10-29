@@ -15,7 +15,7 @@ _MAGIC_SIGNATURES: Dict[bytes, str] = {
 
 _EXTENSION_MAP: Dict[str, str] = {
     ".txt": "text",
-    ".log": "text",
+    ".log": "log",
     ".md": "md",
     ".markdown": "md",
     ".rst": "text",

@@ -5,7 +5,7 @@ Turn chaotic files into a predictable JSON payload that downstream tools love.
 ## Features
 - Normalises paths, MIME types, and metadata for any file.
 - Extracts clean text and rich metadata from HTML, DOCX, PDF, XLSX, and email sources.
-- Summarises archives, logs, CSV/TSV sheets, and image scans while surfacing attachment metadata.
+- Summarises archives, logs (with severity/timestamp rollups), CSV/TSV sheets, and image scans while surfacing attachment metadata.
 - Pretty prints JSON sources and captures schema hints (top-level keys, type).
 - Captures text statistics such as line, character, and word counts.
 - Generates chat-ready message chunks for LLM ingestion.
@@ -91,6 +91,10 @@ from sr_adapter import build_payload
 payload = build_payload("examples/sample.txt")
 print(payload.to_dict())
 ```
+
+Log inputs expose additional metadata including `log_line_count`,
+sorted `log_levels`, and first/last timestamps while the unified payload emits
+`log` blocks and validation warnings when high-severity entries are present.
 
 Use JSON lines mode to stream results to other processes:
 

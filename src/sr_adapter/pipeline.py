@@ -14,6 +14,7 @@ from .parsers import (
     parse_html,
     parse_image,
     parse_json,
+    parse_log,
     parse_md,
     parse_pdf,
     parse_txt,
@@ -28,6 +29,7 @@ from .sniff import detect_type
 PARSERS: Dict[str, callable] = {
     "text": parse_txt,
     "md": parse_md,
+    "log": parse_log,
     "html": parse_html,
     "csv": parse_csv,
     "json": parse_json,

@@ -39,6 +39,8 @@ try:  # Pillow is optional – only used for richer image metadata when availabl
 except Exception:  # pragma: no cover - dependency import guard
     Image = None  # type: ignore[assignment]
 
+from .logs import summarize_log_text
+
 _TEXT_EXTENSIONS = {
     ".csv",
     ".log",
@@ -410,6 +412,8 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
 
     if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:
         text = path.read_text(encoding="utf-8", errors="ignore")
+        extra.setdefault("extracted_as_text", True)
+        extra.update(summarize_log_text(text))
         return text, extra
 
     # Fallback for binary files – provide a short base64 preview.
