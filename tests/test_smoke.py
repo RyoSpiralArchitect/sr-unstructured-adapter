@@ -17,6 +17,19 @@ def test_payload_basic(tmp_path: Path) -> None:
     assert payload_dict["text"] == "hello"
     assert payload_dict["meta"]["size"] == 5
     assert payload_dict["meta"]["line_count"] == 1
+    assert payload_dict["meta"]["word_count"] == 1
+
+
+def test_payload_counts_ignore_trailing_newlines(tmp_path: Path) -> None:
+    path = tmp_path / "multiline.txt"
+    path.write_text("first line\nsecond line\n", encoding="utf-8")
+
+    payload_dict = to_unified_payload(path)
+    meta = payload_dict["meta"]
+
+    assert meta["line_count"] == 2
+    assert meta["word_count"] == 4
+    assert meta["char_count"] == len("first line\nsecond line\n")
 
 
 def test_json_payload_includes_schema(tmp_path: Path) -> None:
@@ -29,6 +42,7 @@ def test_json_payload_includes_schema(tmp_path: Path) -> None:
     assert payload.meta["json_valid"] is True
     assert payload.meta["json_top_level_type"] == "dict"
     assert payload.meta["json_top_level_keys"] == ["a", "b"]
+    assert "word_count" not in payload.meta
 
 
 def test_to_llm_messages_chunking(tmp_path: Path) -> None:
