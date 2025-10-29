@@ -1,20 +1,63 @@
 # SR Unstructured Adapter
 
-Convert messy/unstructured files into a **unified JSON payload** for LLMs & search.
+Turn chaotic files into a predictable JSON payload that downstream tools love.
+
+## Features
+- Normalises paths, MIME types, and metadata for any file.
+- Pretty prints JSON sources and captures schema hints (top-level keys, type).
+- Generates chat-ready message chunks for LLM ingestion.
+- Provides a simple CLI (`python -m sr_adapter.adapter`) that can emit either
+  JSON lines or a formatted list.
+
+## Installation
+This repository uses a [PEP 621](https://peps.python.org/pep-0621/) compatible
+`pyproject.toml`. Install in editable mode while iterating:
+
+```bash
+pip install -e .
+```
 
 ## Quickstart
 ```bash
 python -m sr_adapter.adapter examples/sample.txt
 ```
 
-### Output (JSON)
+### Output
 ```json
-{"source":"examples/sample.txt","mime":"text/plain","text":"...","meta":{"size":123}}
+[
+  {
+    "source": "/absolute/path/to/examples/sample.txt",
+    "mime": "text/plain",
+    "text": "...",
+    "meta": {
+      "size": 123,
+      "line_count": 10,
+      "char_count": 118,
+      "modified_at": "2025-01-01T00:00:00+00:00"
+    }
+  }
+]
 ```
 
-## Supported (now)
-- `.txt` / `.md` / `.json` (basic)
-- `.html` / `.pdf` → TODO（stub）
+Use JSON lines mode to stream results to other processes:
 
-## Why
-Give downstream systems a *consistent* payload, even when inputs are chaotic.
+```bash
+python -m sr_adapter.adapter --as-json-lines examples/sample.txt
+```
+
+## Library usage
+```python
+from sr_adapter import build_payload, to_llm_messages
+
+payload = build_payload("examples/sample.txt")
+print(payload.to_dict())
+
+messages = to_llm_messages(payload, chunk_size=1000)
+```
+
+## Development
+Run the tests with `pytest`:
+
+```bash
+pytest
+```
