@@ -1,0 +1,7 @@
+name: default
+patterns: []
+fallback:
+  as: paragraph
+  confidence: 0.5
+llm:
+  enable: false
