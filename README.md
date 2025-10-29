@@ -34,6 +34,7 @@ python -m sr_adapter.adapter examples/sample.txt
       "size": 123,
       "line_count": 10,
       "char_count": 118,
+      "word_count": 24,
       "modified_at": "2025-01-01T00:00:00+00:00"
     }
   }
