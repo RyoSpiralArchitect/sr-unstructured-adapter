@@ -13,6 +13,10 @@ from email import policy
 from email.parser import BytesParser
 from email.utils import getaddresses
 
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses
+
 from bs4 import BeautifulSoup
 from docx import Document as DocxDocument
 from openpyxl import load_workbook
