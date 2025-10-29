@@ -93,8 +93,9 @@ print(payload.to_dict())
 ```
 
 Log inputs expose additional metadata including `log_line_count`,
-sorted `log_levels`, and first/last timestamps while the unified payload emits
-`log` blocks and validation warnings when high-severity entries are present.
+severity-ordered `log_levels`, aggregated `log_level_counts`, example messages,
+and first/last timestamps while the unified payload emits `log` blocks and
+validation warnings when high-severity entries are present.
 
 Use JSON lines mode to stream results to other processes:
 

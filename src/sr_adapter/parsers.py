@@ -7,7 +7,11 @@ import json
 import re
 import zipfile
 from pathlib import Path
-from typing import Iterable, List
+from typing import Dict, Iterable, List
+
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses
 
 from email import policy
 from email.parser import BytesParser
@@ -18,7 +22,7 @@ from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
-from .logs import parse_log_line
+from .logs import LogEntry, iter_log_entries
 from .schema import Block, clone_model
 
 
@@ -179,48 +183,75 @@ def parse_csv(path: str | Path) -> List[Block]:
 def parse_log(path: str | Path) -> List[Block]:
     source = Path(path)
     text = source.read_text(encoding="utf-8", errors="ignore")
+    lines = text.splitlines()
+    entries = list(iter_log_entries(lines))
+
+    consumed = [False] * len(lines)
+    by_start: Dict[int, LogEntry] = {}
+    by_end: Dict[int, int] = {}
+    for entry in entries:
+        if entry.start_line is None:
+            continue
+        start = entry.start_line
+        end = entry.end_line if entry.end_line is not None else start + 1
+        by_start[start] = entry
+        by_end[start] = end
+        for idx in range(start, end):
+            if 0 <= idx < len(consumed):
+                consumed[idx] = True
+
     blocks: List[Block] = []
-    pending: List[str] = []
+    index = 0
 
-    def _flush_pending() -> None:
-        if not pending:
-            return
-        for chunk in pending:
-            blocks.append(_new_block("paragraph", chunk, source, confidence=0.45))
-        pending.clear()
-
-    for line in text.splitlines():
-        entry = parse_log_line(line)
-        if entry is None:
+    def _emit_paragraph(start: int, end: int) -> None:
+        for line in lines[start:end]:
             stripped = line.strip()
-            if stripped:
-                pending.append(stripped)
+            if not stripped:
+                continue
+            blocks.append(_new_block("paragraph", stripped, source, confidence=0.45))
+
+    while index < len(lines):
+        if index in by_start:
+            entry = by_start[index]
+            end = by_end.get(index, index + 1)
+            attrs: Dict[str, object] = {}
+            if entry.timestamp:
+                attrs["timestamp"] = entry.timestamp
+                if entry.raw_timestamp and entry.raw_timestamp != entry.timestamp:
+                    attrs["raw_timestamp"] = entry.raw_timestamp
+            elif entry.raw_timestamp:
+                attrs["raw_timestamp"] = entry.raw_timestamp
+            if entry.level:
+                attrs["level"] = entry.level
+            attrs["line_start"] = str(index + 1)
+            attrs["line_end"] = str(end)
+
+            message = entry.message or entry.raw.strip()
+            confidence = 0.55
+            if entry.level:
+                confidence += 0.15
+            if entry.timestamp:
+                confidence += 0.15
+            if "\n" in message:
+                confidence -= 0.05
+            confidence = max(0.4, min(confidence, 0.9))
+
+            blocks.append(
+                Block(
+                    type="log",
+                    text=message,
+                    attrs=attrs,
+                    source=str(source),
+                    confidence=confidence,
+                )
+            )
+            index = end
             continue
 
-        _flush_pending()
-
-        attrs = {}
-        if entry.timestamp:
-            attrs["timestamp"] = entry.timestamp
-            if entry.raw_timestamp and entry.raw_timestamp != entry.timestamp:
-                attrs["raw_timestamp"] = entry.raw_timestamp
-        elif entry.raw_timestamp:
-            attrs["raw_timestamp"] = entry.raw_timestamp
-        if entry.level:
-            attrs["level"] = entry.level
-
-        message = entry.message or entry.raw.strip()
-        blocks.append(
-            Block(
-                type="log",
-                text=message,
-                attrs=attrs,
-                source=str(source),
-                confidence=0.7 if entry.has_structured_fields else 0.5,
-            )
-        )
-
-    _flush_pending()
+        start = index
+        while index < len(lines) and not consumed[index]:
+            index += 1
+        _emit_paragraph(start, index)
 
     if not blocks:
         stripped = text.strip()

@@ -74,6 +74,8 @@ def test_log_payload_summarizes_entries(tmp_path: Path) -> None:
                 "2024-01-01 10:00:00 INFO service starting",
                 "2024-01-01 10:01:00 WARN cache miss detected",
                 "2024-01-01 10:02:00 ERROR critical failure",
+                "    Traceback (most recent call last):",
+                "    ValueError: boom",
             ]
         ),
         encoding="utf-8",
@@ -82,9 +84,14 @@ def test_log_payload_summarizes_entries(tmp_path: Path) -> None:
     payload = build_payload(path)
 
     assert payload.meta["log_line_count"] == 3
-    assert payload.meta["log_levels"] == ["ERROR", "INFO", "WARN"]
+    assert payload.meta["log_levels"] == ["ERROR", "WARN", "INFO"]
     assert payload.meta["log_first_timestamp"].startswith("2024-01-01T10:00:00")
     assert payload.meta["log_last_timestamp"].startswith("2024-01-01T10:02:00")
+    assert payload.meta["log_level_counts"] == {"ERROR": 1, "WARN": 1, "INFO": 1}
+    assert payload.meta["log_high_severity_count"] == 1
+    assert payload.meta["log_has_multiline_entries"] is True
+    assert payload.meta["log_examples"][0]["level"] == "INFO"
+    assert "critical failure" in payload.meta["log_examples"][-1]["message"]
 
     unified = to_unified_payload(path)
     assert unified["doc_type"] == "log"

@@ -230,10 +230,15 @@ def _compile_validation(meta: Dict[str, Any], blocks: List[Block], payload: Payl
         warnings.append("PDF did not expose text – consider OCR for scans.")
     if meta.get("zip_contains_nested"):
         warnings.append("ZIP file contains nested archives; deep extraction recommended.")
-    log_levels = meta.get("log_levels")
-    if isinstance(log_levels, list):
-        if any(level in {"ERROR", "CRITICAL", "FATAL"} for level in log_levels):
+    high_severity = meta.get("log_high_severity_count")
+    if isinstance(high_severity, int):
+        if high_severity > 0:
             warnings.append("Log file contains high-severity entries.")
+    else:
+        log_levels = meta.get("log_levels")
+        if isinstance(log_levels, list):
+            if any(level in {"ERROR", "CRITICAL", "FATAL"} for level in log_levels):
+                warnings.append("Log file contains high-severity entries.")
 
     return {"warnings": warnings, "errors": errors}
 
