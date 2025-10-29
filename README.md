@@ -5,6 +5,7 @@ Turn chaotic files into a predictable JSON payload that downstream tools love.
 ## Features
 - Normalises paths, MIME types, and metadata for any file.
 - Pretty prints JSON sources and captures schema hints (top-level keys, type).
+- Captures text statistics such as line, character, and word counts.
 - Generates chat-ready message chunks for LLM ingestion.
 - Provides a simple CLI (`python -m sr_adapter.adapter`) that can emit either
   JSON lines or a formatted list.

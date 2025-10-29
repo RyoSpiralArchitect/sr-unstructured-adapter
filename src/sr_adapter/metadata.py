@@ -7,6 +7,23 @@ from pathlib import Path
 from typing import Dict
 
 
+def _count_words(text: str) -> int:
+    """Return the number of whitespace-delimited tokens in *text*."""
+
+    count = 0
+    in_word = False
+    for char in text:
+        if char.isspace():
+            if in_word:
+                count += 1
+                in_word = False
+        else:
+            in_word = True
+    if in_word:
+        count += 1
+    return count
+
+
 def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object]) -> Dict[str, object]:
     """Gather metadata for the given file."""
 
@@ -23,6 +40,9 @@ def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object])
                 "char_count": len(text),
             }
         )
+
+        if mime.startswith("text/"):
+            metadata["word_count"] = _count_words(text)
 
     if mime.startswith("text/"):
         metadata.setdefault("encoding", "utf-8")
