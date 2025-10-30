@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Core data structures used across the adapter pipeline (v0.2)."""
 
 from __future__ import annotations
@@ -47,8 +48,23 @@ class Span(BaseModel):
 
 
 BlockType = Literal[
-    "paragraph", "heading", "title", "list_item",
-    "table", "figure", "code", "footnote", "metadata"
+    "paragraph",
+    "heading",
+    "header",
+    "title",
+    "list_item",
+    "list",
+    "table",
+    "figure",
+    "code",
+    "footnote",
+    "metadata",
+    "meta",
+    "kv",
+    "log",
+    "event",
+    "attachment",
+    "other",
 ]
 
 
