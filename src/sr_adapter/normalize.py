@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Shared normalization routines used by all parsers."""
 
 from __future__ import annotations

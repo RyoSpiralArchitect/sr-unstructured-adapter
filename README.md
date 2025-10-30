@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 # SR Unstructured Adapter
 
 Turn chaotic files into a predictable JSON payload that downstream tools love.
