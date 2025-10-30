@@ -8,6 +8,7 @@ import re
 import zipfile
 from pathlib import Path
 from typing import Dict, Iterable, List
+from xml.dom import minidom
 from xml.etree import ElementTree as ET
 
 from email import policy
@@ -19,6 +20,7 @@ from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
+from .loaders import extract_pptx_slides
 from .logs import LogEntry, iter_log_entries
 from .schema import Block, clone_model
 
@@ -46,6 +48,15 @@ def _split_paragraphs(text: str) -> Iterable[str]:
             buf.clear()
     if buf:
         yield "\n".join(buf)
+
+
+def _prettify_xml(element: ET.Element) -> str:
+    rough = ET.tostring(element, encoding="utf-8")
+    try:
+        parsed = minidom.parseString(rough)
+        return parsed.toprettyxml(indent="  ")
+    except Exception:
+        return rough.decode("utf-8", errors="ignore")
 
 
 def _classify_chunk(chunk: str) -> str:
@@ -304,6 +315,41 @@ def parse_docx(path: str | Path) -> List[Block]:
     return blocks or [_new_block("other", "", source, confidence=0.1)]
 
 
+def parse_pptx(path: str | Path) -> List[Block]:
+    source = Path(path)
+    slides = extract_pptx_slides(source)
+    blocks: List[Block] = []
+
+    for index, slide in enumerate(slides, start=1):
+        title = slide.get("title")
+        bullets = slide.get("bullets", [])
+        paragraphs = slide.get("paragraphs", []) or []
+
+        if title:
+            blocks.append(
+                _new_block(
+                    "header",
+                    f"Slide {index}: {title}",
+                    source,
+                    confidence=0.75,
+                )
+            )
+
+        if bullets:
+            formatted = "\n".join(f"- {bullet}" for bullet in bullets if bullet)
+            if formatted:
+                blocks.append(_new_block("list", formatted, source, confidence=0.65))
+
+        remaining = paragraphs[1:] if title else paragraphs
+        extra_text = [line for line in remaining if line and line not in bullets]
+        if extra_text:
+            blocks.append(
+                _new_block("paragraph", "\n".join(extra_text), source, confidence=0.55)
+            )
+
+    return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
 def parse_xlsx(path: str | Path) -> List[Block]:
     source = Path(path)
     workbook = load_workbook(filename=str(source), read_only=True, data_only=True)
@@ -372,6 +418,40 @@ def parse_json(path: str | Path) -> List[Block]:
             confidence=0.6,
         )
     ]
+
+
+def parse_yaml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    stripped = text.strip()
+    if not stripped:
+        return [_new_block("other", "", source, confidence=0.1)]
+
+    blocks = [_new_block("code", chunk, source, confidence=0.55) for chunk in _split_paragraphs(text)]
+    return blocks or [_new_block("code", stripped, source, confidence=0.55)]
+
+
+def parse_xml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError:
+        stripped = text.strip()
+        if not stripped:
+            return [_new_block("other", "", source, confidence=0.1)]
+        return [_new_block("code", stripped, source, confidence=0.45)]
+
+    blocks: List[Block] = []
+    root_tag = root.tag.split("}")[-1]
+    blocks.append(_new_block("meta", f"XML root: {root_tag}", source, confidence=0.7))
+    pretty = _prettify_xml(root).strip()
+    if pretty:
+        blocks.append(_new_block("code", pretty, source, confidence=0.6))
+    text_content = " ".join(segment.strip() for segment in root.itertext() if segment.strip())
+    if text_content:
+        blocks.append(_new_block("paragraph", text_content, source, confidence=0.5))
+    return blocks or [_new_block("code", text.strip(), source, confidence=0.55)]
 
 
 def parse_email(path: str | Path) -> List[Block]:

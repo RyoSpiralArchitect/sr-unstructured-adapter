@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import textwrap
 import zipfile
 from pathlib import Path
 
@@ -106,8 +107,10 @@ def test_to_llm_messages_chunking(tmp_path: Path) -> None:
     payload = build_payload(path)
     messages = to_llm_messages(payload, chunk_size=2000)
 
-    assert len(messages) == 3
-    assert "part 1" in messages[0]["content"]
+    assert len(messages) == 4
+    assert messages[0]["role"] == "system"
+    assert "Key metadata" in messages[0]["content"]
+    assert "part 1" in messages[1]["content"]
     assert "part 3" in messages[-1]["content"]
 
 
@@ -237,66 +240,140 @@ def test_zip_payload_surfaces_entries(tmp_path: Path) -> None:
     assert payload.meta["zip_contains_nested"] is True
 
     unified = to_unified_payload(path)
-    assert unified["doc_type"] == "archive"
+    assert unified["doc_type"] == "zip"
     assert any(att["name"] == "data.csv" for att in unified["attachments"])
     assert any(block["type"] == "attachment" for block in unified["text_blocks"])
 
 
-def test_rtf_payload_roundtrip(tmp_path: Path) -> None:
-    rtf = r"{\rtf1\ansi\deff0 {\fonttbl{\f0 Courier;}}\n\f0\fs20 Hello \\b World\\b0!}"
-    path = tmp_path / "note.rtf"
-    path.write_text(rtf, encoding="utf-8")
+def test_yaml_payload_reports_keys(tmp_path: Path) -> None:
+    path = tmp_path / "config.yaml"
+    path.write_text(
+        textwrap.dedent(
+            """
+            version: 1
+            services:
+              - api
+              - worker
+            settings:
+              debug: true
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
 
     payload = build_payload(path)
-    assert "Hello" in payload.text
-    assert "World" in payload.text
-    assert payload.meta.get("rtf_decoder") in {"striprtf", "fallback"}
+    keys = payload.meta.get("yaml_top_level_keys")
+    assert isinstance(keys, list) and {"version", "services", "settings"}.issubset(keys)
+    assert payload.meta.get("yaml_contains_lists") is True
 
     unified = to_unified_payload(path)
-    assert unified["doc_type"] == "text"
-    assert unified["highlights"]["summary"]
+    assert unified["doc_type"] == "yaml"
+    assert any("YAML" in hint for hint in unified["llm_hints"])
+
+
+def test_xml_payload_reports_structure(tmp_path: Path) -> None:
+    path = tmp_path / "invoice.xml"
+    path.write_text(
+        "<invoice id='123'><total currency='USD'>123.45</total><note>Thanks</note></invoice>",
+        encoding="utf-8",
+    )
+
+    payload = build_payload(path)
+    assert payload.meta["xml_root_tag"] == "invoice"
+    assert payload.meta["xml_element_count"] >= 2
+
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "xml"
+    assert any(block["type"] == "meta" for block in unified["text_blocks"])
+    assert any("XML" in hint for hint in unified["llm_hints"])
+
+
+def _write_minimal_pptx(path: Path) -> None:
+    content_types = """<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>
+"""
+    root_rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
+</Relationships>
+"""
+    presentation = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+                xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+    <p:sldId id="257" r:id="rId2"/>
+  </p:sldIdLst>
+</p:presentation>
+"""
+    rels_main = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
+</Relationships>
+"""
+    slide1 = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+       xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp>
+        <p:txBody>
+          <a:p>
+            <a:r><a:t>Intro</a:t></a:r>
+          </a:p>
+          <a:p>
+            <a:r><a:t>First point</a:t></a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>
+"""
+    slide2 = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+       xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp>
+        <p:txBody>
+          <a:p>
+            <a:r><a:t>Summary</a:t></a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>
+"""
+
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", root_rels)
+        archive.writestr("ppt/presentation.xml", presentation)
+        archive.writestr("ppt/_rels/presentation.xml.rels", rels_main)
+        archive.writestr("ppt/slides/slide1.xml", slide1)
+        archive.writestr("ppt/slides/slide2.xml", slide2)
 
 
 def test_pptx_payload_extracts_slides(tmp_path: Path) -> None:
     path = tmp_path / "deck.pptx"
-    slide_xml = """<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
-    <p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"
-           xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"
-           xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">
-      <p:cSld>
-        <p:spTree>
-          <p:sp>
-            <p:txBody>
-              <a:bodyPr/>
-              <a:lstStyle/>
-              <a:p>
-                <a:r><a:t>Deck Title</a:t></a:r>
-              </a:p>
-            </p:txBody>
-          </p:sp>
-          <p:sp>
-            <p:txBody>
-              <a:bodyPr/>
-              <a:lstStyle/>
-              <a:p>
-                <a:r><a:t>First bullet</a:t></a:r>
-              </a:p>
-            </p:txBody>
-          </p:sp>
-        </p:spTree>
-      </p:cSld>
-    </p:sld>
-    """
-    with zipfile.ZipFile(path, "w") as archive:
-        archive.writestr("ppt/slides/slide1.xml", slide_xml)
+    _write_minimal_pptx(path)
 
     payload = build_payload(path)
-    assert "Deck Title" in payload.text
-    assert payload.meta["pptx_slide_count"] == 1
-    assert payload.meta["pptx_slide_titles"] == ["Deck Title"]
+    assert payload.meta["pptx_slide_count"] == 2
+    assert "Intro" in payload.text
+    assert payload.meta["pptx_titles"][0] == "Intro"
 
     unified = to_unified_payload(path)
-    assert unified["doc_type"] == "presentation"
-    assert unified["llm_ready"]["markdown"].startswith("# Document: Presentation")
-    assert unified["highlights"]["summary"]
-    assert unified["llm_ready"]["chunks"]
+    assert unified["doc_type"] == "pptx"
+    assert any(block["type"] == "header" for block in unified["text_blocks"])
+    assert any("Presentation" in hint for hint in unified["llm_hints"])

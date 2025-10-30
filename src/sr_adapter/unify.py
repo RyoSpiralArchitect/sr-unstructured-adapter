@@ -217,6 +217,14 @@ def _item_provenance_label(item: Dict[str, Any]) -> str:
     return ""
 
 
+def _list_preview(values: Iterable[Any], limit: int = 5) -> str:
+    sequence = [str(value) for value in values if value not in (None, "")]
+    if not sequence:
+        return ""
+    preview = sequence[:limit]
+    if len(sequence) > limit:
+        preview.append("…")
+    return ", ".join(preview)
 def _infer_doc_type(meta: Dict[str, Any], payload: Payload, blocks: List[Block], default: str) -> str:
     resolved = (default or payload.mime or "").strip()
     baseline = resolved.lower()
@@ -277,6 +285,114 @@ def _compile_validation(meta: Dict[str, Any], blocks: List[Block], payload: Payl
     return {"warnings": warnings, "errors": errors}
 
 
+def _build_llm_hints(
+    meta: Dict[str, Any],
+    parties: List[Dict[str, Any]],
+    amounts: List[Dict[str, Any]],
+    tables: List[Dict[str, Any]],
+    attachments: List[Dict[str, Any]],
+    document_meta: Dict[str, Any],
+) -> List[str]:
+    hints: List[str] = []
+
+    def _add(message: str) -> None:
+        if message and message not in hints:
+            hints.append(message)
+
+    doc_type = document_meta.get("type")
+    if doc_type:
+        _add(f"Detected type: {doc_type}")
+
+    word_count = meta.get("word_count")
+    if isinstance(word_count, int) and word_count > 0:
+        _add(f"Word count: {word_count}")
+    line_count = meta.get("line_count")
+    if isinstance(line_count, int) and line_count > 0:
+        _add(f"Line count: {line_count}")
+
+    title = meta.get("html_title") or meta.get("email_subject")
+    if title:
+        _add(f"Title: {title}")
+
+    pptx_count = meta.get("pptx_slide_count")
+    if isinstance(pptx_count, int) and pptx_count > 0:
+        _add(f"Presentation with {pptx_count} slides.")
+        titles = meta.get("pptx_titles")
+        if isinstance(titles, list) and titles:
+            preview = _list_preview(titles)
+            if preview:
+                _add(f"Slide highlights: {preview}")
+
+    yaml_keys = meta.get("yaml_top_level_keys")
+    if isinstance(yaml_keys, list) and yaml_keys:
+        preview = _list_preview(yaml_keys)
+        if preview:
+            _add(f"YAML keys: {preview}")
+
+    xml_root = meta.get("xml_root_tag")
+    if xml_root:
+        element_count = meta.get("xml_element_count")
+        if isinstance(element_count, int) and element_count > 0:
+            _add(f"XML root '{xml_root}' with {element_count} elements.")
+        else:
+            _add(f"XML root '{xml_root}'.")
+
+    sheet_count = meta.get("workbook_sheet_count")
+    if isinstance(sheet_count, int) and sheet_count > 0:
+        _add(f"Workbook with {sheet_count} sheets.")
+
+    log_count = meta.get("log_line_count")
+    if isinstance(log_count, int) and log_count > 0:
+        severity = meta.get("log_high_severity_count")
+        if isinstance(severity, int) and severity > 0:
+            _add(f"Log summary: {log_count} entries ({severity} high severity).")
+        else:
+            _add(f"Log summary: {log_count} entries.")
+        levels = meta.get("log_levels")
+        if isinstance(levels, list) and levels:
+            preview = _list_preview(levels)
+            if preview:
+                _add(f"Log levels: {preview}")
+
+    if parties:
+        senders = [party.get("name") for party in parties if party.get("role") == "from"]
+        recipients = [
+            party.get("name")
+            for party in parties
+            if party.get("role") in {"to", "cc"}
+        ]
+        preview = _list_preview(senders)
+        if preview:
+            _add(f"Senders: {preview}")
+        preview = _list_preview(recipients)
+        if preview:
+            _add(f"Recipients: {preview}")
+
+    if amounts:
+        sample = amounts[0]
+        value = sample.get("value")
+        currency = sample.get("currency") or ""
+        if value:
+            display = f"{currency}{value}".strip()
+            _add(f"Monetary amounts detected (e.g. {display}).")
+
+    if tables:
+        _add(f"Structured tables detected ({len(tables)} total).")
+
+    if attachments:
+        names = [
+            att.get("name") or att.get("filename") or att.get("source")
+            for att in attachments
+        ]
+        preview = _list_preview(name for name in names if name)
+        if preview:
+            _add(f"Attachments: {preview}")
+        else:
+            _add(f"{len(attachments)} attachments referenced.")
+
+    if len(hints) > 10:
+        return hints[:10]
+    return hints
 def _to_float(value: str) -> float | None:
     try:
         return float(value.replace(",", ""))
@@ -364,12 +480,13 @@ def build_unified_payload(payload: Payload, document: Document) -> Dict[str, Any
         ],
     }
 
+    llm_hints = _build_llm_hints(meta, parties, amounts, tables, attachments, document.meta)
     inferred_doc_type = _infer_doc_type(meta, payload, blocks, document.meta.get("type", payload.mime))
 
     unified = {
         "schema_version": "1.0",
         "doc_id": str(uuid.uuid5(uuid.NAMESPACE_URL, str(payload.source))),
-        "doc_type": inferred_doc_type,
+        "doc_type": document.meta.get("type", payload.mime),
         "source": str(payload.source),
         "mime": payload.mime,
         "confidence": _avg_confidence(blocks),
@@ -383,6 +500,9 @@ def build_unified_payload(payload: Payload, document: Document) -> Dict[str, Any
         "meta": meta,
         "provenance": provenance,
         "validation": _compile_validation(meta, blocks, payload),
+        "llm_hints": llm_hints,
+    }
+
     }
 
     unified["highlights"] = _derive_highlights(unified)

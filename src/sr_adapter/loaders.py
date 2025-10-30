@@ -64,11 +64,15 @@ _PPTX_EXTENSIONS = {".pptx"}
 _EMAIL_EXTENSIONS = {".eml", ".msg"}
 _ZIP_EXTENSIONS = {".zip"}
 _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp"}
+_XML_EXTENSIONS = {".xml"}
+_YAML_EXTENSIONS = {".yaml", ".yml"}
 
 _HTML_MIMES = {"text/html", "application/xhtml+xml"}
 _DOCX_MIMES = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
 _XLSX_MIMES = {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
-_PPTX_MIMES = {"application/vnd.openxmlformats-officedocument.presentationml.presentation"}
+_PPTX_MIMES = {
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+}
 _EMAIL_MIMES = {"message/rfc822", "application/vnd.ms-outlook"}
 _ZIP_MIMES = {"application/zip"}
 _IMAGE_MIMES = {
@@ -77,9 +81,63 @@ _IMAGE_MIMES = {
     "image/tiff",
     "image/bmp",
 }
+_XML_MIMES = {"application/xml", "text/xml"}
+_YAML_MIMES = {"application/x-yaml", "text/yaml", "text/x-yaml"}
 
-_CONTROL_WORD_PATTERN = re.compile(r"\\[a-z]+(?:-?\d+)? ?")
-_HEX_CHAR_PATTERN = re.compile(r"\\'[0-9a-fA-F]{2}")
+_NS_A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+
+
+def extract_pptx_slides(path: Path) -> List[Dict[str, object]]:
+    slides: List[Dict[str, object]] = []
+
+    try:
+        with zipfile.ZipFile(path) as archive:
+            slide_files = [
+                name
+                for name in archive.namelist()
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+            ]
+            slide_files.sort(key=lambda name: int(re.findall(r"(\d+)", name)[-1]))
+
+            for slide_name in slide_files:
+                data = archive.read(slide_name)
+                try:
+                    root = ET.fromstring(data)
+                except ET.ParseError:
+                    slides.append({"raw": data.decode("utf-8", errors="ignore")})
+                    continue
+
+                paragraphs: List[str] = []
+                for para in root.iter(f"{_NS_A}p"):
+                    pieces = [
+                        text.strip()
+                        for text in (
+                            node.text or ""
+                            for node in para.iter(f"{_NS_A}t")
+                        )
+                        if text.strip()
+                    ]
+                    if pieces:
+                        paragraphs.append(" ".join(pieces))
+
+                if not paragraphs:
+                    slides.append({"raw": ""})
+                    continue
+
+                title = paragraphs[0]
+                bullets = paragraphs[1:]
+                slides.append(
+                    {
+                        "title": title,
+                        "bullets": bullets,
+                        "raw": "\n".join(paragraphs),
+                        "paragraphs": paragraphs,
+                    }
+                )
+    except zipfile.BadZipFile:
+        return []
+
+    return slides
 
 
 def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -207,6 +265,27 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
 
 
 def _read_pptx(path: Path) -> Tuple[str, Dict[str, object]]:
+    slides = extract_pptx_slides(path)
+    if not slides:
+        return "", {"extracted_as_text": True, "pptx_slide_count": 0}
+
+    titles = [slide.get("title") for slide in slides if slide.get("title")]
+    bullet_count = sum(len(slide.get("bullets", [])) for slide in slides)
+    paragraph_count = sum(
+        len(slide.get("paragraphs", [])) for slide in slides if slide.get("paragraphs")
+    )
+
+    text = "\n\n".join(slide.get("raw", "") for slide in slides if slide.get("raw"))
+    extra: Dict[str, object] = {
+        "extracted_as_text": bool(text),
+        "pptx_slide_count": len(slides),
+    }
+    if titles:
+        extra["pptx_titles"] = [title for title in titles if title][:10]
+    if bullet_count:
+        extra["pptx_bullet_count"] = bullet_count
+    if paragraph_count:
+        extra["pptx_text_runs"] = paragraph_count
     with zipfile.ZipFile(path) as archive:
         slide_members = sorted(
             member
@@ -405,6 +484,62 @@ def _read_image(path: Path) -> Tuple[str, Dict[str, object]]:
     return "", meta
 
 
+def _read_xml(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError:
+        return raw, {"extracted_as_text": True, "xml_valid": False}
+
+    serialised = ET.tostring(root, encoding="unicode")
+    namespaces = sorted(
+        {
+            elem.tag.split("}")[0][1:]
+            for elem in root.iter()
+            if isinstance(elem.tag, str) and elem.tag.startswith("{")
+        }
+    )
+    element_count = sum(1 for _ in root.iter())
+    attribute_count = sum(len(elem.attrib) for elem in root.iter())
+
+    extra: Dict[str, object] = {
+        "extracted_as_text": True,
+        "xml_valid": True,
+        "xml_root_tag": root.tag.split("}")[-1],
+        "xml_element_count": element_count,
+        "xml_attribute_count": attribute_count,
+    }
+    if namespaces:
+        extra["xml_namespaces"] = namespaces
+
+    return serialised, extra
+
+
+def _read_yaml(path: Path) -> Tuple[str, Dict[str, object]]:
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    top_level: List[str] = []
+    has_lists = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        if stripped.startswith("- "):
+            has_lists = True
+            continue
+        if ":" in stripped and indent == 0:
+            candidate = stripped.split(":", 1)[0].strip()
+            if candidate and candidate not in top_level:
+                top_level.append(candidate)
+
+    extra: Dict[str, object] = {"extracted_as_text": True}
+    if top_level:
+        extra["yaml_top_level_keys"] = top_level
+    if has_lists:
+        extra["yaml_contains_lists"] = True
+    return text, extra
+
+
 def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     """Return a textual representation and extra metadata for *path*.
 
@@ -445,6 +580,11 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     if mime in _DOCX_MIMES or suffix in _DOCX_EXTENSIONS:
         text, docx_extra = _read_docx(path)
         extra.update(docx_extra)
+        return text, extra
+
+    if mime in _PPTX_MIMES or suffix in _PPTX_EXTENSIONS:
+        text, pptx_extra = _read_pptx(path)
+        extra.update(pptx_extra)
         return text, extra
 
     if mime == "application/pdf" or suffix == ".pdf":
@@ -494,6 +634,16 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     if mime in _IMAGE_MIMES or suffix in _IMAGE_EXTENSIONS:
         text, image_extra = _read_image(path)
         extra.update(image_extra)
+        return text, extra
+
+    if mime in _XML_MIMES or suffix in _XML_EXTENSIONS:
+        text, xml_extra = _read_xml(path)
+        extra.update(xml_extra)
+        return text, extra
+
+    if mime in _YAML_MIMES or suffix in _YAML_EXTENSIONS:
+        text, yaml_extra = _read_yaml(path)
+        extra.update(yaml_extra)
         return text, extra
 
     if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:

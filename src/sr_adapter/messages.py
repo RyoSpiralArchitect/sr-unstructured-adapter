@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterator, List
+from typing import Any, Dict, Iterator, List
 
 from .models import Payload
 
@@ -12,6 +12,64 @@ def _iter_chunks(text: str, chunk_size: int) -> Iterator[str]:
         yield text[start : start + chunk_size]
 
 
+_META_PRIORITY = [
+    "html_title",
+    "email_subject",
+    "pdf_page_count",
+    "pptx_slide_count",
+    "workbook_sheet_count",
+    "yaml_top_level_keys",
+    "xml_root_tag",
+    "log_line_count",
+    "log_high_severity_count",
+    "word_count",
+    "line_count",
+]
+
+
+def _format_meta_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, list):
+        preview = [str(item) for item in value[:5]]
+        if len(value) > 5:
+            preview.append("…")
+        return ", ".join(preview)
+    if isinstance(value, dict):
+        items = list(value.items())
+        preview = [f"{key}={val}" for key, val in items[:5]]
+        if len(items) > 5:
+            preview.append("…")
+        return ", ".join(preview)
+    return str(value)
+
+
+def _summarize_meta(meta: Dict[str, Any] | None, *, limit: int = 8) -> str:
+    if not meta:
+        return ""
+
+    lines: List[str] = []
+    seen: set[str] = set()
+    ordered_keys = _META_PRIORITY + [key for key in sorted(meta.keys()) if key not in _META_PRIORITY]
+    for key in ordered_keys:
+        if key in seen or key not in meta:
+            continue
+        value = meta[key]
+        if value in (None, "", [], {}):
+            if not isinstance(value, (int, float)) or value == 0:
+                continue
+        formatted = _format_meta_value(value)
+        if not formatted:
+            continue
+        lines.append(f"- {key}: {formatted}")
+        seen.add(key)
+        if len(lines) >= limit:
+            break
+    return "\n".join(lines)
+
+
 def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2000) -> List[Dict[str, str]]:
     """Convert a payload into chat messages that respect chunking."""
 
@@ -19,20 +77,37 @@ def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2
         source = str(payload.source)
         mime = payload.mime
         text = payload.text
+        meta = payload.meta
     else:
         source = str(payload.get("source", ""))
         mime = str(payload.get("mime", ""))
         text = str(payload.get("text", ""))
+        meta = payload.get("meta") if isinstance(payload, dict) else None
+        if not isinstance(meta, dict):
+            meta = {}
+
+    meta_summary = _summarize_meta(meta)
 
     if not text:
+        preface = f"[{mime}] {source}\n(no textual preview available)"
+        if meta_summary:
+            preface = f"Source: {source}\nKey metadata:\n{meta_summary}\n\n{preface}"
         return [
             {
                 "role": "user",
-                "content": f"[{mime}] {source}\n(no textual preview available)",
+                "content": preface,
             }
         ]
 
     messages: List[Dict[str, str]] = []
+    if meta_summary:
+        messages.append(
+            {
+                "role": "system",
+                "content": f"Source: {source}\nKey metadata:\n{meta_summary}",
+            }
+        )
+
     multi_part = len(text) > chunk_size
     for index, chunk in enumerate(_iter_chunks(text, chunk_size), start=1):
         header = f"[{mime}] {source}"
