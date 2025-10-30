@@ -83,6 +83,29 @@ def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
     assert any(block.type == "list" for block in document.blocks)
 
 
+def test_parse_txt_extracts_kv_and_log(tmp_path: Path) -> None:
+    source = tmp_path / "structured.txt"
+    source.write_text(
+        "\n".join(
+            [
+                "Subject: Update",
+                "2024-01-01 09:30 status ok",
+                "- bullet item",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_txt(source)
+
+    types = {block.type for block in blocks}
+    assert "kv" in types
+    assert "log" in types
+    log_block = next(block for block in blocks if block.type == "log")
+    assert log_block.attrs["timestamp"].startswith("2024-01-01")
+    assert "status ok" in log_block.attrs["message"]
+
+
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
     block = Block(type="paragraph", text="unknown content", attrs={"a": "1"})
     processed = apply_recipe([block], "default")
@@ -110,6 +133,59 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     payload = json.loads(lines[0])
     assert payload["meta"]["type"] == "text"
     assert any(block["type"] == "kv" for block in payload["blocks"])
+
+
+def test_convert_eml_extracts_headers(tmp_path: Path) -> None:
+    eml = tmp_path / "mail.eml"
+    eml.write_text(
+        "\n".join(
+            [
+                "From: Example <sender@example.com>",
+                "To: Recipient <user@example.com>",
+                "Subject: Hello",
+                "MIME-Version: 1.0",
+                "Content-Type: text/plain; charset=utf-8",
+                "",
+                "Hello world",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(eml, recipe="default")
+
+    assert document.meta["type"] == "eml"
+    assert document.blocks[0].type == "meta"
+    assert document.blocks[0].attrs["subject"] == "Hello"
+    assert any(block.type in {"paragraph", "kv"} for block in document.blocks[1:])
+
+
+def test_convert_ics_yields_event_blocks(tmp_path: Path) -> None:
+    ics = tmp_path / "event.ics"
+    ics.write_text(
+        "\n".join(
+            [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "BEGIN:VEVENT",
+                "SUMMARY:Sync",
+                "DTSTART:20240201T120000Z",
+                "DTEND:20240201T123000Z",
+                "LOCATION:Video",
+                "DESCRIPTION:Weekly sync",
+                "END:VEVENT",
+                "END:VCALENDAR",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(ics, recipe="default")
+
+    assert document.meta["type"] == "ics"
+    assert any(block.type == "event" for block in document.blocks)
+    event = next(block for block in document.blocks if block.type == "event")
+    assert event.attrs["summary"] == "Sync"
 
 
 def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:

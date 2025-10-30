@@ -16,8 +16,11 @@ from typing import Dict, Tuple, List, Optional
 
 _TEXT_EXTENSIONS = {
     ".csv",
+    ".cfg",
+    ".ini",
     ".log",
     ".md",
+    ".properties",
     ".rst",
     ".text",
     ".txt",
@@ -395,6 +398,21 @@ def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
     return _normalize_newlines(body), meta
 
 
+def _read_ics(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw, meta = _read_text_best_effort(path)
+    text = _normalize_newlines(raw)
+    events = text.upper().split("BEGIN:VEVENT")
+    count = max(0, len(events) - 1)
+    meta.update(
+        {
+            "ics_events": count,
+            "ics_has_timezone": "TZID=" in text,
+            "ics_has_alarms": "BEGIN:VALARM" in text,
+        }
+    )
+    return text, meta
+
+
 def _read_image_meta(path: Path) -> Tuple[str, Dict[str, object]]:
     """No OCR by default; if Pillow available, report size/EXIF."""
     meta: Dict[str, object] = {}
@@ -461,6 +479,8 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_rtf(path)
     if mime == "message/rfc822" or suffix == ".eml":
         return _read_eml(path)
+    if mime == "text/calendar" or suffix == ".ics":
+        return _read_ics(path)
     if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:
         return _read_plain_text(path)
 

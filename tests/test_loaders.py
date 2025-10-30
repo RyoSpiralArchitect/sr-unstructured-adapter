@@ -60,3 +60,28 @@ def test_eml_loader_extracts_plain_body(tmp_path: Path) -> None:
     assert meta["email_parsed"] is True
     assert meta["email_attachment_count"] == 0
     assert meta["email_subject"] == "Greetings"
+
+
+def test_ics_loader_counts_events(tmp_path: Path) -> None:
+    ics = tmp_path / "schedule.ics"
+    ics.write_text(
+        "\n".join(
+            [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "BEGIN:VEVENT",
+                "SUMMARY:Planning Meeting",
+                "DTSTART:20240101T090000",
+                "DTEND:20240101T100000",
+                "END:VEVENT",
+                "END:VCALENDAR",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    text, meta = read_file_contents(ics, "text/calendar")
+
+    assert "Planning Meeting" in text
+    assert meta["ics_events"] == 1
+    assert meta["ics_has_timezone"] is False

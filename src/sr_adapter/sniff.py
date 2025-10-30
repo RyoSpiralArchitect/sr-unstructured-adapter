@@ -27,9 +27,11 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".pdf": "pdf",
     ".docx": "docx",
     ".xlsx": "xlsx",
+    ".pptx": "pptx",
     ".xml": "text",
     ".rtf": "text",
-    ".eml": "text",
+    ".eml": "eml",
+    ".ics": "ics",
 }
 
 
@@ -57,6 +59,8 @@ def detect_type(path: str | Path) -> str:
             return "docx"
         if suffix == ".xlsx":
             return "xlsx"
+        if suffix == ".pptx":
+            return "pptx"
 
     suffix = path.suffix.lower()
     if suffix in _EXTENSION_MAP:
