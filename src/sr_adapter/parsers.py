@@ -799,3 +799,140 @@ def parse_ics(path: str | Path) -> List[Block]:
 
     return blocks
 
+
+def parse_eml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    data = source.read_bytes()
+    blocks: List[Block] = []
+    try:
+        message = BytesParser(policy=policy.default).parsebytes(data)
+    except Exception:
+        return [_new_block("other", data.decode("utf-8", errors="ignore"), source, confidence=0.2)]
+
+    header_attrs = {
+        "subject": message.get("subject", ""),
+        "from": message.get("from", ""),
+        "to": message.get("to", ""),
+        "cc": message.get("cc", ""),
+        "date": message.get("date", ""),
+    }
+    header_text = "\n".join(
+        [f"Subject: {header_attrs['subject']}", f"From: {header_attrs['from']}", f"To: {header_attrs['to']}"]
+    ).strip()
+    blocks.append(
+        Block(
+            type="meta",
+            text=header_text,
+            attrs={k: v for k, v in header_attrs.items() if v},
+            source=str(source),
+            confidence=0.85,
+        )
+    )
+
+    text_parts: List[str] = []
+    html_fallback: List[str] = []
+    attachments: List[Dict[str, object]] = []
+    for part in message.walk():
+        if part.is_multipart():
+            continue
+        filename = part.get_filename()
+        content_type = part.get_content_type()
+        payload = part.get_payload(decode=True) or b""
+        if filename:
+            attachments.append(
+                {
+                    "filename": filename,
+                    "content_type": content_type,
+                    "size": len(payload),
+                }
+            )
+            continue
+        if content_type.startswith("text/"):
+            charset = part.get_content_charset() or "utf-8"
+            try:
+                decoded = payload.decode(charset, errors="ignore")
+            except LookupError:
+                decoded = payload.decode("utf-8", errors="ignore")
+            if content_type == "text/plain":
+                text_parts.append(decoded)
+            else:
+                html_fallback.append(decoded)
+
+    if not text_parts and html_fallback:
+        for html in html_fallback:
+            cleaned = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+            if cleaned:
+                text_parts.append(cleaned)
+
+    for part in text_parts:
+        for chunk in _iter_refined_chunks(part):
+            blocks.append(_block_from_chunk(chunk, source))
+
+    for attachment in attachments[:10]:
+        blocks.append(
+            Block(
+                type="attachment",
+                text=attachment.get("filename") or attachment.get("content_type", "attachment"),
+                attrs=attachment,
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
+
+
+def parse_ics(path: str | Path) -> List[Block]:
+    source = Path(path)
+    raw_lines = source.read_text(encoding="utf-8", errors="ignore").splitlines()
+    unfolded: List[str] = []
+    for line in raw_lines:
+        if line.startswith((" ", "\t")) and unfolded:
+            unfolded[-1] += line.strip()
+        else:
+            unfolded.append(line)
+
+    events: List[Dict[str, str]] = []
+    current: Dict[str, str] = {}
+    for line in unfolded:
+        upper = line.upper()
+        if upper == "BEGIN:VEVENT":
+            current = {}
+            continue
+        if upper == "END:VEVENT":
+            if current:
+                events.append(current)
+            current = {}
+            continue
+        if ":" in line:
+            key, value = line.split(":", 1)
+            current[key.strip().upper()] = value.strip()
+
+    blocks: List[Block] = []
+    for event in events:
+        summary = event.get("SUMMARY", "Event")
+        description_lines = [summary]
+        if "DTSTART" in event:
+            description_lines.append(f"Start: {event['DTSTART']}")
+        if "DTEND" in event:
+            description_lines.append(f"End: {event['DTEND']}")
+        if "LOCATION" in event:
+            description_lines.append(f"Location: {event['LOCATION']}")
+        if "DESCRIPTION" in event:
+            description_lines.append(event["DESCRIPTION"])
+        blocks.append(
+            Block(
+                type="event",
+                text="\n".join(description_lines),
+                attrs={k.lower(): v for k, v in event.items()},
+                source=str(source),
+                confidence=0.75,
+            )
+        )
+
+    if not blocks:
+        text = "\n".join(unfolded)
+        blocks.append(_new_block("other", text, source, confidence=0.3))
+
+    return blocks
+
