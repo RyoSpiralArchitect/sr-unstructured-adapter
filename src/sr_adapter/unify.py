@@ -30,7 +30,7 @@ def _avg_confidence(blocks: Iterable[Block]) -> float:
 
 
 def _normalize_amount(raw: str) -> str:
-    value = raw.replace(" ", "")
+    value = raw.replace("\n", "").replace("\r", "").replace(" ", "")
     if "," in value and "." in value:
         if value.rfind(",") > value.rfind("."):
             value = value.replace(".", "").replace(",", ".")
@@ -137,12 +137,20 @@ def _extract_items_and_tables(blocks: List[Block]) -> Tuple[List[Dict[str, Any]]
         if block.type == "table":
             rows: List[List[str]] = []
             if "rows" in block.attrs:
-                try:
-                    decoded = json.loads(block.attrs["rows"])
-                    if isinstance(decoded, list):
-                        rows = [list(map(str, row)) for row in decoded]
-                except json.JSONDecodeError:
-                    rows = []
+                raw_rows = block.attrs["rows"]
+                if isinstance(raw_rows, str):
+                    try:
+                        decoded = json.loads(raw_rows)
+                    except json.JSONDecodeError:
+                        decoded = []
+                else:
+                    decoded = raw_rows
+                if isinstance(decoded, list):
+                    rows = [
+                        ["" if cell is None else str(cell) for cell in row]
+                        for row in decoded
+                        if isinstance(row, list)
+                    ]
             tables.append(
                 {
                     "block_index": index,

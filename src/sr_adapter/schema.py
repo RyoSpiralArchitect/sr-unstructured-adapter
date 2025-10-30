@@ -21,7 +21,7 @@ class Block(BaseModel):
     type: str = Field(default="paragraph", description="Semantic type of the block")
     text: str = Field(default="", description="Normalized textual content")
     spans: List[Span] = Field(default_factory=list, description="Inline annotations")
-    attrs: Dict[str, str] = Field(default_factory=dict, description="Structured metadata")
+    attrs: Dict[str, Any] = Field(default_factory=dict, description="Structured metadata")
     source: Optional[str] = Field(
         default=None, description="Origin of the block (file path, page index, etc.)"
     )
