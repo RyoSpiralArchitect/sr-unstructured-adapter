@@ -176,3 +176,12 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     assert payload["meta"]["type"] == "log"
     assert any(block["type"] == "kv" for block in payload["blocks"])
 
+
+def test_convert_pptx_emits_slide_blocks(tmp_path: Path) -> None:
+    pptx = tmp_path / "deck.pptx"
+    _create_pptx(pptx)
+
+    document = convert(pptx, recipe="default")
+    assert document.meta["type"] == "pptx"
+    assert any(block.type == "slide" for block in document.blocks)
+

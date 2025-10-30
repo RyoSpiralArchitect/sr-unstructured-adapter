@@ -112,12 +112,13 @@ python -m sr_adapter.adapter --as-json-lines examples/sample.txt
 
 ## Library usage
 ```python
-from sr_adapter import build_payload, to_llm_messages
+from sr_adapter import build_llm_bundle, build_payload, to_llm_messages, to_unified_payload
 
 payload = build_payload("examples/sample.txt")
-print(payload.to_dict())
-
 messages = to_llm_messages(payload, chunk_size=1000)
+unified = to_unified_payload(payload)
+print(unified["highlights"])
+markdown_bundle = build_llm_bundle(unified)
 ```
 
 ## Development
