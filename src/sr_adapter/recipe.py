@@ -83,7 +83,11 @@ def apply_recipe(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
                 updated = clone_model(block, **data)
                 matched = True
                 break
-        if not matched and recipe.fallback_type:
+        if (
+            not matched
+            and recipe.fallback_type
+            and block.type in {"paragraph", "other"}
+        ):
             data = {"type": recipe.fallback_type}
             attrs = dict(block.attrs)
             if recipe.fallback_attrs:
