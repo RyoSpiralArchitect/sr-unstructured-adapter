@@ -60,3 +60,64 @@ def test_eml_loader_extracts_plain_body(tmp_path: Path) -> None:
     assert meta["email_parsed"] is True
     assert meta["email_attachment_count"] == 0
     assert meta["email_subject"] == "Greetings"
+
+
+def test_ics_loader_counts_events(tmp_path: Path) -> None:
+    ics = tmp_path / "schedule.ics"
+    ics.write_text(
+        "\n".join(
+            [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "BEGIN:VEVENT",
+                "SUMMARY:Planning Meeting",
+                "DTSTART:20240101T090000",
+                "DTEND:20240101T100000",
+                "END:VEVENT",
+                "END:VCALENDAR",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    text, meta = read_file_contents(ics, "text/calendar")
+
+    assert "Planning Meeting" in text
+    assert meta["ics_events"] == 1
+    assert meta["ics_has_timezone"] is False
+
+
+def test_yaml_loader_reports_documents(tmp_path: Path) -> None:
+    path = tmp_path / "config.yaml"
+    path.write_text(
+        "\n".join([
+            "service:",
+            "  host: localhost",
+            "  retries: 3",
+        ]),
+        encoding="utf-8",
+    )
+
+    text, meta = read_file_contents(path, "text/yaml")
+
+    assert "localhost" in text
+    assert meta["yaml_documents"] == 1
+    assert "service" in meta["yaml_root_keys"]
+
+
+def test_toml_loader_parses_tables(tmp_path: Path) -> None:
+    path = tmp_path / "settings.toml"
+    path.write_text(
+        "\n".join([
+            "[service]",
+            "host = \"localhost\"",
+            "retries = 5",
+        ]),
+        encoding="utf-8",
+    )
+
+    text, meta = read_file_contents(path, "application/toml")
+
+    assert "localhost" in text
+    assert meta["toml_valid"] is True
+    assert "service" in meta["toml_root_keys"]
