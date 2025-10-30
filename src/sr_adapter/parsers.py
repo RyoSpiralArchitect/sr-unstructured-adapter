@@ -8,6 +8,7 @@ import re
 import zipfile
 import xml.etree.ElementTree as ET
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
@@ -31,6 +32,17 @@ _LOG_LINE = re.compile(
 )
 _MAX_CHARS_PER_CHUNK = 600
 _STRUCTURED_BLOCK_LIMIT = 400
+_R_IDENTIFIER = re.compile(r"^[A-Za-z.][A-Za-z0-9._]*$")
+
+
+@dataclass(frozen=True)
+class _PathSegment:
+    kind: str  # "key" or "index"
+    value: str | int
+    base: int | None = None  # index display base when kind == "index"
+
+
+PathTuple = tuple[_PathSegment, ...]
 
 
 def _new_block(block_type: str, text: str, source: Path, confidence: float = 0.5) -> Block:
@@ -159,8 +171,52 @@ def _iter_refined_chunks(text: str) -> Iterable[str]:
                     yield cleaned
 
 
-def _format_path(path: str) -> str:
-    return path or "<root>"
+def _format_dot_path(path: PathTuple) -> str:
+    parts: List[str] = []
+    for segment in path:
+        if segment.kind == "key":
+            if parts:
+                parts.append(".")
+            parts.append(str(segment.value))
+        elif segment.kind == "index":
+            parts.append(f"[{segment.value}]")
+    return "".join(parts)
+
+
+def _format_label(path: PathTuple) -> str:
+    dotted = _format_dot_path(path)
+    return dotted or "<root>"
+
+
+def _format_r_key(name: str) -> str:
+    if _R_IDENTIFIER.match(name):
+        return f"${name}"
+    escaped = name.replace("\\", "\\\\").replace('"', '\\"')
+    return f'[["{escaped}"]]'
+
+
+def _format_r_path(path: PathTuple) -> str:
+    cursor = ".data"
+    for segment in path:
+        if segment.kind == "key":
+            cursor += _format_r_key(str(segment.value))
+        elif segment.kind == "index":
+            base = 0 if segment.base is None else segment.base
+            index_value = int(segment.value) - base + 1
+            cursor += f"[[{index_value}]]"
+    return cursor
+
+
+def _format_glue_path(path: PathTuple) -> str:
+    return f"{{{_format_r_path(path)}}}"
+
+
+def _extend_key(path: PathTuple, key: object) -> PathTuple:
+    return path + (_PathSegment("key", str(key)),)
+
+
+def _extend_index(path: PathTuple, index: int, *, base: int = 0) -> PathTuple:
+    return path + (_PathSegment("index", index, base),)
 
 
 def _stringify_scalar(value: object) -> str:
@@ -182,7 +238,7 @@ def _structured_to_blocks(
     data: object,
     source: Path,
     *,
-    prefix: str = "",
+    path: PathTuple = (),
     limit: int = _STRUCTURED_BLOCK_LIMIT,
 ) -> Tuple[List[Block], bool]:
     blocks: List[Block] = []
@@ -196,11 +252,13 @@ def _structured_to_blocks(
         blocks.append(block)
         return True
 
-    def _visit(value: object, path: str) -> None:
+    def _visit(value: object, cursor: PathTuple) -> None:
         if truncated:
             return
 
-        label = _format_path(path)
+        label = _format_label(cursor)
+        r_path = _format_r_path(cursor)
+        glue_path = _format_glue_path(cursor)
 
         if isinstance(value, Mapping):
             items = list(value.items())
@@ -210,6 +268,8 @@ def _structured_to_blocks(
                 "type": "object",
                 "size": len(items),
                 "keys": [str(key) for key, _ in items[:20]],
+                "path_r": r_path,
+                "path_glue": glue_path,
             }
             if not _add(
                 Block(
@@ -222,7 +282,7 @@ def _structured_to_blocks(
             ):
                 return
             for key, child in items:
-                child_path = f"{path}.{key}" if path else str(key)
+                child_path = _extend_key(cursor, key)
                 _visit(child, child_path)
             return
 
@@ -234,6 +294,8 @@ def _structured_to_blocks(
                 "type": "array",
                 "size": len(seq),
                 "sample_types": sample_types,
+                "path_r": r_path,
+                "path_glue": glue_path,
             }
             if not _add(
                 Block(
@@ -246,16 +308,18 @@ def _structured_to_blocks(
             ):
                 return
             for idx, child in enumerate(seq):
-                child_path = f"{path}[{idx}]" if path else f"[{idx}]"
+                child_path = _extend_index(cursor, idx, base=0)
                 _visit(child, child_path)
             return
 
         value_text = _stringify_scalar(value)
-        text = value_text if not path else f"{label}: {value_text}"
+        text = value_text if not cursor else f"{label}: {value_text}"
         attrs = {
             "key": label,
             "value": value_text,
             "value_type": type(value).__name__,
+            "path_r": r_path,
+            "path_glue": glue_path,
         }
         _add(
             Block(
@@ -267,7 +331,7 @@ def _structured_to_blocks(
             )
         )
 
-    _visit(data, prefix)
+    _visit(data, path)
     return blocks, truncated
 
 
@@ -522,9 +586,16 @@ def parse_jsonl(path: str | Path) -> List[Block]:
                 break
             continue
 
-        label = f"record[{idx}]"
+        record_path = _extend_index(_extend_key((), "record"), idx, base=1)
+        label = _format_label(record_path)
         summary_type = type(record).__name__
-        summary_attrs = {"key": label, "type": summary_type, "line": idx}
+        summary_attrs = {
+            "key": label,
+            "type": summary_type,
+            "line": idx,
+            "path_r": _format_r_path(record_path),
+            "path_glue": _format_glue_path(record_path),
+        }
         if isinstance(record, Mapping):
             summary_attrs["size"] = len(record)
             summary_attrs["keys"] = [str(k) for k in list(record.keys())[:10]]
@@ -545,7 +616,7 @@ def parse_jsonl(path: str | Path) -> List[Block]:
         if remaining <= 0:
             truncated = True
             break
-        sub_blocks, sub_truncated = _structured_to_blocks(record, source, prefix=label, limit=remaining)
+        sub_blocks, sub_truncated = _structured_to_blocks(record, source, path=record_path, limit=remaining)
         blocks.extend(sub_blocks)
         if sub_truncated:
             truncated = True
@@ -604,12 +675,16 @@ def parse_yaml(path: str | Path) -> List[Block]:
         if len(blocks) >= budget:
             truncated = True
             break
-        prefix = "" if len(docs) == 1 else f"doc[{idx}]"
         remaining = budget - len(blocks)
         if remaining <= 0:
             truncated = True
             break
-        sub_blocks, sub_truncated = _structured_to_blocks(doc, source, prefix=prefix, limit=remaining)
+        doc_path: PathTuple
+        if len(docs) == 1:
+            doc_path = ()
+        else:
+            doc_path = _extend_index(_extend_key((), "doc"), idx, base=0)
+        sub_blocks, sub_truncated = _structured_to_blocks(doc, source, path=doc_path, limit=remaining)
         blocks.extend(sub_blocks)
         if sub_truncated:
             truncated = True
@@ -660,143 +735,6 @@ def parse_toml(path: str | Path) -> List[Block]:
                 confidence=0.4,
             )
         )
-    return blocks
-
-
-def parse_eml(path: str | Path) -> List[Block]:
-    source = Path(path)
-    data = source.read_bytes()
-    blocks: List[Block] = []
-    try:
-        message = BytesParser(policy=policy.default).parsebytes(data)
-    except Exception:
-        return [_new_block("other", data.decode("utf-8", errors="ignore"), source, confidence=0.2)]
-
-    header_attrs = {
-        "subject": message.get("subject", ""),
-        "from": message.get("from", ""),
-        "to": message.get("to", ""),
-        "cc": message.get("cc", ""),
-        "date": message.get("date", ""),
-    }
-    header_text = "\n".join(
-        [f"Subject: {header_attrs['subject']}", f"From: {header_attrs['from']}", f"To: {header_attrs['to']}"]
-    ).strip()
-    blocks.append(
-        Block(
-            type="meta",
-            text=header_text,
-            attrs={k: v for k, v in header_attrs.items() if v},
-            source=str(source),
-            confidence=0.85,
-        )
-    )
-
-    text_parts: List[str] = []
-    html_fallback: List[str] = []
-    attachments: List[Dict[str, object]] = []
-    for part in message.walk():
-        if part.is_multipart():
-            continue
-        filename = part.get_filename()
-        content_type = part.get_content_type()
-        payload = part.get_payload(decode=True) or b""
-        if filename:
-            attachments.append(
-                {
-                    "filename": filename,
-                    "content_type": content_type,
-                    "size": len(payload),
-                }
-            )
-            continue
-        if content_type.startswith("text/"):
-            charset = part.get_content_charset() or "utf-8"
-            try:
-                decoded = payload.decode(charset, errors="ignore")
-            except LookupError:
-                decoded = payload.decode("utf-8", errors="ignore")
-            if content_type == "text/plain":
-                text_parts.append(decoded)
-            else:
-                html_fallback.append(decoded)
-
-    if not text_parts and html_fallback:
-        for html in html_fallback:
-            cleaned = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
-            if cleaned:
-                text_parts.append(cleaned)
-
-    for part in text_parts:
-        for chunk in _iter_refined_chunks(part):
-            blocks.append(_block_from_chunk(chunk, source))
-
-    for attachment in attachments[:10]:
-        blocks.append(
-            Block(
-                type="attachment",
-                text=attachment.get("filename") or attachment.get("content_type", "attachment"),
-                attrs=attachment,
-                source=str(source),
-                confidence=0.4,
-            )
-        )
-
-    return blocks or [_new_block("other", "", source, confidence=0.2)]
-
-
-def parse_ics(path: str | Path) -> List[Block]:
-    source = Path(path)
-    raw_lines = source.read_text(encoding="utf-8", errors="ignore").splitlines()
-    unfolded: List[str] = []
-    for line in raw_lines:
-        if line.startswith((" ", "\t")) and unfolded:
-            unfolded[-1] += line.strip()
-        else:
-            unfolded.append(line)
-
-    events: List[Dict[str, str]] = []
-    current: Dict[str, str] = {}
-    for line in unfolded:
-        upper = line.upper()
-        if upper == "BEGIN:VEVENT":
-            current = {}
-            continue
-        if upper == "END:VEVENT":
-            if current:
-                events.append(current)
-            current = {}
-            continue
-        if ":" in line:
-            key, value = line.split(":", 1)
-            current[key.strip().upper()] = value.strip()
-
-    blocks: List[Block] = []
-    for event in events:
-        summary = event.get("SUMMARY", "Event")
-        description_lines = [summary]
-        if "DTSTART" in event:
-            description_lines.append(f"Start: {event['DTSTART']}")
-        if "DTEND" in event:
-            description_lines.append(f"End: {event['DTEND']}")
-        if "LOCATION" in event:
-            description_lines.append(f"Location: {event['LOCATION']}")
-        if "DESCRIPTION" in event:
-            description_lines.append(event["DESCRIPTION"])
-        blocks.append(
-            Block(
-                type="event",
-                text="\n".join(description_lines),
-                attrs={k.lower(): v for k, v in event.items()},
-                source=str(source),
-                confidence=0.75,
-            )
-        )
-
-    if not blocks:
-        text = "\n".join(unfolded)
-        blocks.append(_new_block("other", text, source, confidence=0.3))
-
     return blocks
 
 

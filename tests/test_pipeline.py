@@ -215,6 +215,12 @@ def test_convert_json_extracts_nested_keys(tmp_path: Path) -> None:
     assert "service.host" in kv_keys
     assert "service.ports[0]" in kv_keys
     assert any(block.attrs.get("type") == "array" for block in document.blocks if block.type == "metadata")
+    host_block = next(block for block in document.blocks if block.attrs.get("key") == "service.host")
+    assert host_block.attrs["path_r"] == ".data$service$host"
+    assert host_block.attrs["path_glue"] == "{.data$service$host}"
+    port_block = next(block for block in document.blocks if block.attrs.get("key") == "service.ports[0]")
+    assert port_block.attrs["path_r"] == ".data$service$ports[[1]]"
+    assert port_block.attrs["path_glue"] == "{.data$service$ports[[1]]}"
 
 
 def test_convert_yaml_emits_summary_and_kv(tmp_path: Path) -> None:
@@ -275,6 +281,12 @@ def test_convert_jsonl_breaks_into_records(tmp_path: Path) -> None:
     kv_keys = {block.attrs.get("key") for block in document.blocks if block.type == "kv"}
     assert "record[1].id" in kv_keys
     assert any(block.attrs.get("type") == "object" for block in document.blocks if block.attrs.get("key") == "record[1]")
+    record_summary = next(block for block in document.blocks if block.attrs.get("key") == "record[1]")
+    assert record_summary.attrs["path_r"] == ".data$record[[1]]"
+    assert record_summary.attrs["path_glue"] == "{.data$record[[1]]}"
+    record_id = next(block for block in document.blocks if block.attrs.get("key") == "record[1].id")
+    assert record_id.attrs["path_r"] == ".data$record[[1]]$id"
+    assert record_id.attrs["path_glue"] == "{.data$record[[1]]$id}"
 
 
 def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:
