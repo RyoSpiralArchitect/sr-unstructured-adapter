@@ -78,11 +78,22 @@ class DocumentMeta(BaseModel):
     source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
     title: Optional[str] = None
     mime_type: Optional[str] = None
+    type: Optional[str] = None
     checksum: Optional[str] = None
     size_bytes: Optional[int] = None
     page_count: Optional[int] = None
     languages: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def __getitem__(self, key: str) -> Any:
+        data = self.model_dump()
+        if key not in data:
+            raise KeyError(key)
+        return data[key]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        data = self.model_dump()
+        return data.get(key, default)
 
 
 class Document(BaseModel):

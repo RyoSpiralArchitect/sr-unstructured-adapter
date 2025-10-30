@@ -10,6 +10,7 @@ from openpyxl import Workbook
 from pypdf import PdfWriter
 
 from sr_adapter.pipeline import convert
+from sr_adapter.parsers import parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
 from sr_adapter.sniff import detect_type
@@ -109,4 +110,15 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     payload = json.loads(lines[0])
     assert payload["meta"]["type"] == "text"
     assert any(block["type"] == "kv" for block in payload["blocks"])
+
+
+def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:
+    body = " ".join(["Sentence number %d." % i for i in range(1, 80)])
+    path = tmp_path / "long.txt"
+    path.write_text(body, encoding="utf-8")
+
+    blocks = parse_txt(path)
+
+    assert len(blocks) > 1
+    assert all(len(block.text) <= 600 for block in blocks)
 

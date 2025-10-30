@@ -5,14 +5,28 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
+import xml.etree.ElementTree as ET
+from email import policy
+from email.parser import BytesParser
 from pathlib import Path
 from typing import Dict, Tuple, List, Optional
 
 # ---- soft deps are optional; we import lazily inside funcs ----
 
 _TEXT_EXTENSIONS = {
-    ".csv", ".log", ".md", ".rst", ".text", ".txt", ".yaml", ".yml", ".toml",
-    ".html", ".htm"
+    ".csv",
+    ".log",
+    ".md",
+    ".rst",
+    ".text",
+    ".txt",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".html",
+    ".htm",
+    ".xml",
 }
 
 _JSONL_MIMES = {"application/x-ndjson", "application/jsonl", "application/ndjson"}
@@ -83,6 +97,55 @@ def _binary_preview(blob: bytes) -> Dict[str, object]:
 def _sha256(b: bytes) -> str:
     import hashlib
     return hashlib.sha256(b).hexdigest()
+
+
+def _rtf_to_text(blob: str) -> str:
+    """Very small RTF to text converter without external deps."""
+
+    out: List[str] = []
+    i = 0
+    length = len(blob)
+    while i < length:
+        ch = blob[i]
+        if ch == "\\":
+            i += 1
+            if i >= length:
+                break
+            control = blob[i]
+            if control == "'" and i + 2 < length:
+                hex_part = blob[i + 1 : i + 3]
+                try:
+                    out.append(bytes.fromhex(hex_part).decode("latin-1"))
+                except Exception:
+                    pass
+                i += 3
+                continue
+            while i < length and blob[i].isalpha():
+                i += 1
+            if i < length and blob[i] in "-0123456789":
+                i += 1
+                while i < length and blob[i].isdigit():
+                    i += 1
+            if i < length and blob[i] == " ":
+                i += 1
+            continue
+        if ch in "{}":
+            i += 1
+            continue
+        out.append(ch)
+        i += 1
+    text = "".join(out)
+    return _normalize_newlines(text)
+
+
+def _pretty_xml_text(root: ET.Element) -> str:
+    try:
+        from xml.dom import minidom
+
+        pretty = minidom.parseString(ET.tostring(root, encoding="utf-8")).toprettyxml(indent="  ")
+        return "\n".join(line for line in pretty.splitlines() if line.strip())
+    except Exception:
+        return _normalize_newlines(ET.tostring(root, encoding="unicode"))
 
 
 # ------------------------- readers -------------------------
@@ -157,6 +220,29 @@ def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
     except Exception:
         meta["html_parsed"] = False
         return txt, meta
+
+
+def _read_xml(path: Path) -> Tuple[str, Dict[str, object]]:
+    meta: Dict[str, object] = {"xml_valid": False}
+    try:
+        tree = ET.parse(str(path))
+        root = tree.getroot()
+        meta.update(
+            {
+                "xml_valid": True,
+                "xml_root": root.tag,
+                "xml_child_count": sum(1 for _ in root),
+                "xml_element_count": sum(1 for _ in root.iter()),
+            }
+        )
+        pretty = _pretty_xml_text(root)
+        return pretty, meta
+    except ET.ParseError as exc:
+        meta["xml_error"] = str(exc)
+    except Exception as exc:
+        meta["xml_error"] = f"{type(exc).__name__}: {exc}"
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    return _normalize_newlines(raw), meta
 
 
 def _read_pdf(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -236,6 +322,79 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
         return "", meta
 
 
+def _read_rtf(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw = path.read_text(encoding="latin-1", errors="ignore")
+    text = _rtf_to_text(raw)
+    meta: Dict[str, object] = {"rtf_characters": len(text)}
+    return text, meta
+
+
+def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
+    data = path.read_bytes()
+    meta: Dict[str, object] = {}
+    parser = BytesParser(policy=policy.default)
+    try:
+        message = parser.parsebytes(data)
+    except Exception as exc:
+        meta["email_parsed"] = False
+        meta["email_error"] = str(exc)
+        return "", meta
+
+    meta.update(
+        {
+            "email_parsed": True,
+            "email_subject": message.get("subject", ""),
+            "email_from": message.get("from", ""),
+            "email_to": message.get("to", ""),
+            "email_date": message.get("date", ""),
+        }
+    )
+
+    text_parts: List[str] = []
+    html_fallback: List[str] = []
+    attachments: List[Dict[str, object]] = []
+    for part in message.walk():
+        if part.is_multipart():
+            continue
+        filename = part.get_filename() or ""
+        content_type = part.get_content_type()
+        payload = part.get_payload(decode=True) or b""
+        size = len(payload)
+        if content_type.startswith("text/") and not filename:
+            charset = part.get_content_charset() or "utf-8"
+            try:
+                decoded = payload.decode(charset, errors="ignore")
+            except LookupError:
+                decoded = payload.decode("utf-8", errors="ignore")
+            if content_type == "text/plain":
+                text_parts.append(decoded.strip())
+            else:
+                html_fallback.append(decoded)
+        else:
+            attachments.append(
+                {
+                    "filename": filename,
+                    "content_type": content_type,
+                    "size": size,
+                }
+            )
+
+    if not text_parts and html_fallback:
+        stripped = []
+        for html in html_fallback:
+            cleaned = re.sub(r"<[^>]+>", " ", html)
+            cleaned = re.sub(r"\s+", " ", cleaned)
+            stripped.append(cleaned.strip())
+        text_parts = stripped
+
+    meta["email_attachment_count"] = len(attachments)
+    if attachments:
+        meta["email_attachments"] = attachments[:10]
+    meta["email_body_parts"] = len(text_parts)
+    body = "\n\n".join(part for part in text_parts if part)
+    return _normalize_newlines(body), meta
+
+
 def _read_image_meta(path: Path) -> Tuple[str, Dict[str, object]]:
     """No OCR by default; if Pillow available, report size/EXIF."""
     meta: Dict[str, object] = {}
@@ -290,12 +449,18 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_json(path)
     if mime in _JSONL_MIMES or suffix in {".jsonl", ".ndjson"}:
         return _read_jsonl(path)
+    if mime in {"application/xml", "text/xml"} or suffix == ".xml":
+        return _read_xml(path)
 
     # HTML / Markdown / Plain text
     if mime in {"text/html"} or suffix in {".html", ".htm"}:
         return _read_html(path)
     if suffix in {".md", ".markdown"}:
         return _read_markdown(path)
+    if mime in {"text/rtf"} or suffix == ".rtf":
+        return _read_rtf(path)
+    if mime == "message/rfc822" or suffix == ".eml":
+        return _read_eml(path)
     if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:
         return _read_plain_text(path)
 
