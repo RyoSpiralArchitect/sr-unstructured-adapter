@@ -44,6 +44,7 @@ def _guess_mime(path: Path) -> str:
     if suf in {".docx"}:             return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     if suf in {".pptx"}:             return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     if suf in {".xlsx"}:             return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if suf in {".ics"}:              return "text/calendar"
     if suf in {".pdf"}:              return "application/pdf"
     if suf in {".html", ".htm"}:     return "text/html"
     # fallback to stdlib

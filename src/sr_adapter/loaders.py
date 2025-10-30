@@ -12,18 +12,26 @@ from email.parser import BytesParser
 from pathlib import Path
 from typing import Dict, Tuple, List, Optional
 
+import yaml
+
 # ---- soft deps are optional; we import lazily inside funcs ----
 
 _TEXT_EXTENSIONS = {
     ".csv",
+    ".cfg",
+    ".conf",
+    ".ini",
     ".log",
     ".md",
+    ".properties",
     ".rst",
     ".text",
     ".txt",
     ".yaml",
     ".yml",
     ".toml",
+    ".jsonl",
+    ".ndjson",
     ".html",
     ".htm",
     ".xml",
@@ -182,6 +190,48 @@ def _read_jsonl(path: Path) -> Tuple[str, Dict[str, object]]:
     meta.update({"jsonl_lines": len(lines), "jsonl_valid_count": valid, "jsonl_key_samples": samples})
     # そのまま返す（改変せず）
     return "\n".join(lines), meta
+
+
+def _read_yaml(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw, meta = _read_text_best_effort(path)
+    text = _normalize_newlines(raw)
+    try:
+        docs = list(yaml.safe_load_all(text))
+        meta.update(
+            {
+                "yaml_documents": len(docs),
+                "yaml_sample_types": [type(doc).__name__ for doc in docs[:5]],
+            }
+        )
+        if docs and isinstance(docs[0], dict):
+            meta["yaml_root_keys"] = sorted(map(str, docs[0].keys()))
+    except Exception as exc:
+        meta["yaml_error"] = str(exc)
+    return text, meta
+
+
+def _read_toml(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    text = _normalize_newlines(raw)
+    meta: Dict[str, object] = {"toml_valid": False}
+    try:
+        try:
+            import tomllib  # type: ignore[attr-defined]
+        except ModuleNotFoundError:  # pragma: no cover - Python <3.11 fallback
+            import tomli as tomllib  # type: ignore
+    except ModuleNotFoundError:
+        meta["toml_error"] = "tomllib not available"
+        return text, meta
+
+    try:
+        data = tomllib.loads(text)
+        meta["toml_valid"] = True
+        if isinstance(data, dict):
+            meta["toml_root_keys"] = sorted(map(str, data.keys()))
+            meta["toml_table_count"] = sum(1 for value in data.values() if isinstance(value, dict))
+    except Exception as exc:
+        meta["toml_error"] = str(exc)
+    return text, meta
 
 
 def _read_plain_text(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -395,6 +445,21 @@ def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
     return _normalize_newlines(body), meta
 
 
+def _read_ics(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw, meta = _read_text_best_effort(path)
+    text = _normalize_newlines(raw)
+    events = text.upper().split("BEGIN:VEVENT")
+    count = max(0, len(events) - 1)
+    meta.update(
+        {
+            "ics_events": count,
+            "ics_has_timezone": "TZID=" in text,
+            "ics_has_alarms": "BEGIN:VALARM" in text,
+        }
+    )
+    return text, meta
+
+
 def _read_image_meta(path: Path) -> Tuple[str, Dict[str, object]]:
     """No OCR by default; if Pillow available, report size/EXIF."""
     meta: Dict[str, object] = {}
@@ -449,6 +514,10 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_json(path)
     if mime in _JSONL_MIMES or suffix in {".jsonl", ".ndjson"}:
         return _read_jsonl(path)
+    if mime in {"application/x-yaml", "text/yaml", "application/yaml"} or suffix in {".yaml", ".yml"}:
+        return _read_yaml(path)
+    if mime in {"application/toml", "application/x-toml"} or suffix == ".toml":
+        return _read_toml(path)
     if mime in {"application/xml", "text/xml"} or suffix == ".xml":
         return _read_xml(path)
 
@@ -461,6 +530,8 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_rtf(path)
     if mime == "message/rfc822" or suffix == ".eml":
         return _read_eml(path)
+    if mime == "text/calendar" or suffix == ".ics":
+        return _read_ics(path)
     if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:
         return _read_plain_text(path)
 

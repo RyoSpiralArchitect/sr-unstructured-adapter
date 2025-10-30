@@ -22,14 +22,25 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".csv": "csv",
     ".tsv": "csv",
     ".json": "json",
+    ".jsonl": "jsonl",
+    ".ndjson": "jsonl",
     ".html": "html",
     ".htm": "html",
     ".pdf": "pdf",
     ".docx": "docx",
     ".xlsx": "xlsx",
+    ".pptx": "pptx",
+    ".ini": "ini",
+    ".cfg": "ini",
+    ".conf": "ini",
+    ".properties": "ini",
     ".xml": "text",
     ".rtf": "text",
-    ".eml": "text",
+    ".yaml": "yaml",
+    ".yml": "yaml",
+    ".toml": "toml",
+    ".eml": "eml",
+    ".ics": "ics",
 }
 
 
@@ -57,6 +68,8 @@ def detect_type(path: str | Path) -> str:
             return "docx"
         if suffix == ".xlsx":
             return "xlsx"
+        if suffix == ".pptx":
+            return "pptx"
 
     suffix = path.suffix.lower()
     if suffix in _EXTENSION_MAP:
