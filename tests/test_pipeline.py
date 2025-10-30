@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from docx import Document as DocxDocument
@@ -44,6 +45,39 @@ def _create_xlsx(path: Path) -> None:
     wb.save(str(path))
 
 
+def _create_pptx(path: Path) -> None:
+    slide_xml = """<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+    <p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"
+           xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"
+           xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">
+      <p:cSld>
+        <p:spTree>
+          <p:sp>
+            <p:txBody>
+              <a:bodyPr/>
+              <a:lstStyle/>
+              <a:p>
+                <a:r><a:t>Deck Title</a:t></a:r>
+              </a:p>
+            </p:txBody>
+          </p:sp>
+          <p:sp>
+            <p:txBody>
+              <a:bodyPr/>
+              <a:lstStyle/>
+              <a:p>
+                <a:r><a:t>Intro line</a:t></a:r>
+              </a:p>
+            </p:txBody>
+          </p:sp>
+        </p:spTree>
+      </p:cSld>
+    </p:sld>
+    """
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("ppt/slides/slide1.xml", slide_xml)
+
+
 def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     txt = tmp_path / "sample.txt"
     txt.write_text("plain", encoding="utf-8")
@@ -60,11 +94,15 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     xlsx = tmp_path / "sample.xlsx"
     _create_xlsx(xlsx)
 
+    pptx = tmp_path / "sample.pptx"
+    _create_pptx(pptx)
+
     assert detect_type(txt) == "text"
     assert detect_type(md) == "md"
     assert detect_type(pdf) == "pdf"
     assert detect_type(docx) == "docx"
     assert detect_type(xlsx) == "xlsx"
+    assert detect_type(pptx) == "pptx"
 
 
 def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
@@ -75,7 +113,7 @@ def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
     )
 
     document = convert(log, recipe="call_log")
-    assert document.meta["type"] == "text"
+    assert document.meta["type"] == "log"
     assert len(document.blocks) >= 3
     assert document.blocks[0].type == "meta"
     assert document.blocks[1].type == "header"
@@ -107,6 +145,15 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     lines = out.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     payload = json.loads(lines[0])
-    assert payload["meta"]["type"] == "text"
+    assert payload["meta"]["type"] == "log"
     assert any(block["type"] == "kv" for block in payload["blocks"])
+
+
+def test_convert_pptx_emits_slide_blocks(tmp_path: Path) -> None:
+    pptx = tmp_path / "deck.pptx"
+    _create_pptx(pptx)
+
+    document = convert(pptx, recipe="default")
+    assert document.meta["type"] == "pptx"
+    assert any(block.type == "slide" for block in document.blocks)
 

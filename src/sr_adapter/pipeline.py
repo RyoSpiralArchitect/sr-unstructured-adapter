@@ -10,12 +10,17 @@ from .normalize import normalize_blocks
 from .parsers import (
     parse_csv,
     parse_docx,
+    parse_email,
     parse_html,
+    parse_image,
     parse_json,
+    parse_log,
     parse_md,
     parse_pdf,
+    parse_pptx,
     parse_txt,
     parse_xlsx,
+    parse_zip,
 )
 from .recipe import apply_recipe
 from .schema import Block, Document
@@ -25,12 +30,17 @@ from .sniff import detect_type
 PARSERS: Dict[str, callable] = {
     "text": parse_txt,
     "md": parse_md,
+    "log": parse_log,
     "html": parse_html,
     "csv": parse_csv,
     "json": parse_json,
     "pdf": parse_pdf,
     "docx": parse_docx,
+    "pptx": parse_pptx,
     "xlsx": parse_xlsx,
+    "email": parse_email,
+    "zip": parse_zip,
+    "image": parse_image,
 }
 
 

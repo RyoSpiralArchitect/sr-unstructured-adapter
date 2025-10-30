@@ -10,6 +10,8 @@ from typing import Iterable, Iterator, List
 from .loaders import read_file_contents
 from .metadata import collect_metadata
 from .models import Payload
+from .pipeline import convert
+from .unify import build_unified_payload
 
 mimetypes.init()
 
@@ -38,7 +40,9 @@ def build_payload(path: str | Path) -> Payload:
 def to_unified_payload(path: str | Path) -> dict:
     """Return a JSON-serialisable payload for *path*."""
 
-    return build_payload(path).to_dict()
+    payload = build_payload(path)
+    document = convert(path, recipe="default", llm_ok=False)
+    return build_unified_payload(payload, document)
 
 
 def stream_payloads(paths: Iterable[str | Path]) -> Iterator[Payload]:
