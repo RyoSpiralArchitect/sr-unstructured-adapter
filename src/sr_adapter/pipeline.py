@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """High level conversion pipeline wiring parsers and writers together."""
 
 from __future__ import annotations
@@ -12,12 +13,20 @@ from .normalize import normalize_blocks
 from .parsers import (
     parse_csv,
     parse_docx,
+    parse_eml,
     parse_html,
+    parse_image,
+    parse_ics,
+    parse_ini,
     parse_json,
+    parse_jsonl,
     parse_md,
+    parse_pptx,
     parse_pdf,
+    parse_toml,
     parse_txt,
     parse_xlsx,
+    parse_yaml,
 )
 from .recipe import apply_recipe
 from .schema import Block, Document
@@ -39,9 +48,27 @@ class ParserRegistry:
             "text/html": "html",
             "text/csv": "csv",
             "application/json": "json",
+            "application/ld+json": "json",
+            "application/x-ndjson": "jsonl",
+            "application/jsonl": "jsonl",
+            "application/ndjson": "jsonl",
+            "application/x-yaml": "yaml",
+            "text/yaml": "yaml",
+            "application/yaml": "yaml",
+            "application/toml": "toml",
+            "application/x-toml": "toml",
+            "text/ini": "ini",
+            "text/x-ini": "ini",
+            "application/ini": "ini",
             "application/pdf": "pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+            "image/png": "image",
+            "image/jpeg": "image",
+            "image/tiff": "image",
+            "image/bmp": "image",
+            "image/gif": "image",
+            "image/webp": "image",
         }
 
     def register(self, key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -> None:
@@ -65,9 +92,17 @@ REGISTRY.register("md", parse_md, also=("markdown",))
 REGISTRY.register("html", parse_html)
 REGISTRY.register("csv", parse_csv)
 REGISTRY.register("json", parse_json)
+REGISTRY.register("jsonl", parse_jsonl)
+REGISTRY.register("ini", parse_ini, also=("cfg", "conf", "properties"))
 REGISTRY.register("pdf", parse_pdf)
 REGISTRY.register("docx", parse_docx)
+REGISTRY.register("pptx", parse_pptx)
 REGISTRY.register("xlsx", parse_xlsx)
+REGISTRY.register("image", parse_image, also=("png", "jpg", "jpeg", "tiff", "bmp", "gif", "webp"))
+REGISTRY.register("eml", parse_eml)
+REGISTRY.register("ics", parse_ics)
+REGISTRY.register("yaml", parse_yaml, also=("yml",))
+REGISTRY.register("toml", parse_toml)
 
 # 外部拡張用ヘルパ（プラグイン等から利用）
 def register_parser(key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -> None:

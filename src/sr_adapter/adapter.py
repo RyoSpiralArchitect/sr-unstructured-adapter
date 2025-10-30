@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 """Public interface for building unified payloads from files."""
 
@@ -44,8 +45,15 @@ def _guess_mime(path: Path) -> str:
     if suf in {".docx"}:             return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     if suf in {".pptx"}:             return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     if suf in {".xlsx"}:             return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if suf in {".ics"}:              return "text/calendar"
     if suf in {".pdf"}:              return "application/pdf"
     if suf in {".html", ".htm"}:     return "text/html"
+    if suf in {".png"}:              return "image/png"
+    if suf in {".jpg", ".jpeg"}:    return "image/jpeg"
+    if suf in {".tif", ".tiff"}:    return "image/tiff"
+    if suf in {".bmp"}:              return "image/bmp"
+    if suf in {".gif"}:              return "image/gif"
+    if suf in {".webp"}:             return "image/webp"
     # fallback to stdlib
     mime, _ = mimetypes.guess_type(str(path))
     if mime:

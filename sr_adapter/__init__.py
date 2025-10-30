@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Shim package to expose ``src.sr_adapter`` without installation.
 
 This keeps ``python -m sr_adapter.cli`` working in editable checkouts by
