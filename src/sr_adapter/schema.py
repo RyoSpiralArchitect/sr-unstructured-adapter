@@ -1,9 +1,11 @@
 """Core data structures used across the adapter pipeline (v0.2)."""
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Tuple, Literal
+
 from datetime import datetime
-import hashlib, uuid
+import hashlib
+import uuid
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -47,8 +49,20 @@ class Span(BaseModel):
 
 
 BlockType = Literal[
-    "paragraph", "heading", "title", "list_item",
-    "table", "figure", "code", "footnote", "metadata"
+    "paragraph",
+    "heading",
+    "title",
+    "list_item",
+    "table",
+    "figure",
+    "code",
+    "footnote",
+    "metadata",
+    "header",
+    "list",
+    "kv",
+    "meta",
+    "other",
 ]
 
 
@@ -77,12 +91,16 @@ class DocumentMeta(BaseModel):
     uri: Optional[str] = None
     source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
     title: Optional[str] = None
+    type: Optional[str] = None
     mime_type: Optional[str] = None
     checksum: Optional[str] = None
     size_bytes: Optional[int] = None
     page_count: Optional[int] = None
     languages: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def __getitem__(self, key: str):  # type: ignore[override]
+        return getattr(self, key)
 
 
 class Document(BaseModel):
