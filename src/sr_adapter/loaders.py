@@ -14,6 +14,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+import yaml
+
 # ---- soft deps are optional; we import lazily inside funcs ----
 
 _TEXT_EXTENSIONS = {
