@@ -221,6 +221,10 @@ def test_convert_json_extracts_nested_keys(tmp_path: Path) -> None:
     port_block = next(block for block in document.blocks if block.attrs.get("key") == "service.ports[0]")
     assert port_block.attrs["path_r"] == ".data$service$ports[[1]]"
     assert port_block.attrs["path_glue"] == "{.data$service$ports[[1]]}"
+    service_meta = next(block for block in document.blocks if block.attrs.get("key") == "service")
+    assert service_meta.attrs.get("sample_values") == ["localhost"]
+    ports_meta = next(block for block in document.blocks if block.attrs.get("key") == "service.ports")
+    assert ports_meta.attrs.get("sample_values") == ["80", "443"]
 
 
 def test_convert_yaml_emits_summary_and_kv(tmp_path: Path) -> None:
@@ -242,7 +246,10 @@ def test_convert_yaml_emits_summary_and_kv(tmp_path: Path) -> None:
     assert document.meta["type"] == "yaml"
     kv_keys = {block.attrs.get("key") for block in document.blocks if block.type == "kv"}
     assert "service.host" in kv_keys
-    assert any(block.text.startswith("YAML:") for block in document.blocks if block.type == "metadata")
+    summary_block = next(block for block in document.blocks if block.text.startswith("YAML:"))
+    assert summary_block.attrs["path_r"] == ".data"
+    assert summary_block.attrs["path_glue"] == "{.data}"
+    assert summary_block.attrs["key"] == "<root>"
 
 
 def test_convert_toml_handles_tables(tmp_path: Path) -> None:

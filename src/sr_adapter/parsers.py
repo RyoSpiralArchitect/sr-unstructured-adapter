@@ -262,7 +262,6 @@ def _structured_to_blocks(
 
         if isinstance(value, Mapping):
             items = list(value.items())
-            items.sort(key=lambda item: str(item[0]))
             attrs = {
                 "key": label,
                 "type": "object",
@@ -271,6 +270,17 @@ def _structured_to_blocks(
                 "path_r": r_path,
                 "path_glue": glue_path,
             }
+            sample_values = [
+                _stringify_scalar(child)
+                for _, child in items
+                if not isinstance(child, Mapping)
+                and not (
+                    isinstance(child, Sequence)
+                    and not isinstance(child, (str, bytes, bytearray))
+                )
+            ][:5]
+            if sample_values:
+                attrs["sample_values"] = sample_values
             if not _add(
                 Block(
                     type="metadata",
@@ -297,6 +307,17 @@ def _structured_to_blocks(
                 "path_r": r_path,
                 "path_glue": glue_path,
             }
+            sample_values = [
+                _stringify_scalar(item)
+                for item in seq
+                if not isinstance(item, Mapping)
+                and not (
+                    isinstance(item, Sequence)
+                    and not isinstance(item, (str, bytes, bytearray))
+                )
+            ][:5]
+            if sample_values:
+                attrs["sample_values"] = sample_values
             if not _add(
                 Block(
                     type="metadata",
@@ -548,7 +569,12 @@ def parse_json(path: str | Path) -> List[Block]:
             Block(
                 type="metadata",
                 text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
-                attrs={"truncated": True},
+                attrs={
+                    "truncated": True,
+                    "key": _format_label(()),
+                    "path_r": _format_r_path(()),
+                    "path_glue": _format_glue_path(()),
+                },
                 source=str(source),
                 confidence=0.4,
             )
@@ -629,7 +655,12 @@ def parse_jsonl(path: str | Path) -> List[Block]:
             Block(
                 type="metadata",
                 text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
-                attrs={"truncated": True},
+                attrs={
+                    "truncated": True,
+                    "key": _format_label(()),
+                    "path_r": _format_r_path(()),
+                    "path_glue": _format_glue_path(()),
+                },
                 source=str(source),
                 confidence=0.4,
             )
@@ -665,7 +696,13 @@ def parse_yaml(path: str | Path) -> List[Block]:
         Block(
             type="metadata",
             text=f"YAML: {len(docs)} document(s)",
-            attrs={"documents": len(docs), "sample_types": sample_types},
+            attrs={
+                "key": _format_label(()),
+                "documents": len(docs),
+                "sample_types": sample_types,
+                "path_r": _format_r_path(()),
+                "path_glue": _format_glue_path(()),
+            },
             source=str(source),
             confidence=0.6,
         )
@@ -697,7 +734,12 @@ def parse_yaml(path: str | Path) -> List[Block]:
             Block(
                 type="metadata",
                 text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
-                attrs={"truncated": True},
+                attrs={
+                    "truncated": True,
+                    "key": _format_label(()),
+                    "path_r": _format_r_path(()),
+                    "path_glue": _format_glue_path(()),
+                },
                 source=str(source),
                 confidence=0.4,
             )
@@ -730,7 +772,12 @@ def parse_toml(path: str | Path) -> List[Block]:
             Block(
                 type="metadata",
                 text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
-                attrs={"truncated": True},
+                attrs={
+                    "truncated": True,
+                    "key": _format_label(()),
+                    "path_r": _format_r_path(()),
+                    "path_glue": _format_glue_path(()),
+                },
                 source=str(source),
                 confidence=0.4,
             )
