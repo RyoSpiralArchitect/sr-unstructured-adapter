@@ -9,6 +9,7 @@ import json
 import re
 import zipfile
 import xml.etree.ElementTree as ET
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from email import policy
@@ -43,6 +44,8 @@ _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 _INI_ARROW_RE = re.compile(
     r"^(?P<indent>\s*)(?P<key>[^\s:=#;\[\]][^:=#;]*?)\s*(?:=>|->)\s*(?P<value>.+)$"
 )
+_WHITESPACE_TABLE_SPLIT = re.compile(r"\s{2,}")
+_MARKDOWN_DIVIDER = re.compile(r"^:?-{3,}:?$")
 
 
 @dataclass(frozen=True)
@@ -172,9 +175,85 @@ def _shatter_chunk(chunk: str) -> List[str]:
     return [chunk[i : i + _MAX_CHARS_PER_CHUNK] for i in range(0, len(chunk), _MAX_CHARS_PER_CHUNK)]
 
 
+def _split_with_delimiter(line: str, delimiter: str) -> List[str]:
+    try:
+        reader = csv.reader([line], delimiter=delimiter)
+        row = next(reader, [])
+    except Exception:
+        return []
+    cells = [cell.strip() for cell in row]
+    if delimiter == "|":
+        while cells and not cells[0]:
+            cells.pop(0)
+        while cells and not cells[-1]:
+            cells.pop()
+    return cells
+
+
+def _split_with_whitespace(line: str) -> List[str]:
+    parts = [segment.strip() for segment in _WHITESPACE_TABLE_SPLIT.split(line.strip())]
+    return [part for part in parts if part]
+
+
+def _coerce_tabular_rows(lines: Sequence[str]) -> tuple[str, List[List[str]]] | None:
+    cleaned = [line for line in lines if line.strip()]
+    if len(cleaned) < 2:
+        return None
+
+    candidates = [
+        ("comma", lambda line: _split_with_delimiter(line, ",")),
+        ("tab", lambda line: _split_with_delimiter(line, "\t")),
+        ("semicolon", lambda line: _split_with_delimiter(line, ";")),
+        ("pipe", lambda line: _split_with_delimiter(line, "|")),
+        ("whitespace", _split_with_whitespace),
+    ]
+
+    best_label = ""
+    best_rows: List[List[str]] = []
+    best_score: tuple[int, int] | None = None
+
+    for label, splitter in candidates:
+        rows = [splitter(line) for line in cleaned]
+        usable = [row for row in rows if len(row) >= 2]
+        if len(usable) < 2:
+            continue
+
+        width_counts = Counter(len(row) for row in usable)
+        top_width, freq = width_counts.most_common(1)[0]
+        consistent = [row[:top_width] for row in usable if len(row) >= top_width]
+
+        filtered = [
+            row
+            for row in consistent
+            if not all(_MARKDOWN_DIVIDER.match(cell) for cell in row)
+        ]
+        if len(filtered) < 2:
+            continue
+
+        coverage = len(filtered)
+        if coverage < max(2, len(cleaned) - 1):
+            continue
+
+        score = (coverage, top_width)
+        if not best_score or score > best_score:
+            best_score = score
+            best_label = label
+            best_rows = filtered
+
+    if not best_rows:
+        return None
+
+    width = max(len(row) for row in best_rows)
+    normalized = [row[:width] + [""] * (width - len(row)) for row in best_rows]
+    return best_label, normalized
+
+
 def _iter_refined_chunks(text: str) -> Iterable[str]:
     for chunk in _split_paragraphs(text):
-        for piece in _explode_structured_chunk(chunk):
+        lines = [line for line in chunk.splitlines() if line.strip()]
+        table_hint = _coerce_tabular_rows(lines) if len(lines) >= 2 else None
+        pieces = _explode_structured_chunk(chunk) if table_hint is None else [chunk]
+        for piece in pieces:
             for refined in _shatter_chunk(piece):
                 cleaned = refined.strip()
                 if cleaned:
@@ -543,7 +622,30 @@ def _structured_to_blocks(
 def parse_txt(path: str | Path) -> List[Block]:
     source = Path(path)
     text = source.read_text(encoding="utf-8", errors="ignore")
-    blocks = [_block_from_chunk(chunk, source) for chunk in _iter_refined_chunks(text)]
+    blocks: List[Block] = []
+    for chunk in _iter_refined_chunks(text):
+        if "\n" in chunk:
+            lines = [line for line in chunk.splitlines() if line.strip()]
+            result = _coerce_tabular_rows(lines)
+            if result is not None:
+                delimiter, rows = result
+                blocks.append(
+                    Block(
+                        type="table",
+                        text="\n".join([", ".join(row) for row in rows]),
+                        attrs={
+                            "rows": json.dumps(rows, ensure_ascii=False),
+                            "delimiter": delimiter,
+                            "structured_from": "text_table",
+                            "row_count": len(rows),
+                            "column_count": len(rows[0]) if rows else 0,
+                        },
+                        source=str(source),
+                        confidence=0.78 if delimiter != "whitespace" else 0.74,
+                    )
+                )
+                continue
+        blocks.append(_block_from_chunk(chunk, source))
     return blocks or [_new_block("other", text, source, confidence=0.3)]
 
 

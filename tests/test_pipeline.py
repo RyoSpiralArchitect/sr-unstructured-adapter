@@ -149,6 +149,52 @@ def test_parse_txt_extracts_kv_and_log(tmp_path: Path) -> None:
     assert name_block.attrs["value"] == "Alice"
 
 
+def test_parse_txt_detects_pipe_table(tmp_path: Path) -> None:
+    source = tmp_path / "table.txt"
+    source.write_text(
+        "\n".join(
+            [
+                "| Name | Age | City |",
+                "| --- | --- | --- |",
+                "| Alice | 30 | Tokyo |",
+                "| Bob | 41 | Osaka |",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_txt(source)
+
+    table_block = next(block for block in blocks if block.type == "table")
+    rows = json.loads(table_block.attrs["rows"])
+    assert rows[0] == ["Name", "Age", "City"]
+    assert rows[1][0] == "Alice"
+    assert table_block.attrs["delimiter"] == "pipe"
+    assert table_block.attrs["row_count"] == 3
+
+
+def test_parse_txt_detects_whitespace_table(tmp_path: Path) -> None:
+    source = tmp_path / "whitespace_table.txt"
+    source.write_text(
+        "\n".join(
+            [
+                "Name    Score    Notes",
+                "Alice   98       OK",
+                "Bob     87       Needs follow-up",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_txt(source)
+
+    table_block = next(block for block in blocks if block.type == "table")
+    rows = json.loads(table_block.attrs["rows"])
+    assert len(rows) == 3
+    assert rows[2][2] == "Needs follow-up"
+    assert table_block.attrs["delimiter"] == "whitespace"
+
+
 def test_parse_ini_coerces_space_pairs(tmp_path: Path) -> None:
     source = tmp_path / "messy.cfg"
     source.write_text(
