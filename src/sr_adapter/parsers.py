@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Collection of lightweight parsers that emit :class:`Block` objects."""
 
 from __future__ import annotations

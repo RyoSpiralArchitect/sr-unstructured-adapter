@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """High level conversion pipeline wiring parsers and writers together."""
 
 from __future__ import annotations

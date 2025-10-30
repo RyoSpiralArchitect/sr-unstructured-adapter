@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Utilities for reading various unstructured file formats."""
 
 from __future__ import annotations
@@ -11,8 +12,6 @@ from email import policy
 from email.parser import BytesParser
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-
-import yaml
 
 import yaml
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Tools for transforming unstructured files into unified payloads."""
 
 from .adapter import build_payload, stream_payloads, to_unified_payload

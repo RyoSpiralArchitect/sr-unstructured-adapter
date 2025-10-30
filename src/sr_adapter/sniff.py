@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Simple file type detection used by the conversion pipeline."""
 
 from __future__ import annotations

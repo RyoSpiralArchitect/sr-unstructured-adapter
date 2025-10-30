@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Core data structures used across the adapter pipeline (v0.2)."""
 
 from __future__ import annotations
