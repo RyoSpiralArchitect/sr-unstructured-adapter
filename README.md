@@ -4,11 +4,11 @@ Turn chaotic files into a predictable JSON payload that downstream tools love.
 
 ## Features
 - Normalises paths, MIME types, and metadata for any file.
-- Extracts clean text and rich metadata from HTML, DOCX, PDF, XLSX, and email sources.
+- Extracts clean text and rich metadata from HTML, DOCX, PDF, RTF, PPTX, XLSX, and email sources.
 - Summarises archives, logs (with severity/timestamp rollups), CSV/TSV sheets, and image scans while surfacing attachment metadata.
 - Pretty prints JSON sources and captures schema hints (top-level keys, type).
 - Captures text statistics such as line, character, and word counts.
-- Generates chat-ready message chunks for LLM ingestion.
+- Generates chat-ready message chunks and Markdown bundles optimised for LLM ingestion.
 - Normalises output into a unified document schema with doc-level confidence,
   provenance, and validation hints.
 - Provides a simple CLI (`python -m sr_adapter.adapter`) that can emit either
@@ -78,6 +78,26 @@ python -m sr_adapter.adapter examples/sample.txt
   "validation": {
     "warnings": [],
     "errors": []
+  },
+  "highlights": {
+    "summary": "First few lines of the document…",
+    "key_points": ["Key date 2025-01-01"]
+  },
+  "llm_ready": {
+    "markdown": "# Document: Text...",
+    "sections": [
+      {
+        "title": "Chunk 1",
+        "text": "First chunk of text..."
+      }
+    ],
+    "chunks": [
+      {
+        "title": "Chunk 1",
+        "text": "First chunk of text...",
+        "approx_tokens": 128
+      }
+    ]
   }
 }
 ```
@@ -105,12 +125,13 @@ python -m sr_adapter.adapter --as-json-lines examples/sample.txt
 
 ## Library usage
 ```python
-from sr_adapter import build_payload, to_llm_messages
+from sr_adapter import build_llm_bundle, build_payload, to_llm_messages, to_unified_payload
 
 payload = build_payload("examples/sample.txt")
-print(payload.to_dict())
-
 messages = to_llm_messages(payload, chunk_size=1000)
+unified = to_unified_payload(payload)
+print(unified["highlights"])
+markdown_bundle = build_llm_bundle(unified)
 ```
 
 ## Development

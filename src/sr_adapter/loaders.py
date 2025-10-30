@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import zipfile
 from email import policy
 from email.parser import BytesParser
@@ -11,6 +12,7 @@ from email.utils import getaddresses, parsedate_to_datetime
 from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Tuple
+from xml.etree import ElementTree as ET
 
 from bs4 import BeautifulSoup
 
@@ -39,6 +41,11 @@ try:  # Pillow is optional – only used for richer image metadata when availabl
 except Exception:  # pragma: no cover - dependency import guard
     Image = None  # type: ignore[assignment]
 
+try:  # striprtf is optional – fall back to heuristic decoding if unavailable.
+    from striprtf.striprtf import rtf_to_text as _rtf_to_text  # type: ignore[attr-defined]
+except Exception:  # pragma: no cover - dependency import guard
+    _rtf_to_text = None  # type: ignore[assignment]
+
 from .logs import summarize_log_text
 
 _TEXT_EXTENSIONS = {
@@ -53,6 +60,7 @@ _TEXT_EXTENSIONS = {
 _HTML_EXTENSIONS = {".html", ".htm", ".xhtml"}
 _DOCX_EXTENSIONS = {".docx"}
 _XLSX_EXTENSIONS = {".xlsx"}
+_PPTX_EXTENSIONS = {".pptx"}
 _EMAIL_EXTENSIONS = {".eml", ".msg"}
 _ZIP_EXTENSIONS = {".zip"}
 _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp"}
@@ -60,6 +68,7 @@ _IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp"}
 _HTML_MIMES = {"text/html", "application/xhtml+xml"}
 _DOCX_MIMES = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
 _XLSX_MIMES = {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+_PPTX_MIMES = {"application/vnd.openxmlformats-officedocument.presentationml.presentation"}
 _EMAIL_MIMES = {"message/rfc822", "application/vnd.ms-outlook"}
 _ZIP_MIMES = {"application/zip"}
 _IMAGE_MIMES = {
@@ -68,6 +77,9 @@ _IMAGE_MIMES = {
     "image/tiff",
     "image/bmp",
 }
+
+_CONTROL_WORD_PATTERN = re.compile(r"\\[a-z]+(?:-?\d+)? ?")
+_HEX_CHAR_PATTERN = re.compile(r"\\'[0-9a-fA-F]{2}")
 
 
 def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -113,6 +125,25 @@ def _read_docx(path: Path) -> Tuple[str, Dict[str, object]]:
         "docx_paragraphs": len(document.paragraphs),
         "docx_tables": len(tables),
     }
+    return text, extra
+
+
+def _decode_rtf(raw: str) -> str:
+    if _rtf_to_text is not None:
+        return _rtf_to_text(raw)
+
+    # Minimal best-effort fallback when striprtf is not installed.
+    text = _HEX_CHAR_PATTERN.sub(lambda match: bytes.fromhex(match.group(0)[2:]).decode("latin-1", errors="ignore"), raw)
+    text = text.replace("\\par", "\n").replace("\\pard", "\n")
+    text = _CONTROL_WORD_PATTERN.sub("", text)
+    text = text.replace("{", "").replace("}", "")
+    return text.strip()
+
+
+def _read_rtf(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    text = _decode_rtf(raw)
+    extra: Dict[str, object] = {"extracted_as_text": bool(text), "rtf_decoder": "striprtf" if _rtf_to_text else "fallback"}
     return text, extra
 
 
@@ -173,6 +204,51 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
         return text, extra
     finally:
         workbook.close()
+
+
+def _read_pptx(path: Path) -> Tuple[str, Dict[str, object]]:
+    with zipfile.ZipFile(path) as archive:
+        slide_members = sorted(
+            member
+            for member in archive.namelist()
+            if member.startswith("ppt/slides/") and member.endswith(".xml")
+        )
+
+        slides: List[str] = []
+        titles: List[str] = []
+        bullet_counts = 0
+
+        for index, member in enumerate(slide_members, start=1):
+            with archive.open(member) as handle:
+                xml_data = handle.read()
+            try:
+                tree = ET.fromstring(xml_data)
+            except Exception:  # pragma: no cover - malformed slide guard
+                continue
+
+            namespace = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+            texts = []
+            for node in tree.findall(".//a:t", namespace):
+                if node.text and node.text.strip():
+                    texts.append(node.text.strip())
+
+            if not texts:
+                continue
+
+            title = texts[0]
+            titles.append(title)
+            bullet_counts += sum(1 for text in texts if text.startswith("•"))
+            slide_body = "\n".join(texts)
+            slides.append(f"# Slide {index}: {title}\n{slide_body}")
+
+    text = "\n\n".join(slides)
+    extra: Dict[str, object] = {
+        "extracted_as_text": bool(text),
+        "pptx_slide_count": len(slide_members),
+        "pptx_slide_titles": titles,
+        "pptx_bullet_points": bullet_counts,
+    }
+    return text, extra
 
 
 def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -379,6 +455,16 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     if mime in _XLSX_MIMES or suffix in _XLSX_EXTENSIONS:
         text, xlsx_extra = _read_xlsx(path)
         extra.update(xlsx_extra)
+        return text, extra
+
+    if mime in _PPTX_MIMES or suffix in _PPTX_EXTENSIONS:
+        text, pptx_extra = _read_pptx(path)
+        extra.update(pptx_extra)
+        return text, extra
+
+    if suffix == ".rtf" or mime == "application/rtf":
+        text, rtf_extra = _read_rtf(path)
+        extra.update(rtf_extra)
         return text, extra
 
     if mime in _EMAIL_MIMES or suffix in _EMAIL_EXTENSIONS:

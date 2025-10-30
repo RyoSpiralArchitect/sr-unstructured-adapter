@@ -237,6 +237,66 @@ def test_zip_payload_surfaces_entries(tmp_path: Path) -> None:
     assert payload.meta["zip_contains_nested"] is True
 
     unified = to_unified_payload(path)
-    assert unified["doc_type"] == "zip"
+    assert unified["doc_type"] == "archive"
     assert any(att["name"] == "data.csv" for att in unified["attachments"])
     assert any(block["type"] == "attachment" for block in unified["text_blocks"])
+
+
+def test_rtf_payload_roundtrip(tmp_path: Path) -> None:
+    rtf = r"{\rtf1\ansi\deff0 {\fonttbl{\f0 Courier;}}\n\f0\fs20 Hello \\b World\\b0!}"
+    path = tmp_path / "note.rtf"
+    path.write_text(rtf, encoding="utf-8")
+
+    payload = build_payload(path)
+    assert "Hello" in payload.text
+    assert "World" in payload.text
+    assert payload.meta.get("rtf_decoder") in {"striprtf", "fallback"}
+
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "text"
+    assert unified["highlights"]["summary"]
+
+
+def test_pptx_payload_extracts_slides(tmp_path: Path) -> None:
+    path = tmp_path / "deck.pptx"
+    slide_xml = """<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+    <p:sld xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\"
+           xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\"
+           xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">
+      <p:cSld>
+        <p:spTree>
+          <p:sp>
+            <p:txBody>
+              <a:bodyPr/>
+              <a:lstStyle/>
+              <a:p>
+                <a:r><a:t>Deck Title</a:t></a:r>
+              </a:p>
+            </p:txBody>
+          </p:sp>
+          <p:sp>
+            <p:txBody>
+              <a:bodyPr/>
+              <a:lstStyle/>
+              <a:p>
+                <a:r><a:t>First bullet</a:t></a:r>
+              </a:p>
+            </p:txBody>
+          </p:sp>
+        </p:spTree>
+      </p:cSld>
+    </p:sld>
+    """
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("ppt/slides/slide1.xml", slide_xml)
+
+    payload = build_payload(path)
+    assert "Deck Title" in payload.text
+    assert payload.meta["pptx_slide_count"] == 1
+    assert payload.meta["pptx_slide_titles"] == ["Deck Title"]
+
+    unified = to_unified_payload(path)
+    assert unified["doc_type"] == "presentation"
+    assert unified["llm_ready"]["markdown"].startswith("# Document: Presentation")
+    assert unified["highlights"]["summary"]
+    assert unified["llm_ready"]["chunks"]

@@ -1,6 +1,7 @@
 """Tools for transforming unstructured files into unified payloads."""
 
 from .adapter import build_payload, stream_payloads, to_unified_payload
+from .llm import build_llm_bundle
 from .messages import to_llm_messages
 from .models import Payload
 from .pipeline import batch_convert, convert
@@ -11,6 +12,7 @@ __all__ = [
     "build_payload",
     "stream_payloads",
     "to_unified_payload",
+    "build_llm_bundle",
     "to_llm_messages",
     "Block",
     "Document",

@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, List, Tuple
 
 from .models import Payload
 from .schema import Block, Document
+from .llm import build_llm_bundle
 
 _AMOUNT_PATTERN = re.compile(
     r"(?P<currency>[\$€¥£])?\s*(?P<number>(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)(?:[.,]\d{2})?)"
@@ -216,6 +217,39 @@ def _item_provenance_label(item: Dict[str, Any]) -> str:
     return ""
 
 
+def _infer_doc_type(meta: Dict[str, Any], payload: Payload, blocks: List[Block], default: str) -> str:
+    resolved = (default or payload.mime or "").strip()
+    baseline = resolved.lower()
+
+    if meta.get("email_from") or meta.get("email_subject"):
+        return "email"
+    if meta.get("log_levels") or meta.get("log_high_severity_count") is not None:
+        return "log"
+    if meta.get("zip_entry_count"):
+        return "archive"
+    if meta.get("pptx_slide_count"):
+        return "presentation"
+    if meta.get("workbook_sheet_count"):
+        return "spreadsheet"
+    if meta.get("pdf_page_count"):
+        return "pdf"
+    if meta.get("image_format"):
+        return "image"
+    if any(block.type == "table" for block in blocks):
+        return "table"
+    if payload.mime.startswith("text/"):
+        return "text"
+    if baseline in {"pptx"}:
+        return "presentation"
+    if baseline in {"xlsx"}:
+        return "spreadsheet"
+    if baseline in {"zip"}:
+        return "archive"
+    if baseline in {"eml", "msg"}:
+        return "email"
+    return resolved or payload.mime
+
+
 def _compile_validation(meta: Dict[str, Any], blocks: List[Block], payload: Payload) -> Dict[str, List[str]]:
     warnings: List[str] = []
     errors: List[str] = []
@@ -241,6 +275,64 @@ def _compile_validation(meta: Dict[str, Any], blocks: List[Block], payload: Payl
                 warnings.append("Log file contains high-severity entries.")
 
     return {"warnings": warnings, "errors": errors}
+
+
+def _to_float(value: str) -> float | None:
+    try:
+        return float(value.replace(",", ""))
+    except Exception:  # pragma: no cover - defensive guard
+        return None
+
+
+def _derive_highlights(unified: Dict[str, Any]) -> Dict[str, Any]:
+    key_points: List[str] = []
+
+    amounts = unified.get("amounts") or []
+    numeric_amounts = [
+        (entry, _to_float(entry.get("value", "")))
+        for entry in amounts
+        if isinstance(entry, dict)
+    ]
+    numeric_amounts = [pair for pair in numeric_amounts if pair[1] is not None]
+    if numeric_amounts:
+        entry_dict, _ = max(numeric_amounts, key=lambda pair: pair[1])
+        currency = entry_dict.get("currency") or ""
+        label = f"Largest amount {currency}{entry_dict.get('value')} (block {entry_dict.get('block_index')})"
+        key_points.append(label.strip())
+
+    dates = unified.get("dates") or []
+    normalised_dates = [entry.get("value") for entry in dates if entry.get("value")]
+    if normalised_dates:
+        unique_dates = sorted({value for value in normalised_dates})
+        if unique_dates:
+            if len(unique_dates) == 1:
+                key_points.append(f"Key date {unique_dates[0]}")
+            else:
+                key_points.append(f"Date range {unique_dates[0]} – {unique_dates[-1]}")
+
+    parties = unified.get("parties") or []
+    senders = [party.get("name") for party in parties if party.get("role") == "from" and party.get("name")]
+    recipients = [party.get("name") for party in parties if party.get("role") in {"to", "cc"} and party.get("name")]
+    if senders:
+        key_points.append(f"From: {', '.join(sorted(set(senders)))}")
+    if recipients:
+        key_points.append(f"Recipients: {', '.join(sorted(set(recipients)))}")
+
+    validation = unified.get("validation") or {}
+    warnings = validation.get("warnings") or []
+    if warnings:
+        key_points.extend(warnings[:2])
+
+    text_blocks = unified.get("text_blocks") or []
+    summary = ""
+    if text_blocks:
+        primer = " ".join(block.get("text", "") for block in text_blocks[:3]).strip()
+        if primer:
+            summary = primer[:400]
+            if len(primer) > 400:
+                summary = summary.rsplit(" ", 1)[0] + "…"
+
+    return {"summary": summary, "key_points": key_points}
 
 
 def build_unified_payload(payload: Payload, document: Document) -> Dict[str, Any]:
@@ -272,10 +364,12 @@ def build_unified_payload(payload: Payload, document: Document) -> Dict[str, Any
         ],
     }
 
+    inferred_doc_type = _infer_doc_type(meta, payload, blocks, document.meta.get("type", payload.mime))
+
     unified = {
         "schema_version": "1.0",
         "doc_id": str(uuid.uuid5(uuid.NAMESPACE_URL, str(payload.source))),
-        "doc_type": document.meta.get("type", payload.mime),
+        "doc_type": inferred_doc_type,
         "source": str(payload.source),
         "mime": payload.mime,
         "confidence": _avg_confidence(blocks),
@@ -290,6 +384,9 @@ def build_unified_payload(payload: Payload, document: Document) -> Dict[str, Any
         "provenance": provenance,
         "validation": _compile_validation(meta, blocks, payload),
     }
+
+    unified["highlights"] = _derive_highlights(unified)
+    unified["llm_ready"] = build_llm_bundle(unified)
 
     return unified
 
