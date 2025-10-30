@@ -194,6 +194,21 @@ def _extract_text_blocks(blocks: List[Block]) -> List[Dict[str, Any]]:
     for index, block in enumerate(blocks):
         if block.type == "table":
             continue
+        if block.type == "slide":
+            title = block.attrs.get("title") if isinstance(block.attrs, dict) else None
+            slide_no = block.attrs.get("slide") if isinstance(block.attrs, dict) else None
+            if title:
+                header_text = f"Slide {slide_no}: {title}" if slide_no else title
+                structured.append(
+                    {
+                        "block_index": index,
+                        "type": "header",
+                        "text": header_text,
+                        "attrs": dict(block.attrs),
+                        "source": block.source,
+                        "confidence": block.confidence,
+                    }
+                )
         structured.append(
             {
                 "block_index": index,

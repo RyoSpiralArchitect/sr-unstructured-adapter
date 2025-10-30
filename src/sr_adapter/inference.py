@@ -5,12 +5,25 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, Iterable, List, Sequence
 
+try:
+    # 任意: あれば使う
+    from dateutil.parser import parse as _dt_parse  # type: ignore
+except Exception:  # pragma: no cover
+    _dt_parse = None
+
 from .schema import Block
 
-_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_ABBREVIATIONS = (r"e\.g", r"i\.e", r"Mr", r"Ms", r"Dr", r"Prof", r"No")
+_ABBREV_GUARD = "".join(rf"(?<!{abbr}\.)" for abbr in _ABBREVIATIONS)
+_SENTENCE_SPLIT = re.compile(
+    rf"{_ABBREV_GUARD}(?<=[.!?。！？])\s+"
+)
 _WHITESPACE = re.compile(r"\s+")
 _HEADER_TYPES = {"header", "title", "heading"}
 _LIST_TYPES = {"list", "kv"}
+
+_MAX_SECTION_PREVIEW_HIGHLIGHTS = 3
+_MAX_SECTION_HIGHLIGHTS = 5
 
 
 def _clean_text(text: str) -> str:
@@ -63,14 +76,18 @@ def build_outline(blocks: Sequence[Block]) -> List[Dict[str, Any]]:
             return
         highlights = section.get("highlights", [])
         preview_parts: List[str] = []
-        for highlight in highlights[:3]:
+        for highlight in highlights[:_MAX_SECTION_PREVIEW_HIGHLIGHTS]:
             label = highlight.get("kind", "block").capitalize()
             text = highlight.get("preview", "")
             if text:
                 preview_parts.append(f"{label}: {text}")
-        preview = section.get("title") or ""
-        if preview_parts:
+        title = section.get("title") or ""
+        if preview_parts and title:
+            preview = " | ".join([title] + preview_parts)
+        elif preview_parts:
             preview = " | ".join(preview_parts)
+        else:
+            preview = title
         confidence_values = section.get("confidences", [])
         confidence = 0.0
         if confidence_values:
@@ -80,7 +97,7 @@ def build_outline(blocks: Sequence[Block]) -> List[Dict[str, Any]]:
                 "title": section.get("title"),
                 "kind": section.get("kind", "section"),
                 "preview": preview,
-                "highlights": highlights[:5],
+                "highlights": highlights[:_MAX_SECTION_HIGHLIGHTS],
                 "block_indices": section.get("block_indices", []),
                 "confidence": round(confidence, 3) if confidence_values else 0.0,
             }
@@ -191,9 +208,41 @@ def build_focus(
             _add("amounts", f"Contains monetary values such as {formatted}", confidence=top.get("confidence", 0.7), source=origin)
 
     if dates:
+        def _date_key(entry: Dict[str, Any]):
+            v = entry.get("value")
+            # 数値 → そのまま
+            if isinstance(v, (int, float)):
+                return (0, float(v))
+            # 文字列 → できれば日時に
+            if isinstance(v, str):
+                # まず ISO ライク
+                try:
+                    # YYYY-MM-DD / YYYY/MM/DD → - に正規化を軽く試みる
+                    norm = v.replace("/", "-")
+                    # dateutil があれば最優先
+                    if _dt_parse is not None:
+                        parsed = _dt_parse(norm)
+                    else:
+                        from datetime import datetime
+
+                        parsed = datetime.fromisoformat(norm)
+                    # タイムゾーン差異を吸収してタイムスタンプへ
+                    from datetime import timezone
+
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=timezone.utc)
+                    else:
+                        parsed = parsed.astimezone(timezone.utc)
+                    return (1, parsed.timestamp())
+                except Exception:
+                    pass
+                return (2, v)  # 最後は辞書順
+            # その他は最後尾へ
+            return (3, str(v))
+
         sorted_dates = sorted(
-            [entry for entry in dates if entry.get("value")],
-            key=lambda entry: entry["value"],
+            [entry for entry in dates if entry.get("value") is not None],
+            key=_date_key,
         )
         if sorted_dates:
             first = sorted_dates[0]
@@ -214,10 +263,11 @@ def build_focus(
                 )
 
     if tables:
+        confs = [t.get("confidence", 0.6) for t in tables if isinstance(t, dict)]
         _add(
             "tables",
             f"Structured tables detected ({len(tables)} total)",
-            confidence=max(table.get("confidence", 0.6) for table in tables),
+            confidence=max(confs) if confs else 0.6,
             source="tables",
         )
 
