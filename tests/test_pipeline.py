@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
 import json
@@ -7,10 +8,11 @@ from pathlib import Path
 
 from docx import Document as DocxDocument
 from openpyxl import Workbook
+from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
 from sr_adapter.pipeline import convert
-from sr_adapter.parsers import parse_txt
+from sr_adapter.parsers import parse_image, parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
 from sr_adapter.sniff import detect_type
@@ -21,6 +23,20 @@ def _create_pdf(path: Path) -> None:
     writer.add_blank_page(width=72, height=72)
     with path.open("wb") as handle:
         writer.write(handle)
+
+
+def _create_png(path: Path, text: str) -> None:
+    image = Image.new("RGB", (320, 120), color="white")
+    draw = ImageDraw.Draw(image)
+    try:
+        font = ImageFont.load_default()
+    except Exception:
+        font = None
+    draw.text((10, 40), text, fill="black", font=font)
+
+    info = PngImagePlugin.PngInfo()
+    info.add_text("Description", text)
+    image.save(str(path), pnginfo=info)
 
 
 def _create_docx(path: Path) -> None:
@@ -61,11 +77,35 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     xlsx = tmp_path / "sample.xlsx"
     _create_xlsx(xlsx)
 
+    yaml_file = tmp_path / "config.yaml"
+    yaml_file.write_text("service: demo", encoding="utf-8")
+
+    jsonl = tmp_path / "records.jsonl"
+    jsonl.write_text("{}\n", encoding="utf-8")
+
+    toml = tmp_path / "config.toml"
+    toml.write_text("title = \"Example\"\n", encoding="utf-8")
+
+    cfg = tmp_path / "settings.cfg"
+    cfg.write_text("host localhost\n", encoding="utf-8")
+
+    props = tmp_path / "application.properties"
+    props.write_text("user => demo\n", encoding="utf-8")
+
+    png = tmp_path / "invoice.png"
+    _create_png(png, "Invoice #42 Total 19.99")
+
     assert detect_type(txt) == "text"
     assert detect_type(md) == "md"
     assert detect_type(pdf) == "pdf"
     assert detect_type(docx) == "docx"
     assert detect_type(xlsx) == "xlsx"
+    assert detect_type(yaml_file) == "yaml"
+    assert detect_type(jsonl) == "jsonl"
+    assert detect_type(toml) == "toml"
+    assert detect_type(cfg) == "ini"
+    assert detect_type(props) == "ini"
+    assert detect_type(png) == "image"
 
 
 def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
@@ -81,6 +121,204 @@ def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
     assert document.blocks[0].type == "meta"
     assert document.blocks[1].type == "header"
     assert any(block.type == "list" for block in document.blocks)
+
+
+def test_parse_txt_extracts_kv_and_log(tmp_path: Path) -> None:
+    source = tmp_path / "structured.txt"
+    source.write_text(
+        "\n".join(
+            [
+                "Subject: Update",
+                "Name -> Alice",
+                "2024-01-01 09:30 status ok",
+                "- bullet item",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_txt(source)
+
+    types = {block.type for block in blocks}
+    assert "kv" in types
+    assert "log" in types
+    log_block = next(block for block in blocks if block.type == "log")
+    assert log_block.attrs["timestamp"].startswith("2024-01-01")
+    assert "status ok" in log_block.attrs["message"]
+    name_block = next(block for block in blocks if block.type == "kv" and block.attrs.get("key") == "Name")
+    assert name_block.attrs["value"] == "Alice"
+
+
+def test_parse_txt_detects_pipe_table(tmp_path: Path) -> None:
+    source = tmp_path / "table.txt"
+    source.write_text(
+        "\n".join(
+            [
+                "| Name | Age | City |",
+                "| --- | --- | --- |",
+                "| Alice | 30 | Tokyo |",
+                "| Bob | 41 | Osaka |",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_txt(source)
+
+    table_block = next(block for block in blocks if block.type == "table")
+    rows = json.loads(table_block.attrs["rows"])
+    assert rows[0] == ["Name", "Age", "City"]
+    assert rows[1][0] == "Alice"
+    assert table_block.attrs["delimiter"] == "pipe"
+    assert table_block.attrs["row_count"] == 3
+
+
+def test_parse_txt_detects_whitespace_table(tmp_path: Path) -> None:
+    source = tmp_path / "whitespace_table.txt"
+    source.write_text(
+        "\n".join(
+            [
+                "Name    Score    Notes",
+                "Alice   98       OK",
+                "Bob     87       Needs follow-up",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_txt(source)
+
+    table_block = next(block for block in blocks if block.type == "table")
+    rows = json.loads(table_block.attrs["rows"])
+    assert len(rows) == 3
+    assert rows[2][2] == "Needs follow-up"
+    assert table_block.attrs["delimiter"] == "whitespace"
+
+
+def test_parse_ini_coerces_space_pairs(tmp_path: Path) -> None:
+    source = tmp_path / "messy.cfg"
+    source.write_text(
+        "\n".join(
+            [
+                "# comment",
+                "host localhost",
+                "port 5432",
+                "",
+                "[service]",
+                "enabled true",
+                "timeout 30",
+                "path => /var/lib/app",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_ini(source)
+
+    root = next(block for block in blocks if block.attrs.get("key") == "<root>")
+    assert root.attrs["section_count"] == 1
+    assert "service" in root.attrs["sections"]
+    assert "host" in root.attrs.get("default_keys", [])
+    assert root.attrs["coerced_pairs"] == 5
+
+    host = next(block for block in blocks if block.attrs.get("key") == "<defaults>.host")
+    assert host.attrs["value"] == "localhost"
+
+    service_path = next(block for block in blocks if block.attrs.get("key") == "service.path")
+    assert service_path.attrs["value"] == "/var/lib/app"
+
+
+def test_convert_ini_uses_structured_parser(tmp_path: Path) -> None:
+    source = tmp_path / "app.properties"
+    source.write_text(
+        "\n".join(
+            [
+                "name demo",
+                "enabled true",
+                "[limits]",
+                "max 10",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(source, recipe="default")
+
+    assert document.meta["type"] == "ini"
+    head = document.blocks[0]
+    assert head.attrs.get("coerced_pairs", 0) >= 3
+    assert any(block.attrs.get("key") == "<defaults>.name" for block in document.blocks if block.type == "kv")
+    assert any(block.attrs.get("key") == "limits.max" for block in document.blocks if block.type == "kv")
+
+
+def test_convert_image_uses_metadata_text(tmp_path: Path) -> None:
+    image = tmp_path / "invoice.png"
+    _create_png(image, "Invoice #42 Total 19.99")
+
+    document = convert(image, recipe="default")
+
+    assert document.meta["type"] == "image"
+    joined = "\n".join(block.text for block in document.blocks)
+    assert "Invoice #42" in joined
+    meta_blocks = [block for block in document.blocks if block.type == "metadata"]
+    assert meta_blocks
+    assert any(block.attrs.get("image_source") == "metadata" for block in meta_blocks)
+    assert any(block.attrs.get("image_has_text") is True for block in meta_blocks)
+    assert "en" in set(document.meta["languages"])
+
+
+def test_convert_txt_detects_languages(tmp_path: Path) -> None:
+    sample = tmp_path / "multilingual.txt"
+    sample.write_text(
+        "\n".join(
+            [
+                "こんにちは、世界。今日は良い日です。",
+                "",
+                "This pipeline keeps getting better with richer metadata for every language.",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(sample, recipe="default")
+
+    languages = set(document.meta["languages"])
+    assert {"ja", "en"}.issubset(languages)
+
+    ja_block = next(block for block in document.blocks if "こんにちは" in block.text)
+    assert ja_block.lang == "ja"
+    assert "ja" in ja_block.attrs.get("language_hints", [])
+    assert ja_block.attrs.get("language_scores")
+    assert ja_block.attrs["language_scores"][0]["lang"] == "ja"
+
+    en_block = next(block for block in document.blocks if "pipeline" in block.text)
+    assert en_block.lang == "en"
+    assert "en" in en_block.attrs.get("language_hints", [])
+
+
+def test_parse_image_propagates_language_metadata(monkeypatch, tmp_path: Path) -> None:
+    image = tmp_path / "ocr.png"
+    _create_png(image, "hello")
+
+    fake_meta = {"image_has_text": True, "image_ocr_languages": ["eng", "jpn"]}
+    fake_segments = [
+        {"text": "hello", "source": "ocr", "kind": "ocr", "confidence": 0.9, "order": 1},
+    ]
+
+    def fake_extract(path: Path):
+        assert Path(path) == image
+        return "hello", dict(fake_meta), list(fake_segments)
+
+    monkeypatch.setattr("sr_adapter.parsers._extract_image_text", fake_extract)
+
+    blocks = parse_image(image)
+
+    summary = next(block for block in blocks if block.type == "metadata" and block.text == "Image summary")
+    assert summary.attrs.get("image_ocr_languages") == ["eng", "jpn"]
+
+    ocr_blocks = [block for block in blocks if block.attrs.get("image_source") == "ocr"]
+    assert ocr_blocks
+    assert any(block.attrs.get("ocr_languages") == ["eng", "jpn"] for block in ocr_blocks)
 
 
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
@@ -110,6 +348,184 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     payload = json.loads(lines[0])
     assert payload["meta"]["type"] == "text"
     assert any(block["type"] == "kv" for block in payload["blocks"])
+
+
+def test_convert_eml_extracts_headers(tmp_path: Path) -> None:
+    eml = tmp_path / "mail.eml"
+    eml.write_text(
+        "\n".join(
+            [
+                "From: Example <sender@example.com>",
+                "To: Recipient <user@example.com>",
+                "Subject: Hello",
+                "MIME-Version: 1.0",
+                "Content-Type: text/plain; charset=utf-8",
+                "",
+                "Hello world",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(eml, recipe="default")
+
+    assert document.meta["type"] == "eml"
+    assert document.blocks[0].type == "meta"
+    assert document.blocks[0].attrs["subject"] == "Hello"
+    assert any(block.type in {"paragraph", "kv"} for block in document.blocks[1:])
+
+
+def test_convert_ics_yields_event_blocks(tmp_path: Path) -> None:
+    ics = tmp_path / "event.ics"
+    ics.write_text(
+        "\n".join(
+            [
+                "BEGIN:VCALENDAR",
+                "VERSION:2.0",
+                "BEGIN:VEVENT",
+                "SUMMARY:Sync",
+                "DTSTART:20240201T120000Z",
+                "DTEND:20240201T123000Z",
+                "LOCATION:Video",
+                "DESCRIPTION:Weekly sync",
+                "END:VEVENT",
+                "END:VCALENDAR",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(ics, recipe="default")
+
+    assert document.meta["type"] == "ics"
+    assert any(block.type == "event" for block in document.blocks)
+    event = next(block for block in document.blocks if block.type == "event")
+    assert event.attrs["summary"] == "Sync"
+
+
+def test_convert_json_extracts_nested_keys(tmp_path: Path) -> None:
+    payload = {
+        "service": {"host": "localhost", "ports": [80, 443]},
+        "debug": True,
+    }
+    src = tmp_path / "config.json"
+    src.write_text(json.dumps(payload), encoding="utf-8")
+
+    document = convert(src, recipe="default")
+
+    assert document.meta["type"] == "json"
+    kv_keys = {block.attrs.get("key") for block in document.blocks if block.type == "kv"}
+    assert "service.host" in kv_keys
+    assert "service.ports[0]" in kv_keys
+    assert any(block.attrs.get("type") == "array" for block in document.blocks if block.type == "metadata")
+    host_block = next(block for block in document.blocks if block.attrs.get("key") == "service.host")
+    assert host_block.attrs["path_r"] == ".data$service$host"
+    assert host_block.attrs["path_glue"] == "{.data$service$host}"
+    assert host_block.attrs["path_r_tokens"] == [".data", "$service", "$host"]
+    port_block = next(block for block in document.blocks if block.attrs.get("key") == "service.ports[0]")
+    assert port_block.attrs["path_r"] == ".data$service$ports[[1]]"
+    assert port_block.attrs["path_glue"] == "{.data$service$ports[[1]]}"
+    assert port_block.attrs["path_r_tokens"] == [".data", "$service", "$ports", "[[1]]"]
+    service_meta = next(block for block in document.blocks if block.attrs.get("key") == "service")
+    assert service_meta.attrs.get("sample_values") == ["localhost"]
+    ports_meta = next(block for block in document.blocks if block.attrs.get("key") == "service.ports")
+    assert ports_meta.attrs.get("sample_values") == ["80", "443"]
+
+
+def test_convert_json_repairs_loose_json(tmp_path: Path) -> None:
+    src = tmp_path / "messy.json"
+    src.write_text(
+        "\n".join(
+            [
+                "{",
+                "  'service': {host: 'localhost', ports: [80, 443,],},",
+                "  // legacy flags",
+                "  'flags': ['alpha', 'beta',],",
+                "}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(src, recipe="default")
+
+    assert document.meta["type"] == "json"
+    host_block = next(block for block in document.blocks if block.type == "kv" and block.attrs.get("key") == "service.host")
+    assert host_block.attrs["value"] == "localhost"
+    root_meta = next(block for block in document.blocks if block.attrs.get("key") == "<root>")
+    assert root_meta.attrs.get("coerced_from") in {"sanitized", "yaml"}
+
+
+def test_convert_yaml_emits_summary_and_kv(tmp_path: Path) -> None:
+    src = tmp_path / "config.yaml"
+    src.write_text(
+        "\n".join([
+            "service:",
+            "  host: localhost",
+            "  retries: 3",
+            "  tags:",
+            "    - api",
+            "    - v1",
+        ]),
+        encoding="utf-8",
+    )
+
+    document = convert(src, recipe="default")
+
+    assert document.meta["type"] == "yaml"
+    kv_keys = {block.attrs.get("key") for block in document.blocks if block.type == "kv"}
+    assert "service.host" in kv_keys
+    summary_block = next(block for block in document.blocks if block.text.startswith("YAML:"))
+    assert summary_block.attrs["path_r"] == ".data"
+    assert summary_block.attrs["path_glue"] == "{.data}"
+    assert summary_block.attrs["path_r_tokens"] == [".data"]
+    assert summary_block.attrs["key"] == "<root>"
+
+
+def test_convert_toml_handles_tables(tmp_path: Path) -> None:
+    src = tmp_path / "settings.toml"
+    src.write_text(
+        "\n".join([
+            "[database]",
+            "user = \"admin\"",
+            "[service]",
+            "enabled = true",
+        ]),
+        encoding="utf-8",
+    )
+
+    document = convert(src, recipe="default")
+
+    assert document.meta["type"] == "toml"
+    kv_keys = {block.attrs.get("key") for block in document.blocks if block.type == "kv"}
+    assert "database.user" in kv_keys
+    assert any(block.attrs.get("type") == "object" for block in document.blocks if block.type == "metadata")
+
+
+def test_convert_jsonl_breaks_into_records(tmp_path: Path) -> None:
+    src = tmp_path / "records.jsonl"
+    src.write_text(
+        "\n".join([
+            json.dumps({"id": 1, "value": "alpha"}),
+            json.dumps({"id": 2, "value": "beta"}),
+        ]),
+        encoding="utf-8",
+    )
+
+    document = convert(src, recipe="default")
+
+    assert document.meta["type"] == "jsonl"
+    kv_keys = {block.attrs.get("key") for block in document.blocks if block.type == "kv"}
+    assert "record[1].id" in kv_keys
+    assert any(block.attrs.get("type") == "object" for block in document.blocks if block.attrs.get("key") == "record[1]")
+    record_summary = next(block for block in document.blocks if block.attrs.get("key") == "record[1]")
+    assert record_summary.attrs["path_r"] == ".data$record[[1]]"
+    assert record_summary.attrs["path_glue"] == "{.data$record[[1]]}"
+    assert record_summary.attrs["path_r_tokens"] == [".data", "$record", "[[1]]"]
+    record_id = next(block for block in document.blocks if block.attrs.get("key") == "record[1].id")
+    assert record_id.attrs["path_r"] == ".data$record[[1]]$id"
+    assert record_id.attrs["path_glue"] == "{.data$record[[1]]$id}"
+    assert record_id.attrs["path_r_tokens"] == [".data", "$record", "[[1]]", "$id"]
 
 
 def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:
