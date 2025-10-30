@@ -7,11 +7,13 @@ import json
 import re
 import zipfile
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping, Sequence
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple
 
+import yaml
 from bs4 import BeautifulSoup
 from docx import Document as DocxDocument
 from openpyxl import load_workbook
@@ -28,6 +30,7 @@ _LOG_LINE = re.compile(
     r"^\[?(?P<ts>\d{4}[-/]\d{2}[-/]\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?)\]?\s*(?P<body>.*)$"
 )
 _MAX_CHARS_PER_CHUNK = 600
+_STRUCTURED_BLOCK_LIMIT = 400
 
 
 def _new_block(block_type: str, text: str, source: Path, confidence: float = 0.5) -> Block:
@@ -154,6 +157,118 @@ def _iter_refined_chunks(text: str) -> Iterable[str]:
                 cleaned = refined.strip()
                 if cleaned:
                     yield cleaned
+
+
+def _format_path(path: str) -> str:
+    return path or "<root>"
+
+
+def _stringify_scalar(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    try:
+        return json.dumps(value, ensure_ascii=False)
+    except TypeError:
+        return str(value)
+
+
+def _structured_to_blocks(
+    data: object,
+    source: Path,
+    *,
+    prefix: str = "",
+    limit: int = _STRUCTURED_BLOCK_LIMIT,
+) -> Tuple[List[Block], bool]:
+    blocks: List[Block] = []
+    truncated = False
+
+    def _add(block: Block) -> bool:
+        nonlocal truncated
+        if len(blocks) >= limit:
+            truncated = True
+            return False
+        blocks.append(block)
+        return True
+
+    def _visit(value: object, path: str) -> None:
+        if truncated:
+            return
+
+        label = _format_path(path)
+
+        if isinstance(value, Mapping):
+            items = list(value.items())
+            items.sort(key=lambda item: str(item[0]))
+            attrs = {
+                "key": label,
+                "type": "object",
+                "size": len(items),
+                "keys": [str(key) for key, _ in items[:20]],
+            }
+            if not _add(
+                Block(
+                    type="metadata",
+                    text=f"{label}: object ({len(items)} keys)",
+                    attrs=attrs,
+                    source=str(source),
+                    confidence=0.7,
+                )
+            ):
+                return
+            for key, child in items:
+                child_path = f"{path}.{key}" if path else str(key)
+                _visit(child, child_path)
+            return
+
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+            seq = list(value)
+            sample_types = sorted({type(item).__name__ for item in seq[:5]})
+            attrs = {
+                "key": label,
+                "type": "array",
+                "size": len(seq),
+                "sample_types": sample_types,
+            }
+            if not _add(
+                Block(
+                    type="metadata",
+                    text=f"{label}: array ({len(seq)} items)",
+                    attrs=attrs,
+                    source=str(source),
+                    confidence=0.65,
+                )
+            ):
+                return
+            for idx, child in enumerate(seq):
+                child_path = f"{path}[{idx}]" if path else f"[{idx}]"
+                _visit(child, child_path)
+            return
+
+        value_text = _stringify_scalar(value)
+        text = value_text if not path else f"{label}: {value_text}"
+        attrs = {
+            "key": label,
+            "value": value_text,
+            "value_type": type(value).__name__,
+        }
+        _add(
+            Block(
+                type="kv",
+                text=text,
+                attrs=attrs,
+                source=str(source),
+                confidence=0.85,
+            )
+        )
+
+    _visit(data, prefix)
+    return blocks, truncated
 
 
 def parse_txt(path: str | Path) -> List[Block]:
@@ -354,15 +469,335 @@ def parse_xlsx(path: str | Path) -> List[Block]:
 
 def parse_json(path: str | Path) -> List[Block]:
     source = Path(path)
-    data = json.loads(source.read_text(encoding="utf-8", errors="ignore"))
-    return [
+    raw = source.read_text(encoding="utf-8", errors="ignore")
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return parse_txt(path)
+
+    budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
+    blocks, truncated = _structured_to_blocks(data, source, limit=budget)
+    if not blocks:
+        return parse_txt(path)
+    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
+        blocks.append(
+            Block(
+                type="metadata",
+                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+                attrs={"truncated": True},
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+    return blocks
+
+
+def parse_jsonl(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    lines = text.splitlines()
+    budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
+    blocks: List[Block] = []
+    truncated = False
+
+    def _try_add(block: Block) -> bool:
+        nonlocal truncated
+        if len(blocks) >= budget:
+            truncated = True
+            return False
+        blocks.append(block)
+        return True
+
+    for idx, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if len(blocks) >= budget:
+            truncated = True
+            break
+        try:
+            record = json.loads(stripped)
+        except json.JSONDecodeError:
+            if not _try_add(_new_block("other", stripped, source, confidence=0.25)):
+                break
+            continue
+
+        label = f"record[{idx}]"
+        summary_type = type(record).__name__
+        summary_attrs = {"key": label, "type": summary_type, "line": idx}
+        if isinstance(record, Mapping):
+            summary_attrs["size"] = len(record)
+            summary_attrs["keys"] = [str(k) for k in list(record.keys())[:10]]
+        elif isinstance(record, Sequence) and not isinstance(record, (str, bytes, bytearray)):
+            summary_attrs["size"] = len(record)
+        if not _try_add(
+            Block(
+                type="metadata",
+                text=f"{label}: {summary_type}",
+                attrs=summary_attrs,
+                source=str(source),
+                confidence=0.65,
+            )
+        ):
+            break
+
+        remaining = budget - len(blocks)
+        if remaining <= 0:
+            truncated = True
+            break
+        sub_blocks, sub_truncated = _structured_to_blocks(record, source, prefix=label, limit=remaining)
+        blocks.extend(sub_blocks)
+        if sub_truncated:
+            truncated = True
+            break
+
+    if not blocks:
+        return parse_txt(path)
+    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
+        blocks.append(
+            Block(
+                type="metadata",
+                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+                attrs={"truncated": True},
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+    return blocks
+
+
+def parse_yaml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    raw = source.read_text(encoding="utf-8", errors="ignore")
+    try:
+        docs = list(yaml.safe_load_all(raw))
+    except Exception:
+        return parse_txt(path)
+
+    if not docs:
+        return parse_txt(path)
+
+    budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
+    blocks: List[Block] = []
+    truncated = False
+
+    def _try_add(block: Block) -> bool:
+        nonlocal truncated
+        if len(blocks) >= budget:
+            truncated = True
+            return False
+        blocks.append(block)
+        return True
+
+    sample_types = [type(doc).__name__ for doc in docs[:5]]
+    _try_add(
         Block(
-            type="code",
-            text=json.dumps(data, ensure_ascii=False, indent=2),
+            type="metadata",
+            text=f"YAML: {len(docs)} document(s)",
+            attrs={"documents": len(docs), "sample_types": sample_types},
             source=str(source),
             confidence=0.6,
         )
-    ]
+    )
+
+    for idx, doc in enumerate(docs):
+        if len(blocks) >= budget:
+            truncated = True
+            break
+        prefix = "" if len(docs) == 1 else f"doc[{idx}]"
+        remaining = budget - len(blocks)
+        if remaining <= 0:
+            truncated = True
+            break
+        sub_blocks, sub_truncated = _structured_to_blocks(doc, source, prefix=prefix, limit=remaining)
+        blocks.extend(sub_blocks)
+        if sub_truncated:
+            truncated = True
+            break
+
+    if not blocks:
+        return parse_txt(path)
+    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
+        blocks.append(
+            Block(
+                type="metadata",
+                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+                attrs={"truncated": True},
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+    return blocks
+
+
+def parse_toml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    raw = source.read_text(encoding="utf-8", errors="ignore")
+    try:
+        try:
+            import tomllib  # type: ignore[attr-defined]
+        except ModuleNotFoundError:  # pragma: no cover - Python <3.11 fallback
+            import tomli as tomllib  # type: ignore
+    except ModuleNotFoundError:
+        return parse_txt(path)
+
+    try:
+        data = tomllib.loads(raw)
+    except Exception:
+        return parse_txt(path)
+
+    budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
+    blocks, truncated = _structured_to_blocks(data, source, limit=budget)
+    if not blocks:
+        return parse_txt(path)
+    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
+        blocks.append(
+            Block(
+                type="metadata",
+                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+                attrs={"truncated": True},
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+    return blocks
+
+
+def parse_eml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    data = source.read_bytes()
+    blocks: List[Block] = []
+    try:
+        message = BytesParser(policy=policy.default).parsebytes(data)
+    except Exception:
+        return [_new_block("other", data.decode("utf-8", errors="ignore"), source, confidence=0.2)]
+
+    header_attrs = {
+        "subject": message.get("subject", ""),
+        "from": message.get("from", ""),
+        "to": message.get("to", ""),
+        "cc": message.get("cc", ""),
+        "date": message.get("date", ""),
+    }
+    header_text = "\n".join(
+        [f"Subject: {header_attrs['subject']}", f"From: {header_attrs['from']}", f"To: {header_attrs['to']}"]
+    ).strip()
+    blocks.append(
+        Block(
+            type="meta",
+            text=header_text,
+            attrs={k: v for k, v in header_attrs.items() if v},
+            source=str(source),
+            confidence=0.85,
+        )
+    )
+
+    text_parts: List[str] = []
+    html_fallback: List[str] = []
+    attachments: List[Dict[str, object]] = []
+    for part in message.walk():
+        if part.is_multipart():
+            continue
+        filename = part.get_filename()
+        content_type = part.get_content_type()
+        payload = part.get_payload(decode=True) or b""
+        if filename:
+            attachments.append(
+                {
+                    "filename": filename,
+                    "content_type": content_type,
+                    "size": len(payload),
+                }
+            )
+            continue
+        if content_type.startswith("text/"):
+            charset = part.get_content_charset() or "utf-8"
+            try:
+                decoded = payload.decode(charset, errors="ignore")
+            except LookupError:
+                decoded = payload.decode("utf-8", errors="ignore")
+            if content_type == "text/plain":
+                text_parts.append(decoded)
+            else:
+                html_fallback.append(decoded)
+
+    if not text_parts and html_fallback:
+        for html in html_fallback:
+            cleaned = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+            if cleaned:
+                text_parts.append(cleaned)
+
+    for part in text_parts:
+        for chunk in _iter_refined_chunks(part):
+            blocks.append(_block_from_chunk(chunk, source))
+
+    for attachment in attachments[:10]:
+        blocks.append(
+            Block(
+                type="attachment",
+                text=attachment.get("filename") or attachment.get("content_type", "attachment"),
+                attrs=attachment,
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
+
+
+def parse_ics(path: str | Path) -> List[Block]:
+    source = Path(path)
+    raw_lines = source.read_text(encoding="utf-8", errors="ignore").splitlines()
+    unfolded: List[str] = []
+    for line in raw_lines:
+        if line.startswith((" ", "\t")) and unfolded:
+            unfolded[-1] += line.strip()
+        else:
+            unfolded.append(line)
+
+    events: List[Dict[str, str]] = []
+    current: Dict[str, str] = {}
+    for line in unfolded:
+        upper = line.upper()
+        if upper == "BEGIN:VEVENT":
+            current = {}
+            continue
+        if upper == "END:VEVENT":
+            if current:
+                events.append(current)
+            current = {}
+            continue
+        if ":" in line:
+            key, value = line.split(":", 1)
+            current[key.strip().upper()] = value.strip()
+
+    blocks: List[Block] = []
+    for event in events:
+        summary = event.get("SUMMARY", "Event")
+        description_lines = [summary]
+        if "DTSTART" in event:
+            description_lines.append(f"Start: {event['DTSTART']}")
+        if "DTEND" in event:
+            description_lines.append(f"End: {event['DTEND']}")
+        if "LOCATION" in event:
+            description_lines.append(f"Location: {event['LOCATION']}")
+        if "DESCRIPTION" in event:
+            description_lines.append(event["DESCRIPTION"])
+        blocks.append(
+            Block(
+                type="event",
+                text="\n".join(description_lines),
+                attrs={k.lower(): v for k, v in event.items()},
+                source=str(source),
+                confidence=0.75,
+            )
+        )
+
+    if not blocks:
+        text = "\n".join(unfolded)
+        blocks.append(_new_block("other", text, source, confidence=0.3))
+
+    return blocks
 
 
 def parse_eml(path: str | Path) -> List[Block]:

@@ -86,7 +86,7 @@ def apply_recipe(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
         if (
             not matched
             and recipe.fallback_type
-            and block.type in {"paragraph", "other", "metadata"}
+            and block.type in {"paragraph", "other"}
         ):
             data = {"type": recipe.fallback_type}
             attrs = dict(block.attrs)

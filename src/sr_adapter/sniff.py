@@ -22,6 +22,8 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".csv": "csv",
     ".tsv": "csv",
     ".json": "json",
+    ".jsonl": "jsonl",
+    ".ndjson": "jsonl",
     ".html": "html",
     ".htm": "html",
     ".pdf": "pdf",
@@ -30,6 +32,9 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".pptx": "pptx",
     ".xml": "text",
     ".rtf": "text",
+    ".yaml": "yaml",
+    ".yml": "yaml",
+    ".toml": "toml",
     ".eml": "eml",
     ".ics": "ics",
 }
