@@ -27,6 +27,9 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".pdf": "pdf",
     ".docx": "docx",
     ".xlsx": "xlsx",
+    ".xml": "text",
+    ".rtf": "text",
+    ".eml": "text",
 }
 
 

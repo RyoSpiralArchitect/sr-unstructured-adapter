@@ -17,6 +17,7 @@ def test_payload_basic(tmp_path: Path) -> None:
     assert payload_dict["text"] == "hello"
     assert payload_dict["meta"]["size"] == 5
     assert payload_dict["meta"]["line_count"] == 1
+    assert payload_dict["meta"]["word_count"] == 1
 
 
 def test_json_payload_includes_schema(tmp_path: Path) -> None:

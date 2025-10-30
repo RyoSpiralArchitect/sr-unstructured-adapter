@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict
 
+import re
+
 
 def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object]) -> Dict[str, object]:
     """Gather metadata for the given file."""
@@ -21,6 +23,7 @@ def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object])
             {
                 "line_count": text.count("\n") + 1,
                 "char_count": len(text),
+                "word_count": len([w for w in re.split(r"\s+", text.strip()) if w]),
             }
         )
 
