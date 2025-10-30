@@ -5,15 +5,30 @@ from __future__ import annotations
 import csv
 import json
 import re
+import zipfile
 from pathlib import Path
-from typing import Iterable, List
+from typing import Dict, Iterable, List
+from xml.dom import minidom
+from xml.etree import ElementTree as ET
+
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses
 
 from bs4 import BeautifulSoup
 from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
+from .loaders import extract_pptx_slides
+from .logs import LogEntry, iter_log_entries
 from .schema import Block, clone_model
+
+
+try:
+    import extract_msg
+except Exception:  # pragma: no cover - optional dependency guard
+    extract_msg = None  # type: ignore[assignment]
 
 
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
@@ -33,6 +48,15 @@ def _split_paragraphs(text: str) -> Iterable[str]:
             buf.clear()
     if buf:
         yield "\n".join(buf)
+
+
+def _prettify_xml(element: ET.Element) -> str:
+    rough = ET.tostring(element, encoding="utf-8")
+    try:
+        parsed = minidom.parseString(rough)
+        return parsed.toprettyxml(indent="  ")
+    except Exception:
+        return rough.decode("utf-8", errors="ignore")
 
 
 def _classify_chunk(chunk: str) -> str:
@@ -164,6 +188,88 @@ def parse_csv(path: str | Path) -> List[Block]:
     ]
 
 
+def parse_log(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    lines = text.splitlines()
+    entries = list(iter_log_entries(lines))
+
+    consumed = [False] * len(lines)
+    by_start: Dict[int, LogEntry] = {}
+    by_end: Dict[int, int] = {}
+    for entry in entries:
+        if entry.start_line is None:
+            continue
+        start = entry.start_line
+        end = entry.end_line if entry.end_line is not None else start + 1
+        by_start[start] = entry
+        by_end[start] = end
+        for idx in range(start, end):
+            if 0 <= idx < len(consumed):
+                consumed[idx] = True
+
+    blocks: List[Block] = []
+    index = 0
+
+    def _emit_paragraph(start: int, end: int) -> None:
+        for line in lines[start:end]:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            blocks.append(_new_block("paragraph", stripped, source, confidence=0.45))
+
+    while index < len(lines):
+        if index in by_start:
+            entry = by_start[index]
+            end = by_end.get(index, index + 1)
+            attrs: Dict[str, object] = {}
+            if entry.timestamp:
+                attrs["timestamp"] = entry.timestamp
+                if entry.raw_timestamp and entry.raw_timestamp != entry.timestamp:
+                    attrs["raw_timestamp"] = entry.raw_timestamp
+            elif entry.raw_timestamp:
+                attrs["raw_timestamp"] = entry.raw_timestamp
+            if entry.level:
+                attrs["level"] = entry.level
+            attrs["line_start"] = str(index + 1)
+            attrs["line_end"] = str(end)
+
+            message = entry.message or entry.raw.strip()
+            confidence = 0.55
+            if entry.level:
+                confidence += 0.15
+            if entry.timestamp:
+                confidence += 0.15
+            if "\n" in message:
+                confidence -= 0.05
+            confidence = max(0.4, min(confidence, 0.9))
+
+            blocks.append(
+                Block(
+                    type="log",
+                    text=message,
+                    attrs=attrs,
+                    source=str(source),
+                    confidence=confidence,
+                )
+            )
+            index = end
+            continue
+
+        start = index
+        while index < len(lines) and not consumed[index]:
+            index += 1
+        _emit_paragraph(start, index)
+
+    if not blocks:
+        stripped = text.strip()
+        if stripped:
+            return [_new_block("paragraph", stripped, source, confidence=0.3)]
+        return [_new_block("other", "", source, confidence=0.1)]
+
+    return blocks
+
+
 def parse_pdf(path: str | Path) -> List[Block]:
     source = Path(path)
     reader = PdfReader(str(source))
@@ -209,14 +315,49 @@ def parse_docx(path: str | Path) -> List[Block]:
     return blocks or [_new_block("other", "", source, confidence=0.1)]
 
 
+def parse_pptx(path: str | Path) -> List[Block]:
+    source = Path(path)
+    slides = extract_pptx_slides(source)
+    blocks: List[Block] = []
+
+    for index, slide in enumerate(slides, start=1):
+        title = slide.get("title")
+        bullets = slide.get("bullets", [])
+        paragraphs = slide.get("paragraphs", []) or []
+
+        if title:
+            blocks.append(
+                _new_block(
+                    "header",
+                    f"Slide {index}: {title}",
+                    source,
+                    confidence=0.75,
+                )
+            )
+
+        if bullets:
+            formatted = "\n".join(f"- {bullet}" for bullet in bullets if bullet)
+            if formatted:
+                blocks.append(_new_block("list", formatted, source, confidence=0.65))
+
+        remaining = paragraphs[1:] if title else paragraphs
+        extra_text = [line for line in remaining if line and line not in bullets]
+        if extra_text:
+            blocks.append(
+                _new_block("paragraph", "\n".join(extra_text), source, confidence=0.55)
+            )
+
+    return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
 def parse_xlsx(path: str | Path) -> List[Block]:
     source = Path(path)
     workbook = load_workbook(filename=str(source), read_only=True, data_only=True)
     sheet = workbook.active
-    rows = [
-        ["" if cell.value is None else str(cell.value) for cell in row]
-        for row in sheet.iter_rows(values_only=True)
-    ]
+    rows: List[List[str]] = []
+    for row in sheet.iter_rows(values_only=True):
+        values = ["" if value is None else str(value) for value in row]
+        rows.append(values)
     text = "\n".join([", ".join(row) for row in rows])
     workbook.close()
     return [
@@ -241,4 +382,137 @@ def parse_json(path: str | Path) -> List[Block]:
             confidence=0.6,
         )
     ]
+
+
+def parse_yaml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    stripped = text.strip()
+    if not stripped:
+        return [_new_block("other", "", source, confidence=0.1)]
+
+    blocks = [_new_block("code", chunk, source, confidence=0.55) for chunk in _split_paragraphs(text)]
+    return blocks or [_new_block("code", stripped, source, confidence=0.55)]
+
+
+def parse_xml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text = source.read_text(encoding="utf-8", errors="ignore")
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError:
+        stripped = text.strip()
+        if not stripped:
+            return [_new_block("other", "", source, confidence=0.1)]
+        return [_new_block("code", stripped, source, confidence=0.45)]
+
+    blocks: List[Block] = []
+    root_tag = root.tag.split("}")[-1]
+    blocks.append(_new_block("meta", f"XML root: {root_tag}", source, confidence=0.7))
+    pretty = _prettify_xml(root).strip()
+    if pretty:
+        blocks.append(_new_block("code", pretty, source, confidence=0.6))
+    text_content = " ".join(segment.strip() for segment in root.itertext() if segment.strip())
+    if text_content:
+        blocks.append(_new_block("paragraph", text_content, source, confidence=0.5))
+    return blocks or [_new_block("code", text.strip(), source, confidence=0.55)]
+
+
+def parse_email(path: str | Path) -> List[Block]:
+    source = Path(path)
+    suffix = source.suffix.lower()
+
+    if suffix == ".msg" and extract_msg is not None:
+        message = extract_msg.Message(str(source))
+        try:
+            blocks: List[Block] = []
+            if message.subject:
+                blocks.append(
+                    _new_block("title", message.subject.strip(), source, confidence=0.9)
+                )
+
+            address_lines = []
+            if message.sender:
+                address_lines.append(f"From: {message.sender}")
+            if message.to:
+                tos = [addr.strip() for addr in message.to.split(";") if addr.strip()]
+                if tos:
+                    address_lines.append(f"To: {', '.join(tos)}")
+            if message.cc:
+                ccs = [addr.strip() for addr in message.cc.split(";") if addr.strip()]
+                if ccs:
+                    address_lines.append(f"Cc: {', '.join(ccs)}")
+            if address_lines:
+                blocks.append(
+                    _new_block("kv", "\n".join(address_lines), source, confidence=0.7)
+                )
+
+            if message.body:
+                for chunk in _split_paragraphs(message.body):
+                    blocks.append(
+                        _new_block("paragraph", chunk.strip(), source, confidence=0.55)
+                    )
+            for attachment in message.attachments:
+                name = attachment.longFilename or attachment.shortFilename or "attachment"
+                blocks.append(_new_block("attachment", name, source, confidence=0.4))
+            return blocks or [_new_block("other", "", source, confidence=0.1)]
+        finally:
+            message.close()
+
+    with source.open("rb") as handle:
+        message = BytesParser(policy=policy.default).parse(handle)
+
+    blocks = []
+
+    subject = (message.get("subject") or "").strip()
+    if subject:
+        blocks.append(_new_block("title", subject, source, confidence=0.9))
+
+    address_lines = []
+    for header in ("from", "to", "cc"):
+        values = [addr for _, addr in getaddresses([message.get(header, "")]) if addr]
+        if values:
+            address_lines.append(f"{header.title()}: {', '.join(values)}")
+    if address_lines:
+        blocks.append(_new_block("kv", "\n".join(address_lines), source, confidence=0.7))
+
+    for part in message.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        disposition = part.get_content_disposition()
+        if disposition == "attachment":
+            filename = part.get_filename() or "attachment"
+            blocks.append(_new_block("attachment", filename, source, confidence=0.4))
+            continue
+        if part.get_content_type().startswith("text/"):
+            content = part.get_content().strip()
+            for chunk in _split_paragraphs(content):
+                blocks.append(_new_block("paragraph", chunk.strip(), source, confidence=0.55))
+
+    return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
+def parse_zip(path: str | Path) -> List[Block]:
+    source = Path(path)
+    blocks: List[Block] = []
+
+    with zipfile.ZipFile(source) as archive:
+        for member in archive.infolist():
+            if member.is_dir():
+                continue
+            description = f"{member.filename} ({member.file_size} bytes)"
+            blocks.append(_new_block("attachment", description, source, confidence=0.45))
+            suffix = Path(member.filename).suffix.lower()
+            if member.file_size <= 64 * 1024 and suffix in {".txt", ".log", ".csv", ".tsv"}:
+                with archive.open(member) as handle:
+                    content = handle.read().decode("utf-8", errors="ignore")
+                for chunk in _split_paragraphs(content):
+                    blocks.append(_new_block("paragraph", chunk.strip(), source, confidence=0.5))
+
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
+
+
+def parse_image(path: str | Path) -> List[Block]:
+    source = Path(path)
+    return [_new_block("image", source.name, source, confidence=0.3)]
 
