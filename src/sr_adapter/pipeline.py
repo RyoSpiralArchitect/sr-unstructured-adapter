@@ -12,9 +12,12 @@ from .normalize import normalize_blocks
 from .parsers import (
     parse_csv,
     parse_docx,
+    parse_eml,
     parse_html,
+    parse_ics,
     parse_json,
     parse_md,
+    parse_pptx,
     parse_pdf,
     parse_txt,
     parse_xlsx,
@@ -67,7 +70,10 @@ REGISTRY.register("csv", parse_csv)
 REGISTRY.register("json", parse_json)
 REGISTRY.register("pdf", parse_pdf)
 REGISTRY.register("docx", parse_docx)
+REGISTRY.register("pptx", parse_pptx)
 REGISTRY.register("xlsx", parse_xlsx)
+REGISTRY.register("eml", parse_eml)
+REGISTRY.register("ics", parse_ics)
 
 # 外部拡張用ヘルパ（プラグイン等から利用）
 def register_parser(key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -> None:

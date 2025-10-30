@@ -5,8 +5,12 @@ from __future__ import annotations
 import csv
 import json
 import re
+import zipfile
+import xml.etree.ElementTree as ET
+from email import policy
+from email.parser import BytesParser
 from pathlib import Path
-from typing import Iterable, List
+from typing import Dict, Iterable, List
 
 from bs4 import BeautifulSoup
 from docx import Document as DocxDocument
@@ -19,6 +23,10 @@ from .schema import Block, clone_model
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
 _TIMESTAMP_PREFIX = re.compile(r"^\[?\d{4}[-/]\d{2}[-/]\d{2}")
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?。！？])\s+(?=[\w\"'(])")
+_KV_PATTERN = re.compile(r"^(?P<key>[\w .#/-]{1,64})\s*[:=]\s*(?P<value>.+)$")
+_LOG_LINE = re.compile(
+    r"^\[?(?P<ts>\d{4}[-/]\d{2}[-/]\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?)\]?\s*(?P<body>.*)$"
+)
 _MAX_CHARS_PER_CHUNK = 600
 
 
@@ -46,17 +54,63 @@ def _classify_chunk(chunk: str) -> str:
         return "heading"
     if stripped.upper() == stripped and len(stripped.split()) <= 6:
         return "heading"
-    if _TIMESTAMP_PREFIX.match(stripped):
-        return "metadata"
+    if _LOG_LINE.match(stripped):
+        return "log"
+    if _KV_PATTERN.match(stripped):
+        return "kv"
     lines = stripped.splitlines()
     if len(lines) == 1 and len(stripped) <= 80:
-        if any(stripped.startswith(prefix) for prefix in ("title:", "subject:")):
-            return "metadata"
+        lowered = stripped.lower()
+        if any(lowered.startswith(prefix) for prefix in ("title:", "subject:", "from:", "to:", "cc:")):
+            return "kv"
     if all(_LIST_MARKERS.match(line) for line in lines):
         return "list_item"
+    if _TIMESTAMP_PREFIX.match(stripped):
+        return "metadata"
     if all(":" in line for line in lines) and len(lines) <= 6:
         return "metadata"
     return "paragraph"
+
+
+def _block_from_chunk(chunk: str, source: Path) -> Block:
+    chunk = chunk.strip()
+    block_type = _classify_chunk(chunk)
+    if block_type == "kv":
+        match = _KV_PATTERN.match(chunk)
+        attrs: Dict[str, str] = {}
+        if match:
+            attrs = {"key": match.group("key").strip(), "value": match.group("value").strip()}
+        return Block(
+            type="kv",
+            text=chunk,
+            attrs=attrs,
+            source=str(source),
+            confidence=0.75,
+        )
+    if block_type == "log":
+        match = _LOG_LINE.match(chunk)
+        attrs = {}
+        if match:
+            attrs = {
+                "timestamp": match.group("ts"),
+                "message": match.group("body").strip(),
+            }
+        return Block(
+            type="log",
+            text=chunk,
+            attrs=attrs,
+            source=str(source),
+            confidence=0.6,
+        )
+    if block_type == "list_item":
+        return _new_block("list_item", chunk, source, confidence=0.7)
+    if block_type == "heading":
+        return _new_block("heading", chunk, source, confidence=0.8)
+    if block_type == "metadata":
+        return _new_block("metadata", chunk, source, confidence=0.6)
+    if block_type == "other":
+        return _new_block("other", chunk, source, confidence=0.3)
+    return _new_block(block_type, chunk, source)
 
 
 def _explode_structured_chunk(chunk: str) -> List[str]:
@@ -105,9 +159,7 @@ def _iter_refined_chunks(text: str) -> Iterable[str]:
 def parse_txt(path: str | Path) -> List[Block]:
     source = Path(path)
     text = source.read_text(encoding="utf-8", errors="ignore")
-    blocks = [
-        _new_block(_classify_chunk(chunk), chunk, source) for chunk in _iter_refined_chunks(text)
-    ]
+    blocks = [_block_from_chunk(chunk, source) for chunk in _iter_refined_chunks(text)]
     return blocks or [_new_block("other", text, source, confidence=0.3)]
 
 
@@ -136,11 +188,11 @@ def parse_md(path: str | Path) -> List[Block]:
             blocks.append(_new_block("heading", stripped.lstrip("# "), source, confidence=0.8))
             continue
         if _LIST_MARKERS.match(stripped):
-            blocks.append(_new_block("list_item", stripped, source, confidence=0.7))
+            blocks.append(_block_from_chunk(stripped, source))
             continue
         if stripped:
             for chunk in _shatter_chunk(stripped):
-                blocks.append(_new_block("paragraph", chunk, source))
+                blocks.append(_block_from_chunk(chunk, source))
     if code_buffer:
         blocks.append(_new_block("code", "\n".join(code_buffer), source, confidence=0.7))
     return blocks or [_new_block("other", text, source, confidence=0.3)]
@@ -180,7 +232,7 @@ def parse_html(path: str | Path) -> List[Block]:
             )
         else:
             for chunk in _shatter_chunk(text):
-                blocks.append(_new_block("paragraph", chunk, source, confidence=0.6))
+                blocks.append(_block_from_chunk(chunk, source))
     return blocks or [_new_block("paragraph", soup.get_text("\n", strip=True), source, confidence=0.4)]
 
 
@@ -208,13 +260,10 @@ def parse_pdf(path: str | Path) -> List[Block]:
     for index, page in enumerate(reader.pages):
         text = page.extract_text() or ""
         for chunk in _iter_refined_chunks(text):
-            base = _new_block(
-                _classify_chunk(chunk),
-                chunk,
-                source,
-                confidence=0.55,
-            )
-            blocks.append(clone_model(base, attrs={"page": str(index + 1)}))
+            base = _block_from_chunk(chunk, source)
+            attrs = dict(base.attrs)
+            attrs.setdefault("page", str(index + 1))
+            blocks.append(clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.55)))
     return blocks or [_new_block("other", "", source, confidence=0.1)]
 
 
@@ -226,13 +275,14 @@ def parse_docx(path: str | Path) -> List[Block]:
         text = paragraph.text.strip()
         if not text:
             continue
-        block_type = "paragraph"
-        if paragraph.style and paragraph.style.name:
-            style = paragraph.style.name.lower()
-            if "heading" in style:
-                block_type = "heading"
+        style = (paragraph.style.name.lower() if paragraph.style and paragraph.style.name else "")
+        is_heading = "heading" in style if style else False
         for chunk in _shatter_chunk(text):
-            blocks.append(_new_block(block_type, chunk, source, confidence=0.65))
+            base = _block_from_chunk(chunk, source)
+            data: Dict[str, object] = {"confidence": max(base.confidence, 0.65)}
+            if is_heading and base.type == "paragraph":
+                data["type"] = "heading"
+            blocks.append(clone_model(base, **data))
     for table in doc.tables:
         rows = [[cell.text.strip() for cell in row.cells] for row in table.rows]
         blocks.append(
@@ -245,6 +295,40 @@ def parse_docx(path: str | Path) -> List[Block]:
             )
         )
     return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
+def parse_pptx(path: str | Path) -> List[Block]:
+    source = Path(path)
+    blocks: List[Block] = []
+    try:
+        with zipfile.ZipFile(str(source)) as zf:
+            slide_names = sorted(
+                name
+                for name in zf.namelist()
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
+            )
+            for index, slide_name in enumerate(slide_names, 1):
+                try:
+                    root = ET.fromstring(zf.read(slide_name))
+                except Exception:
+                    continue
+                texts: List[str] = []
+                for node in root.iter():
+                    if node.tag.endswith("}t") and (node.text or "").strip():
+                        texts.append(node.text.strip())
+                if not texts:
+                    continue
+                slide_text = "\n".join(texts)
+                for chunk in _iter_refined_chunks(slide_text):
+                    base = _block_from_chunk(chunk, source)
+                    attrs = dict(base.attrs)
+                    attrs.setdefault("slide", str(index))
+                    blocks.append(
+                        clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.6))
+                    )
+    except Exception:
+        pass
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
 
 
 def parse_xlsx(path: str | Path) -> List[Block]:
@@ -279,4 +363,141 @@ def parse_json(path: str | Path) -> List[Block]:
             confidence=0.6,
         )
     ]
+
+
+def parse_eml(path: str | Path) -> List[Block]:
+    source = Path(path)
+    data = source.read_bytes()
+    blocks: List[Block] = []
+    try:
+        message = BytesParser(policy=policy.default).parsebytes(data)
+    except Exception:
+        return [_new_block("other", data.decode("utf-8", errors="ignore"), source, confidence=0.2)]
+
+    header_attrs = {
+        "subject": message.get("subject", ""),
+        "from": message.get("from", ""),
+        "to": message.get("to", ""),
+        "cc": message.get("cc", ""),
+        "date": message.get("date", ""),
+    }
+    header_text = "\n".join(
+        [f"Subject: {header_attrs['subject']}", f"From: {header_attrs['from']}", f"To: {header_attrs['to']}"]
+    ).strip()
+    blocks.append(
+        Block(
+            type="meta",
+            text=header_text,
+            attrs={k: v for k, v in header_attrs.items() if v},
+            source=str(source),
+            confidence=0.85,
+        )
+    )
+
+    text_parts: List[str] = []
+    html_fallback: List[str] = []
+    attachments: List[Dict[str, object]] = []
+    for part in message.walk():
+        if part.is_multipart():
+            continue
+        filename = part.get_filename()
+        content_type = part.get_content_type()
+        payload = part.get_payload(decode=True) or b""
+        if filename:
+            attachments.append(
+                {
+                    "filename": filename,
+                    "content_type": content_type,
+                    "size": len(payload),
+                }
+            )
+            continue
+        if content_type.startswith("text/"):
+            charset = part.get_content_charset() or "utf-8"
+            try:
+                decoded = payload.decode(charset, errors="ignore")
+            except LookupError:
+                decoded = payload.decode("utf-8", errors="ignore")
+            if content_type == "text/plain":
+                text_parts.append(decoded)
+            else:
+                html_fallback.append(decoded)
+
+    if not text_parts and html_fallback:
+        for html in html_fallback:
+            cleaned = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+            if cleaned:
+                text_parts.append(cleaned)
+
+    for part in text_parts:
+        for chunk in _iter_refined_chunks(part):
+            blocks.append(_block_from_chunk(chunk, source))
+
+    for attachment in attachments[:10]:
+        blocks.append(
+            Block(
+                type="attachment",
+                text=attachment.get("filename") or attachment.get("content_type", "attachment"),
+                attrs=attachment,
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
+
+
+def parse_ics(path: str | Path) -> List[Block]:
+    source = Path(path)
+    raw_lines = source.read_text(encoding="utf-8", errors="ignore").splitlines()
+    unfolded: List[str] = []
+    for line in raw_lines:
+        if line.startswith((" ", "\t")) and unfolded:
+            unfolded[-1] += line.strip()
+        else:
+            unfolded.append(line)
+
+    events: List[Dict[str, str]] = []
+    current: Dict[str, str] = {}
+    for line in unfolded:
+        upper = line.upper()
+        if upper == "BEGIN:VEVENT":
+            current = {}
+            continue
+        if upper == "END:VEVENT":
+            if current:
+                events.append(current)
+            current = {}
+            continue
+        if ":" in line:
+            key, value = line.split(":", 1)
+            current[key.strip().upper()] = value.strip()
+
+    blocks: List[Block] = []
+    for event in events:
+        summary = event.get("SUMMARY", "Event")
+        description_lines = [summary]
+        if "DTSTART" in event:
+            description_lines.append(f"Start: {event['DTSTART']}")
+        if "DTEND" in event:
+            description_lines.append(f"End: {event['DTEND']}")
+        if "LOCATION" in event:
+            description_lines.append(f"Location: {event['LOCATION']}")
+        if "DESCRIPTION" in event:
+            description_lines.append(event["DESCRIPTION"])
+        blocks.append(
+            Block(
+                type="event",
+                text="\n".join(description_lines),
+                attrs={k.lower(): v for k, v in event.items()},
+                source=str(source),
+                confidence=0.75,
+            )
+        )
+
+    if not blocks:
+        text = "\n".join(unfolded)
+        blocks.append(_new_block("other", text, source, confidence=0.3))
+
+    return blocks
 
