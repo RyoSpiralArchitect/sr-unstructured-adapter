@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
 import zipfile
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
 
@@ -15,14 +16,9 @@ from email import policy
 from email.parser import BytesParser
 from email.utils import getaddresses
 
-from bs4 import BeautifulSoup
-from docx import Document as DocxDocument
-from openpyxl import load_workbook
-from pypdf import PdfReader
-
 from .loaders import extract_pptx_slides
 from .logs import LogEntry, iter_log_entries
-from .schema import Block, clone_model
+from .schema import Block, Span
 
 
 try:
@@ -32,10 +28,33 @@ except Exception:  # pragma: no cover - optional dependency guard
 
 
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
+_FENCE = re.compile(r"^```(\w+)?\s*$")
+_URL = re.compile(r"https?://[^\s)]+")
+_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+_DATE = re.compile(r"\b(?:\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4})\b")
 
 
-def _new_block(block_type: str, text: str, source: Path, confidence: float = 0.5) -> Block:
-    return Block(type=block_type, text=text, source=str(source), confidence=confidence)
+def _annotate_spans(text: str) -> List[Span]:
+    spans: List[Span] = []
+    for regex, label in ((_URL, "url"), (_EMAIL, "email"), (_DATE, "date")):
+        for match in regex.finditer(text):
+            spans.append(Span(start=match.start(), end=match.end(), label=label))
+    return spans
+
+
+def _new_block(
+    block_type: str,
+    text: str,
+    source: Path,
+    confidence: float = 0.5,
+    **attrs: Any,
+) -> Block:
+    block = Block(type=block_type, text=text, source=str(source), confidence=confidence)
+    if attrs:
+        block.attrs = dict(attrs)
+    if text:
+        block.spans = _annotate_spans(text)
+    return block
 
 
 def _split_paragraphs(text: str) -> Iterable[str]:
@@ -48,6 +67,29 @@ def _split_paragraphs(text: str) -> Iterable[str]:
             buf.clear()
     if buf:
         yield "\n".join(buf)
+
+
+def _is_md_table_row(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped or "|" not in stripped:
+        return False
+    if stripped.startswith("|") and stripped.endswith("|"):
+        cells = stripped.strip("|").split("|")
+    else:
+        cells = stripped.split("|")
+    return len(cells) >= 2
+
+
+def _is_md_table_separator(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if set(stripped) - {"|", "-", ":", " "}:
+        return False
+    parts = [part.strip() for part in stripped.strip("|").split("|") if part.strip()]
+    if not parts:
+        return False
+    return all(set(part) <= {"-", ":"} for part in parts)
 
 
 def _prettify_xml(element: ET.Element) -> str:
@@ -105,85 +147,204 @@ def parse_md(path: str | Path) -> List[Block]:
     text = source.read_text(encoding="utf-8", errors="ignore")
     blocks: List[Block] = []
     in_code = False
+    code_lang: str | None = None
     code_buffer: List[str] = []
-    for line in text.splitlines():
-        stripped = line.strip("\n")
-        if stripped.startswith("```"):
+    buf_list: List[str] = []
+
+    def flush_list() -> None:
+        nonlocal buf_list
+        if buf_list:
+            blocks.append(
+                _new_block("list", "\n".join(buf_list), source, confidence=0.75)
+            )
+            buf_list = []
+
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        fence_match = _FENCE.match(stripped)
+        if fence_match:
             if in_code:
                 blocks.append(
-                    _new_block("code", "\n".join(code_buffer), source, confidence=0.7)
+                    _new_block(
+                        "code",
+                        "\n".join(code_buffer),
+                        source,
+                        confidence=0.8,
+                        lang=code_lang,
+                    )
                 )
                 code_buffer.clear()
                 in_code = False
+                code_lang = None
             else:
                 in_code = True
+                code_buffer = []
+                code_lang = fence_match.group(1) or None
+            index += 1
             continue
+
         if in_code:
             code_buffer.append(line)
+            index += 1
             continue
+
+        if stripped and _is_md_table_row(stripped):
+            # Require a separator line to confirm table structure
+            if index + 1 < len(lines) and _is_md_table_separator(lines[index + 1]):
+                flush_list()
+                table_lines = [stripped, lines[index + 1].strip()]
+                index += 2
+                while index < len(lines) and _is_md_table_row(lines[index]):
+                    table_lines.append(lines[index].strip())
+                    index += 1
+                rows = []
+                for line_idx, row in enumerate(table_lines):
+                    if line_idx == 1 and _is_md_table_separator(row):
+                        continue
+                    cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+                    rows.append(cells)
+                table_text = "\n".join([" | ".join(row) for row in rows])
+                blocks.append(
+                    _new_block(
+                        "table",
+                        table_text,
+                        source,
+                        confidence=0.85,
+                        rows=rows,
+                    )
+                )
+                continue
+
+        if not stripped:
+            flush_list()
+            index += 1
+            continue
+
         if stripped.startswith("#"):
-            blocks.append(_new_block("header", stripped.lstrip("# "), source, confidence=0.8))
+            flush_list()
+            blocks.append(
+                _new_block(
+                    "header", stripped.lstrip("# ").strip(), source, confidence=0.9
+                )
+            )
+            index += 1
             continue
+
         if _LIST_MARKERS.match(stripped):
-            blocks.append(_new_block("list", stripped, source, confidence=0.7))
+            buf_list.append(stripped)
+            index += 1
             continue
-        if stripped:
-            blocks.append(_new_block("paragraph", stripped, source))
-    if code_buffer:
-        blocks.append(_new_block("code", "\n".join(code_buffer), source, confidence=0.7))
+
+        flush_list()
+        blocks.append(_new_block("paragraph", stripped, source, confidence=0.65))
+        index += 1
+
+    flush_list()
+    if in_code:
+        blocks.append(
+            _new_block(
+                "code",
+                "\n".join(code_buffer),
+                source,
+                confidence=0.8,
+                lang=code_lang,
+            )
+        )
     return blocks or [_new_block("other", text, source, confidence=0.3)]
 
 
 def parse_html(path: str | Path) -> List[Block]:
     source = Path(path)
     html = source.read_text(encoding="utf-8", errors="ignore")
+    try:
+        from bs4 import BeautifulSoup  # type: ignore[import-not-found]
+    except Exception:
+        return [_new_block("paragraph", html, source, confidence=0.4)]
+
     soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.extract()
+
     blocks: List[Block] = []
-    for element in soup.find_all(["title", "h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "pre", "code", "table"]):
+    for element in soup.find_all(
+        ["title", "h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "pre", "code", "table", "a"]
+    ):
         text = element.get_text(" ", strip=True)
         if not text:
             continue
         name = element.name or "p"
         if name == "title":
-            blocks.append(_new_block("title", text, source, confidence=0.9))
+            blocks.append(_new_block("title", text, source, confidence=0.95))
         elif name in {"h1", "h2", "h3", "h4", "h5", "h6"}:
-            blocks.append(_new_block("header", text, source, confidence=0.85))
+            blocks.append(
+                _new_block("header", text, source, confidence=0.9, level=name)
+            )
         elif name == "li":
-            blocks.append(_new_block("list", text, source, confidence=0.7))
+            blocks.append(_new_block("list", text, source, confidence=0.75))
         elif name in {"pre", "code"}:
-            blocks.append(_new_block("code", text, source, confidence=0.75))
+            blocks.append(_new_block("code", text, source, confidence=0.8))
+        elif name == "a":
+            href = element.get("href", "")
+            block = _new_block(
+                "paragraph", text, source, confidence=0.65, href=href
+            )
+            if href:
+                block.spans.append(Span(start=0, end=len(block.text), label="anchor"))
+            blocks.append(block)
         elif name == "table":
             rows = [
                 [cell.get_text(" ", strip=True) for cell in row.find_all(["th", "td"])]
                 for row in element.find_all("tr")
             ]
+            table_text = "\n".join([", ".join(row) for row in rows])
             blocks.append(
-                Block(
-                    type="table",
-                    text="\n".join([", ".join(row) for row in rows]),
-                    attrs={"rows": json.dumps(rows, ensure_ascii=False)},
-                    source=str(source),
-                    confidence=0.8,
+                _new_block(
+                    "table",
+                    table_text,
+                    source,
+                    confidence=0.85,
+                    rows=rows,
                 )
             )
         else:
             blocks.append(_new_block("paragraph", text, source, confidence=0.6))
-    return blocks or [_new_block("paragraph", soup.get_text("\n", strip=True), source, confidence=0.4)]
+    if blocks:
+        return blocks
+    fallback = soup.get_text("\n", strip=True)
+    return [_new_block("paragraph", fallback, source, confidence=0.45)]
 
 
 def parse_csv(path: str | Path) -> List[Block]:
     source = Path(path)
     with source.open("r", encoding="utf-8", errors="ignore", newline="") as handle:
-        reader = csv.reader(handle)
+        sample = handle.read(4096)
+        handle.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample)
+        except Exception:
+            dialect = csv.excel
+        reader = csv.reader(handle, dialect)
         rows = [row for row in reader]
+
+    has_header = False
+    try:
+        has_header = csv.Sniffer().has_header(sample)
+    except Exception:
+        has_header = False
+
     text = "\n".join([", ".join(row) for row in rows])
     return [
-        Block(
-            type="table",
-            text=text,
-            attrs={"rows": json.dumps(rows, ensure_ascii=False)},
-            source=str(source),
-            confidence=0.8,
+        _new_block(
+            "table",
+            text,
+            source,
+            confidence=0.85,
+            has_header=has_header,
+            rows=rows,
+            n_rows=len(rows),
         )
     ]
 
@@ -222,7 +383,7 @@ def parse_log(path: str | Path) -> List[Block]:
         if index in by_start:
             entry = by_start[index]
             end = by_end.get(index, index + 1)
-            attrs: Dict[str, object] = {}
+            attrs: Dict[str, Any] = {}
             if entry.timestamp:
                 attrs["timestamp"] = entry.timestamp
                 if entry.raw_timestamp and entry.raw_timestamp != entry.timestamp:
@@ -245,12 +406,12 @@ def parse_log(path: str | Path) -> List[Block]:
             confidence = max(0.4, min(confidence, 0.9))
 
             blocks.append(
-                Block(
-                    type="log",
-                    text=message,
-                    attrs=attrs,
-                    source=str(source),
+                _new_block(
+                    "log",
+                    message,
+                    source,
                     confidence=confidence,
+                    **attrs,
                 )
             )
             index = end
@@ -272,23 +433,69 @@ def parse_log(path: str | Path) -> List[Block]:
 
 def parse_pdf(path: str | Path) -> List[Block]:
     source = Path(path)
-    reader = PdfReader(str(source))
+    try:
+        from pypdf import PdfReader  # type: ignore[import-not-found]
+    except Exception:
+        return [_new_block("other", "", source, confidence=0.1, note="pypdf_missing")]
+
+    try:
+        reader = PdfReader(str(source))
+    except Exception as exc:
+        return [_new_block("other", "", source, confidence=0.1, error=type(exc).__name__)]
+
+    try:
+        max_pages = int(os.getenv("SR_ADAPTER_PDF_MAX_PAGES", "400"))
+    except ValueError:
+        max_pages = 400
+
+    pages = list(reader.pages)
+    total_pages = len(pages)
     blocks: List[Block] = []
-    for index, page in enumerate(reader.pages):
-        text = page.extract_text() or ""
+    for index, page in enumerate(pages[:max_pages], start=1):
+        try:
+            text = page.extract_text() or ""
+        except Exception:
+            text = ""
+        stripped = text.strip()
+        if not stripped:
+            blocks.append(_new_block("other", "", source, confidence=0.2, page=index))
+            continue
         for chunk in _split_paragraphs(text):
-            base = _new_block(
-                "paragraph",
-                chunk.strip(),
-                source,
-                confidence=0.55,
+            cleaned = chunk.strip()
+            if not cleaned:
+                continue
+            blocks.append(
+                _new_block(
+                    "paragraph",
+                    cleaned,
+                    source,
+                    confidence=0.6,
+                    page=index,
+                )
             )
-            blocks.append(clone_model(base, attrs={"page": str(index + 1)}))
+
+    if total_pages > max_pages:
+        blocks.append(
+            _new_block(
+                "other",
+                "",
+                source,
+                confidence=0.2,
+                pages_read=max_pages,
+                pages_total=total_pages,
+            )
+        )
+
     return blocks or [_new_block("other", "", source, confidence=0.1)]
 
 
 def parse_docx(path: str | Path) -> List[Block]:
     source = Path(path)
+    try:
+        from docx import Document as DocxDocument  # type: ignore[import-not-found]
+    except Exception:
+        return [_new_block("other", "", source, confidence=0.2, note="python_docx_missing")]
+
     doc = DocxDocument(str(source))
     blocks: List[Block] = []
     for paragraph in doc.paragraphs:
@@ -300,17 +507,15 @@ def parse_docx(path: str | Path) -> List[Block]:
             style = paragraph.style.name.lower()
             if "heading" in style:
                 block_type = "header"
-        blocks.append(_new_block(block_type, text, source, confidence=0.65))
+        confidence = 0.65
+        if block_type == "header":
+            confidence = 0.8
+        blocks.append(_new_block(block_type, text, source, confidence=confidence))
     for table in doc.tables:
         rows = [[cell.text.strip() for cell in row.cells] for row in table.rows]
+        table_text = "\n".join([", ".join(row) for row in rows])
         blocks.append(
-            Block(
-                type="table",
-                text="\n".join([", ".join(row) for row in rows]),
-                attrs={"rows": json.dumps(rows, ensure_ascii=False)},
-                source=str(source),
-                confidence=0.75,
-            )
+            _new_block("table", table_text, source, confidence=0.75, rows=rows)
         )
     return blocks or [_new_block("other", "", source, confidence=0.1)]
 
@@ -352,23 +557,64 @@ def parse_pptx(path: str | Path) -> List[Block]:
 
 def parse_xlsx(path: str | Path) -> List[Block]:
     source = Path(path)
+    try:
+        from openpyxl import load_workbook  # type: ignore[import-not-found]
+    except Exception:
+        return [_new_block("table", "", source, confidence=0.3, note="openpyxl_missing")]
+
+    try:
+        max_rows = int(os.getenv("SR_ADAPTER_XLSX_MAX_ROWS", "10000"))
+    except ValueError:
+        max_rows = 10000
+    try:
+        max_sheets = int(os.getenv("SR_ADAPTER_XLSX_MAX_SHEETS", "10"))
+    except ValueError:
+        max_sheets = 10
+
     workbook = load_workbook(filename=str(source), read_only=True, data_only=True)
-    sheet = workbook.active
-    rows: List[List[str]] = []
-    for row in sheet.iter_rows(values_only=True):
-        values = ["" if value is None else str(value) for value in row]
-        rows.append(values)
-    text = "\n".join([", ".join(row) for row in rows])
-    workbook.close()
-    return [
-        Block(
-            type="table",
-            text=text,
-            attrs={"rows": json.dumps(rows, ensure_ascii=False)},
-            source=str(source),
-            confidence=0.75,
-        )
-    ]
+    blocks: List[Block] = []
+    try:
+        worksheets = list(workbook.worksheets)
+        for ws in worksheets[:max_sheets]:
+            rows: List[List[Any]] = []
+            truncated = False
+            for index, row in enumerate(ws.iter_rows(values_only=True)):
+                if index >= max_rows:
+                    truncated = True
+                    break
+                rows.append(list(row))
+            text_lines = []
+            for row in rows:
+                line = ", ".join("" if cell is None else str(cell) for cell in row)
+                text_lines.append(line)
+            text = "\n".join(text_lines)
+            blocks.append(
+                _new_block(
+                    "table",
+                    text,
+                    source,
+                    confidence=0.8,
+                    sheet=ws.title,
+                    rows=rows,
+                    rows_read=len(rows),
+                    truncated=truncated,
+                )
+            )
+        if len(worksheets) > max_sheets:
+            blocks.append(
+                _new_block(
+                    "other",
+                    "",
+                    source,
+                    confidence=0.25,
+                    sheets_read=max_sheets,
+                    sheets_total=len(worksheets),
+                )
+            )
+    finally:
+        workbook.close()
+
+    return blocks or [_new_block("table", "", source, confidence=0.3)]
 
 
 def parse_pptx(path: str | Path) -> List[Block]:
@@ -396,12 +642,13 @@ def parse_pptx(path: str | Path) -> List[Block]:
             title = texts[0]
             body = "\n".join(texts)
             blocks.append(
-                Block(
-                    type="slide",
-                    text=body,
-                    attrs={"title": title, "slide": str(index)},
-                    source=str(source),
+                _new_block(
+                    "slide",
+                    body,
+                    source,
                     confidence=0.6,
+                    title=title,
+                    slide=index,
                 )
             )
     return blocks or [_new_block("other", "", source, confidence=0.2)]
@@ -409,13 +656,69 @@ def parse_pptx(path: str | Path) -> List[Block]:
 
 def parse_json(path: str | Path) -> List[Block]:
     source = Path(path)
-    data = json.loads(source.read_text(encoding="utf-8", errors="ignore"))
+    raw = source.read_text(encoding="utf-8", errors="ignore")
+    stripped = raw.strip()
+    if not stripped:
+        return [_new_block("other", "", source, confidence=0.1)]
+
+    try:
+        data = json.loads(stripped)
+    except Exception:
+        lines = [line for line in stripped.splitlines() if line.strip()]
+        valid = 0
+        for line in lines[:50]:
+            try:
+                json.loads(line)
+            except Exception:
+                continue
+            else:
+                valid += 1
+        return [
+            _new_block(
+                "code",
+                stripped,
+                source,
+                confidence=0.55,
+                jsonl_valid=valid,
+                n_lines=len(lines),
+            )
+        ]
+
+    formatted = json.dumps(data, ensure_ascii=False, indent=2)
     return [
-        Block(
-            type="code",
-            text=json.dumps(data, ensure_ascii=False, indent=2),
-            source=str(source),
-            confidence=0.6,
+        _new_block(
+            "code",
+            formatted,
+            source,
+            confidence=0.7,
+            top_type=type(data).__name__,
+        )
+    ]
+
+
+def parse_jsonl(path: str | Path) -> List[Block]:
+    source = Path(path)
+    lines = source.read_text(encoding="utf-8", errors="ignore").splitlines()
+    records: List[Any] = []
+    errors = 0
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            records.append(json.loads(stripped))
+        except Exception:
+            errors += 1
+    text = "\n".join(line for line in lines if line.strip())
+    confidence = 0.6 if errors == 0 else 0.45
+    return [
+        _new_block(
+            "code",
+            text,
+            source,
+            confidence=confidence,
+            records_valid=len(records),
+            records_invalid=errors,
         )
     ]
 
