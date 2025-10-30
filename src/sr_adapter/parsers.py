@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 import yaml
 from bs4 import BeautifulSoup
@@ -21,7 +21,8 @@ from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
-from .schema import Block, clone_model
+from .loaders import _extract_image_text
+from .schema import BBox, Block, Provenance, clone_model
 
 
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
@@ -647,6 +648,130 @@ def parse_pdf(path: str | Path) -> List[Block]:
             attrs.setdefault("page", str(index + 1))
             blocks.append(clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.55)))
     return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
+def parse_image(path: str | Path) -> List[Block]:
+    source = Path(path)
+    text, meta, segments = _extract_image_text(source)
+
+    blocks: List[Block] = []
+    truncated = False
+    summary_attrs = dict(meta)
+    if summary_attrs:
+        blocks.append(
+            Block(
+                type="metadata",
+                text="Image summary",
+                attrs=summary_attrs,
+                source=str(source),
+                confidence=0.45,
+            )
+        )
+
+    added_content = False
+    for segment in segments:
+        if len(blocks) >= _STRUCTURED_BLOCK_LIMIT:
+            truncated = True
+            break
+        seg_text = str(segment.get("text", "")).strip()
+        if not seg_text:
+            continue
+        kind = segment.get("kind", "ocr")
+        source_kind = segment.get("source", "ocr")
+        if kind == "metadata":
+            attrs = {"image_source": source_kind, "length": len(seg_text)}
+            key = segment.get("key")
+            if key:
+                attrs["key"] = key
+            blocks.append(
+                Block(
+                    type="metadata",
+                    text=seg_text,
+                    attrs=attrs,
+                    source=str(source),
+                    confidence=0.6,
+                )
+            )
+            added_content = True
+            continue
+
+        prov = Provenance()
+        order = segment.get("order")
+        if order is not None:
+            try:
+                prov.order = int(order)
+            except Exception:
+                pass
+        page = segment.get("page")
+        if page is not None:
+            try:
+                prov.page = int(page)
+            except Exception:
+                pass
+        bbox = segment.get("bbox")
+        if bbox and isinstance(bbox, tuple) and len(bbox) == 4:
+            try:
+                prov.bbox = BBox(
+                    x0=float(bbox[0]),
+                    y0=float(bbox[1]),
+                    x1=float(bbox[2]),
+                    y1=float(bbox[3]),
+                )
+            except Exception:
+                prov.bbox = None
+
+        attrs: Dict[str, Any] = {"image_source": source_kind}
+        confidence = segment.get("confidence", 0.6)
+        try:
+            attrs["confidence"] = float(confidence)
+            conf_value = float(confidence)
+        except Exception:
+            attrs["confidence"] = confidence
+            conf_value = 0.6
+
+        blocks.append(
+            Block(
+                type="paragraph",
+                text=seg_text,
+                attrs=attrs,
+                prov=prov,
+                source=str(source),
+                confidence=conf_value,
+            )
+        )
+        added_content = True
+
+    if not added_content and text:
+        for chunk in _iter_refined_chunks(text):
+            if len(blocks) >= _STRUCTURED_BLOCK_LIMIT:
+                truncated = True
+                break
+            blocks.append(_block_from_chunk(chunk, source))
+        added_content = True
+
+    if not blocks:
+        blocks.append(
+            Block(
+                type="metadata",
+                text="Image contained no extractable text",
+                attrs={"image_has_text": bool(text)},
+                source=str(source),
+                confidence=0.35,
+            )
+        )
+
+    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
+        blocks.append(
+            Block(
+                type="metadata",
+                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+                attrs={"truncated": True},
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+
+    return blocks[:_STRUCTURED_BLOCK_LIMIT]
 
 
 def parse_docx(path: str | Path) -> List[Block]:

@@ -41,6 +41,14 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".toml": "toml",
     ".eml": "eml",
     ".ics": "ics",
+    ".png": "image",
+    ".jpg": "image",
+    ".jpeg": "image",
+    ".tif": "image",
+    ".tiff": "image",
+    ".bmp": "image",
+    ".gif": "image",
+    ".webp": "image",
 }
 
 

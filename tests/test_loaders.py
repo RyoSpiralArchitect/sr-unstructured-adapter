@@ -2,7 +2,23 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
+
 from sr_adapter.loaders import read_file_contents
+
+
+def _create_png(path: Path, text: str) -> None:
+    image = Image.new("RGB", (320, 120), color="white")
+    draw = ImageDraw.Draw(image)
+    try:
+        font = ImageFont.load_default()
+    except Exception:
+        font = None
+    draw.text((10, 40), text, fill="black", font=font)
+
+    info = PngImagePlugin.PngInfo()
+    info.add_text("Description", text)
+    image.save(str(path), pnginfo=info)
 
 
 def test_xml_loader_returns_structure(tmp_path: Path) -> None:
@@ -121,3 +137,15 @@ def test_toml_loader_parses_tables(tmp_path: Path) -> None:
     assert "localhost" in text
     assert meta["toml_valid"] is True
     assert "service" in meta["toml_root_keys"]
+
+
+def test_image_loader_extracts_text(tmp_path: Path) -> None:
+    path = tmp_path / "invoice.png"
+    _create_png(path, "Invoice #42 Total 19.99")
+
+    text, meta = read_file_contents(path, "image/png")
+
+    assert "Invoice #42" in text
+    assert meta["image_has_text"] is True
+    assert meta.get("image_text_sources")
+    assert meta.get("image_mode") == "RGB"

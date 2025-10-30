@@ -10,7 +10,9 @@ import xml.etree.ElementTree as ET
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from typing import Dict, Tuple, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+import yaml
 
 import yaml
 
@@ -460,26 +462,210 @@ def _read_ics(path: Path) -> Tuple[str, Dict[str, object]]:
     return text, meta
 
 
-def _read_image_meta(path: Path) -> Tuple[str, Dict[str, object]]:
-    """No OCR by default; if Pillow available, report size/EXIF."""
+def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[str, Any]]]:
+    """Return OCR/metadata text plus diagnostic details for *path*."""
+
     meta: Dict[str, object] = {}
+    segments: List[Dict[str, Any]] = []
+    text_pieces: List[str] = []
+    text_sources: List[Dict[str, object]] = []
+    ocr_segments = 0
+
     try:
-        from PIL import Image, ExifTags  # type: ignore
+        from PIL import ExifTags, Image  # type: ignore
+    except Exception:
+        meta["image_ocr_available"] = False
+        return "", meta, segments
+
+    try:
         with Image.open(str(path)) as im:
-            meta.update({"image_mode": im.mode, "image_size": im.size, "image_format": im.format})
+            width, height = im.size
+            meta.update(
+                {
+                    "image_mode": im.mode,
+                    "image_size": (width, height),
+                    "image_format": im.format or path.suffix.lstrip(".").upper(),
+                }
+            )
+
+            info = getattr(im, "info", {}) or {}
+            info_records: List[Dict[str, object]] = []
+            for key, value in info.items():
+                text_value: Optional[str] = None
+                if isinstance(value, bytes):
+                    try:
+                        text_value = value.decode("utf-8", errors="ignore")
+                    except Exception:
+                        text_value = None
+                elif isinstance(value, str):
+                    text_value = value
+                if not text_value:
+                    continue
+                cleaned = text_value.strip()
+                if not cleaned:
+                    continue
+                info_records.append({"key": key, "length": len(cleaned)})
+                text_pieces.append(cleaned)
+                segments.append({"text": cleaned, "source": "metadata", "key": key, "kind": "metadata"})
+            if info_records:
+                text_sources.extend(
+                    {"source": "metadata", "key": record["key"], "length": record["length"]}
+                    for record in info_records[:10]
+                )
+
             try:
                 exif = im.getexif()
                 if exif:
-                    # 軽量に主要タグだけ
-                    label = {ExifTags.TAGS.get(k, str(k)): v for k, v in list(exif.items())[:20]}
-                    meta["image_exif_sample"] = label
+                    sample = {ExifTags.TAGS.get(k, str(k)): v for k, v in list(exif.items())[:40]}
+                    if sample:
+                        meta["image_exif_sample"] = sample
+                    exif_records: List[Dict[str, object]] = []
+                    for key, value in sample.items():
+                        text_value: Optional[str] = None
+                        if isinstance(value, bytes):
+                            try:
+                                text_value = value.decode("utf-8", errors="ignore")
+                            except Exception:
+                                text_value = None
+                        elif isinstance(value, str):
+                            text_value = value
+                        if not text_value:
+                            continue
+                        cleaned = text_value.strip()
+                        if not cleaned:
+                            continue
+                        exif_records.append({"key": key, "length": len(cleaned)})
+                        text_pieces.append(cleaned)
+                        segments.append({"text": cleaned, "source": "exif", "key": key, "kind": "metadata"})
+                    if exif_records:
+                        text_sources.extend(
+                            {"source": "exif", "key": record["key"], "length": record["length"]}
+                            for record in exif_records[:10]
+                        )
             except Exception:
                 pass
-    except Exception:
-        pass
-    # テキストは返さずプレビューのみ
+
+            try:
+                import pytesseract  # type: ignore
+                from pytesseract import Output  # type: ignore
+
+                data = pytesseract.image_to_data(im, output_type=Output.DICT)  # type: ignore[attr-defined]
+                texts = data.get("text", [])
+                if texts:
+                    line_map: Dict[Tuple[int, int, int, int], Dict[str, Any]] = {}
+                    total = len(texts)
+                    for idx in range(total):
+                        raw = texts[idx]
+                        if not isinstance(raw, str):
+                            continue
+                        token = raw.strip()
+                        if not token:
+                            continue
+                        page = int(data.get("page_num", [1])[idx]) - 1
+                        block = int(data.get("block_num", [0])[idx])
+                        paragraph = int(data.get("par_num", [0])[idx])
+                        line = int(data.get("line_num", [0])[idx])
+                        key = (page, block, paragraph, line)
+                        entry = line_map.setdefault(
+                            key,
+                            {
+                                "words": [],
+                                "bbox": None,
+                                "conf": [],
+                                "page": page,
+                            },
+                        )
+                        entry["words"].append(token)
+                        left = float(data.get("left", [0])[idx])
+                        top = float(data.get("top", [0])[idx])
+                        width = float(data.get("width", [0])[idx])
+                        height = float(data.get("height", [0])[idx])
+                        bbox = entry["bbox"]
+                        if bbox is None:
+                            bbox = [left, top, left + width, top + height]
+                        else:
+                            bbox[0] = min(bbox[0], left)
+                            bbox[1] = min(bbox[1], top)
+                            bbox[2] = max(bbox[2], left + width)
+                            bbox[3] = max(bbox[3], top + height)
+                        entry["bbox"] = bbox
+                        conf_values = entry["conf"]
+                        conf_raw = data.get("conf", ["0"])[idx]
+                        try:
+                            conf_values.append(float(conf_raw))
+                        except Exception:
+                            pass
+
+                    order = 1
+                    for key, entry in sorted(line_map.items()):
+                        words = entry["words"]
+                        if not words:
+                            continue
+                        line_text = " ".join(words).strip()
+                        if not line_text:
+                            continue
+                        bbox = entry["bbox"]
+                        conf_values = entry["conf"]
+                        avg_conf = 0.6
+                        if conf_values:
+                            avg_conf = sum(conf_values) / len(conf_values) / 100.0
+                        page = entry.get("page", 0)
+                        segments.append(
+                            {
+                                "text": line_text,
+                                "source": "ocr",
+                                "kind": "ocr",
+                                "bbox": tuple(bbox) if bbox else None,
+                                "confidence": round(avg_conf, 4),
+                                "page": page,
+                                "order": order,
+                            }
+                        )
+                        text_pieces.append(line_text)
+                        order += 1
+
+                    if order > 1:
+                        ocr_segments = order - 1
+                        text_sources.append({"source": "ocr", "lines": ocr_segments})
+                        meta["image_ocr_engine"] = "pytesseract"
+            except ModuleNotFoundError:
+                meta.setdefault("image_ocr_engine", "unavailable")
+            except Exception as exc:
+                meta["image_ocr_error"] = type(exc).__name__
+    except Exception as exc:
+        meta.setdefault("image_error", type(exc).__name__)
+
+    if ocr_segments:
+        meta["image_ocr_available"] = True
+        meta["image_ocr_lines"] = ocr_segments
+    else:
+        meta.setdefault("image_ocr_available", False)
+
+    if text_sources:
+        meta["image_text_sources"] = text_sources[:10]
+
+    deduped: List[str] = []
+    seen: set[str] = set()
+    for piece in text_pieces:
+        if piece not in seen:
+            deduped.append(piece)
+            seen.add(piece)
+
+    text = "\n".join(deduped).strip()
+    if text:
+        meta["image_has_text"] = True
+        meta["image_text_characters"] = len(text)
+        meta["image_text_preview"] = text[:400]
+    else:
+        meta.setdefault("image_has_text", False)
+
+    return text, meta, segments
+
+
+def _read_image(path: Path) -> Tuple[str, Dict[str, object]]:
+    text, meta, _ = _extract_image_text(path)
     meta.update(_binary_preview(path.read_bytes()))
-    return "", meta
+    return text, meta
 
 
 def _read_zip_index(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -547,7 +733,7 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
 
     # Images
     if mime.startswith("image/"):
-        return _read_image_meta(path)
+        return _read_image(path)
 
     # Archives
     if suffix == ".zip":

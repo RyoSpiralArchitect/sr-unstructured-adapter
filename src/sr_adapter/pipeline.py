@@ -14,6 +14,7 @@ from .parsers import (
     parse_docx,
     parse_eml,
     parse_html,
+    parse_image,
     parse_ics,
     parse_ini,
     parse_json,
@@ -61,6 +62,12 @@ class ParserRegistry:
             "application/pdf": "pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+            "image/png": "image",
+            "image/jpeg": "image",
+            "image/tiff": "image",
+            "image/bmp": "image",
+            "image/gif": "image",
+            "image/webp": "image",
         }
 
     def register(self, key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -> None:
@@ -90,6 +97,7 @@ REGISTRY.register("pdf", parse_pdf)
 REGISTRY.register("docx", parse_docx)
 REGISTRY.register("pptx", parse_pptx)
 REGISTRY.register("xlsx", parse_xlsx)
+REGISTRY.register("image", parse_image, also=("png", "jpg", "jpeg", "tiff", "bmp", "gif", "webp"))
 REGISTRY.register("eml", parse_eml)
 REGISTRY.register("ics", parse_ics)
 REGISTRY.register("yaml", parse_yaml, also=("yml",))

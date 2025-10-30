@@ -7,6 +7,7 @@ from pathlib import Path
 
 from docx import Document as DocxDocument
 from openpyxl import Workbook
+from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
 from sr_adapter.pipeline import convert
@@ -21,6 +22,20 @@ def _create_pdf(path: Path) -> None:
     writer.add_blank_page(width=72, height=72)
     with path.open("wb") as handle:
         writer.write(handle)
+
+
+def _create_png(path: Path, text: str) -> None:
+    image = Image.new("RGB", (320, 120), color="white")
+    draw = ImageDraw.Draw(image)
+    try:
+        font = ImageFont.load_default()
+    except Exception:
+        font = None
+    draw.text((10, 40), text, fill="black", font=font)
+
+    info = PngImagePlugin.PngInfo()
+    info.add_text("Description", text)
+    image.save(str(path), pnginfo=info)
 
 
 def _create_docx(path: Path) -> None:
@@ -76,6 +91,9 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     props = tmp_path / "application.properties"
     props.write_text("user => demo\n", encoding="utf-8")
 
+    png = tmp_path / "invoice.png"
+    _create_png(png, "Invoice #42 Total 19.99")
+
     assert detect_type(txt) == "text"
     assert detect_type(md) == "md"
     assert detect_type(pdf) == "pdf"
@@ -86,6 +104,7 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     assert detect_type(toml) == "toml"
     assert detect_type(cfg) == "ini"
     assert detect_type(props) == "ini"
+    assert detect_type(png) == "image"
 
 
 def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
@@ -183,6 +202,21 @@ def test_convert_ini_uses_structured_parser(tmp_path: Path) -> None:
     assert head.attrs.get("coerced_pairs", 0) >= 3
     assert any(block.attrs.get("key") == "<defaults>.name" for block in document.blocks if block.type == "kv")
     assert any(block.attrs.get("key") == "limits.max" for block in document.blocks if block.type == "kv")
+
+
+def test_convert_image_uses_metadata_text(tmp_path: Path) -> None:
+    image = tmp_path / "invoice.png"
+    _create_png(image, "Invoice #42 Total 19.99")
+
+    document = convert(image, recipe="default")
+
+    assert document.meta["type"] == "image"
+    joined = "\n".join(block.text for block in document.blocks)
+    assert "Invoice #42" in joined
+    meta_blocks = [block for block in document.blocks if block.type == "metadata"]
+    assert meta_blocks
+    assert any(block.attrs.get("image_source") == "metadata" for block in meta_blocks)
+    assert any(block.attrs.get("image_has_text") is True for block in meta_blocks)
 
 
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
