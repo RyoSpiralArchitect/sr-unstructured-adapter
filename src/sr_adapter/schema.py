@@ -91,6 +91,7 @@ class DocumentMeta(BaseModel):
     title: Optional[str] = None
     type: Optional[str] = None
     mime_type: Optional[str] = None
+    type: Optional[str] = None
     checksum: Optional[str] = None
     size_bytes: Optional[int] = None
     page_count: Optional[int] = None
@@ -99,6 +100,16 @@ class DocumentMeta(BaseModel):
 
     def __getitem__(self, key: str):  # type: ignore[override]
         return getattr(self, key)
+
+    def __getitem__(self, key: str) -> Any:
+        data = self.model_dump()
+        if key not in data:
+            raise KeyError(key)
+        return data[key]
+
+    def get(self, key: str, default: Any = None) -> Any:
+        data = self.model_dump()
+        return data.get(key, default)
 
 
 class Document(BaseModel):

@@ -8,6 +8,8 @@ from typing import Dict
 import hashlib
 import re
 
+import re
+
 
 def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object]) -> Dict[str, object]:
     """Gather metadata for the given file."""

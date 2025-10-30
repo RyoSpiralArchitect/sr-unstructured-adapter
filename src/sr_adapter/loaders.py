@@ -423,6 +423,79 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
         return "", meta
 
 
+def _read_rtf(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw = path.read_text(encoding="latin-1", errors="ignore")
+    text = _rtf_to_text(raw)
+    meta: Dict[str, object] = {"rtf_characters": len(text)}
+    return text, meta
+
+
+def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
+    data = path.read_bytes()
+    meta: Dict[str, object] = {}
+    parser = BytesParser(policy=policy.default)
+    try:
+        message = parser.parsebytes(data)
+    except Exception as exc:
+        meta["email_parsed"] = False
+        meta["email_error"] = str(exc)
+        return "", meta
+
+    meta.update(
+        {
+            "email_parsed": True,
+            "email_subject": message.get("subject", ""),
+            "email_from": message.get("from", ""),
+            "email_to": message.get("to", ""),
+            "email_date": message.get("date", ""),
+        }
+    )
+
+    text_parts: List[str] = []
+    html_fallback: List[str] = []
+    attachments: List[Dict[str, object]] = []
+    for part in message.walk():
+        if part.is_multipart():
+            continue
+        filename = part.get_filename() or ""
+        content_type = part.get_content_type()
+        payload = part.get_payload(decode=True) or b""
+        size = len(payload)
+        if content_type.startswith("text/") and not filename:
+            charset = part.get_content_charset() or "utf-8"
+            try:
+                decoded = payload.decode(charset, errors="ignore")
+            except LookupError:
+                decoded = payload.decode("utf-8", errors="ignore")
+            if content_type == "text/plain":
+                text_parts.append(decoded.strip())
+            else:
+                html_fallback.append(decoded)
+        else:
+            attachments.append(
+                {
+                    "filename": filename,
+                    "content_type": content_type,
+                    "size": size,
+                }
+            )
+
+    if not text_parts and html_fallback:
+        stripped = []
+        for html in html_fallback:
+            cleaned = re.sub(r"<[^>]+>", " ", html)
+            cleaned = re.sub(r"\s+", " ", cleaned)
+            stripped.append(cleaned.strip())
+        text_parts = stripped
+
+    meta["email_attachment_count"] = len(attachments)
+    if attachments:
+        meta["email_attachments"] = attachments[:10]
+    meta["email_body_parts"] = len(text_parts)
+    body = "\n\n".join(part for part in text_parts if part)
+    return _normalize_newlines(body), meta
+
+
 def _read_image_meta(path: Path) -> Tuple[str, Dict[str, object]]:
     """No OCR by default; if Pillow available, report size/EXIF."""
     meta: Dict[str, object] = {}
@@ -477,6 +550,8 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_json(path)
     if mime in _JSONL_MIMES or suffix in {".jsonl", ".ndjson"}:
         return _read_jsonl(path)
+    if mime in {"application/xml", "text/xml"} or suffix == ".xml":
+        return _read_xml(path)
 
     # HTML / Markdown / Plain text
     if mime in {"text/html"} or suffix in {".html", ".htm"}:
