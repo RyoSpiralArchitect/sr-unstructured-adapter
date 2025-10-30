@@ -22,11 +22,21 @@ _EXTENSION_MAP: Dict[str, str] = {
     ".csv": "csv",
     ".tsv": "csv",
     ".json": "json",
+    ".jsonl": "json",
+    ".ndjson": "json",
     ".html": "html",
     ".htm": "html",
     ".pdf": "pdf",
     ".docx": "docx",
     ".xlsx": "xlsx",
+    ".rtf": "rtf",
+    ".eml": "eml",
+    ".odt": "odt",
+    ".ods": "ods",
+    ".odp": "odp",
+    ".epub": "epub",
+    ".ics": "text",
+    ".vcf": "text",
 }
 
 

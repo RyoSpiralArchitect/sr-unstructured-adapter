@@ -8,8 +8,32 @@ from .models import Payload
 
 
 def _iter_chunks(text: str, chunk_size: int) -> Iterator[str]:
-    for start in range(0, len(text), chunk_size):
-        yield text[start : start + chunk_size]
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be positive")
+
+    length = len(text)
+    start = 0
+    while start < length:
+        original_start = start
+        end = min(start + chunk_size, length)
+        if end < length:
+            window = text[start:end]
+            chosen = None
+            for sep in ("\n\n", "\n", " "):
+                idx = window.rfind(sep)
+                if idx != -1 and idx >= int(chunk_size * 0.5):
+                    chosen = start + idx
+                    break
+            if chosen is not None and chosen > start:
+                end = chosen
+        chunk = text[start:end].strip()
+        if chunk:
+            yield chunk
+        start = end
+        if start <= original_start:
+            start = original_start + chunk_size
+        while start < length and text[start] in {"\n", " "}:
+            start += 1
 
 
 def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2000) -> List[Dict[str, str]]:
@@ -32,11 +56,20 @@ def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2
             }
         ]
 
+    chunks = list(_iter_chunks(text, chunk_size))
+    if not chunks:
+        return [
+            {
+                "role": "user",
+                "content": f"[{mime}] {source}\n(text available but empty after trimming)",
+            }
+        ]
+
+    total = len(chunks)
     messages: List[Dict[str, str]] = []
-    multi_part = len(text) > chunk_size
-    for index, chunk in enumerate(_iter_chunks(text, chunk_size), start=1):
+    for index, chunk in enumerate(chunks, start=1):
         header = f"[{mime}] {source}"
-        if multi_part:
-            header = f"{header} (part {index})"
+        if total > 1:
+            header = f"{header} (part {index}/{total})"
         messages.append({"role": "user", "content": f"{header}\n{chunk}"})
     return messages

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple, Literal
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib, uuid
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -47,8 +47,20 @@ class Span(BaseModel):
 
 
 BlockType = Literal[
-    "paragraph", "heading", "title", "list_item",
-    "table", "figure", "code", "footnote", "metadata"
+    "paragraph",
+    "heading",
+    "title",
+    "list_item",
+    "table",
+    "figure",
+    "code",
+    "footnote",
+    "metadata",
+    "header",
+    "list",
+    "kv",
+    "meta",
+    "other",
 ]
 
 
@@ -77,12 +89,16 @@ class DocumentMeta(BaseModel):
     uri: Optional[str] = None
     source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
     title: Optional[str] = None
+    type: Optional[str] = None
     mime_type: Optional[str] = None
     checksum: Optional[str] = None
     size_bytes: Optional[int] = None
     page_count: Optional[int] = None
     languages: List[str] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def __getitem__(self, key: str):  # type: ignore[override]
+        return getattr(self, key)
 
 
 class Document(BaseModel):
@@ -104,4 +120,7 @@ def compute_checksum(data: bytes, algo: str = "blake2b") -> str:
 
 def clone_model(model: BaseModel, **updates: Any):
     """Return a copy of *model* with updates applied (Pydantic v2/v1 compatible)."""
-    return model.model_copy(update=updates) if hasattr(model, "model_copy") else model.copy(update=updates)
+
+    if hasattr(model, "model_copy"):
+        return model.model_copy(update=updates)
+    return model.copy(update=updates)

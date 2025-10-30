@@ -5,14 +5,35 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
+import zipfile
+from email import policy
+from email.parser import BytesParser
+from email.utils import getaddresses
+from html import unescape
 from pathlib import Path
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
+import xml.etree.ElementTree as ET
 
 # ---- soft deps are optional; we import lazily inside funcs ----
 
 _TEXT_EXTENSIONS = {
-    ".csv", ".log", ".md", ".rst", ".text", ".txt", ".yaml", ".yml", ".toml",
-    ".html", ".htm"
+    ".csv",
+    ".log",
+    ".md",
+    ".rst",
+    ".text",
+    ".txt",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".html",
+    ".htm",
+    ".ini",
+    ".cfg",
+    ".properties",
+    ".ics",
+    ".vcf",
 }
 
 _JSONL_MIMES = {"application/x-ndjson", "application/jsonl", "application/ndjson"}
@@ -85,6 +106,68 @@ def _sha256(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
 
+def _html_to_text(html: str) -> str:
+    try:
+        from bs4 import BeautifulSoup  # type: ignore
+
+        soup = BeautifulSoup(html, "html.parser")
+        for tag in soup(["script", "style", "noscript", "template"]):
+            tag.extract()
+        text = "\n".join(part.strip() for part in soup.get_text("\n").splitlines() if part.strip())
+        return _normalize_newlines(text)
+    except Exception:
+        # fallback: strip tags via regex
+        text = re.sub(r"<[^>]+>", " ", html)
+        text = unescape(text)
+        text = re.sub(r"\s+", " ", text)
+        return _normalize_newlines(text.strip())
+
+
+def _decode_rtf_best_effort(raw: bytes) -> Tuple[str, Dict[str, object]]:
+    try:
+        text = raw.decode("utf-8")
+        encoding = "utf-8"
+    except UnicodeDecodeError:
+        text = raw.decode("latin-1", errors="ignore")
+        encoding = "latin-1"
+
+    meta: Dict[str, object] = {"encoding": encoding}
+    try:
+        from striprtf.striprtf import rtf_to_text  # type: ignore
+
+        cleaned = rtf_to_text(text)
+        meta["rtf_extracted"] = True
+        return _normalize_newlines(cleaned), meta
+    except Exception as exc:
+        meta["rtf_extracted"] = False
+        meta["rtf_error"] = type(exc).__name__
+
+    # naive fallback: strip common control words and braces
+    def _replace_hex(match: re.Match[str]) -> str:
+        try:
+            return bytes.fromhex(match.group(1)).decode("latin-1", errors="ignore")
+        except Exception:
+            return ""
+
+    simplified = re.sub(r"\\'([0-9a-fA-F]{2})", _replace_hex, text)
+    simplified = re.sub(r"\\[A-Za-z]+-?\d* ?", "", simplified)
+    simplified = simplified.replace("{", "").replace("}", "")
+    simplified = re.sub(r"\s+", " ", simplified)
+    return _normalize_newlines(simplified.strip()), meta
+
+
+def _gather_xml_text(root: ET.Element) -> Iterable[str]:
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        if node.text and node.text.strip():
+            yield node.text.strip()
+        for child in list(node)[::-1]:
+            stack.append(child)
+        if node.tail and node.tail.strip():
+            yield node.tail.strip()
+
+
 # ------------------------- readers -------------------------
 
 def _read_json(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -143,6 +226,61 @@ def _read_markdown(path: Path) -> Tuple[str, Dict[str, object]]:
     return txt, meta
 
 
+def _read_rtf(path: Path) -> Tuple[str, Dict[str, object]]:
+    raw = path.read_bytes()
+    text, meta = _decode_rtf_best_effort(raw)
+    meta.setdefault("length_bytes", len(raw))
+    return text, meta
+
+
+def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
+    parser = BytesParser(policy=policy.default)
+    message = parser.parsebytes(path.read_bytes())
+    meta: Dict[str, object] = {
+        "email_subject": message.get("subject", ""),
+        "email_from": message.get("from", ""),
+        "email_to": [addr for _, addr in getaddresses(message.get_all("to", []))],
+        "email_cc": [addr for _, addr in getaddresses(message.get_all("cc", []))],
+        "email_bcc": [addr for _, addr in getaddresses(message.get_all("bcc", []))],
+        "email_date": message.get("date", ""),
+    }
+
+    attachments: List[Dict[str, object]] = []
+    plain_parts: List[str] = []
+    html_parts: List[str] = []
+
+    for part in message.walk():
+        if part.is_multipart():
+            continue
+        filename = part.get_filename()
+        payload = part.get_payload(decode=True) or b""
+        content_type = part.get_content_type()
+        charset = part.get_content_charset() or "utf-8"
+        if filename:
+            attachments.append({"filename": filename, "size": len(payload)})
+            continue
+        try:
+            decoded = payload.decode(charset, errors="replace")
+        except LookupError:
+            decoded = payload.decode("utf-8", errors="replace")
+        if content_type == "text/plain":
+            plain_parts.append(decoded)
+        elif content_type == "text/html":
+            html_parts.append(decoded)
+
+    meta["email_plain_parts"] = len(plain_parts)
+    meta["email_attachment_count"] = len(attachments)
+    if attachments:
+        meta["email_attachment_names"] = [item["filename"] for item in attachments[:5]]
+    meta["email_has_html_part"] = bool(html_parts)
+
+    body = "\n\n".join(part.strip() for part in plain_parts if part.strip())
+    if not body and html_parts:
+        body = "\n\n".join(_html_to_text(part) for part in html_parts if part.strip())
+    meta["email_has_body"] = bool(body.strip())
+    return _normalize_newlines(body), meta
+
+
 def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
     txt, meta = _read_text_best_effort(path)
     try:
@@ -157,6 +295,55 @@ def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
     except Exception:
         meta["html_parsed"] = False
         return txt, meta
+
+
+def _read_odf_document(path: Path) -> Tuple[str, Dict[str, object]]:
+    try:
+        with zipfile.ZipFile(str(path)) as zf:
+            data = zf.read("content.xml")
+    except Exception as exc:
+        meta = _binary_preview(path.read_bytes())
+        meta["odf_text_extraction"] = f"failed: {type(exc).__name__}"
+        return "", meta
+
+    try:
+        root = ET.fromstring(data)
+    except Exception as exc:  # pragma: no cover - malformed file guard
+        meta = {"odf_text_extraction": f"failed: {type(exc).__name__}"}
+        meta.update(_binary_preview(path.read_bytes()))
+        return "", meta
+
+    texts = [segment for segment in _gather_xml_text(root) if segment]
+    meta = {
+        "odf_text_segments": len(texts),
+    }
+    return _normalize_newlines("\n".join(texts)), meta
+
+
+def _read_epub(path: Path) -> Tuple[str, Dict[str, object]]:
+    try:
+        with zipfile.ZipFile(str(path)) as zf:
+            html_files = [name for name in zf.namelist() if name.lower().endswith((".xhtml", ".html", ".htm"))]
+            texts: List[str] = []
+            for name in html_files:
+                data = zf.read(name)
+                try:
+                    html = data.decode("utf-8")
+                except UnicodeDecodeError:
+                    html = data.decode("latin-1", errors="ignore")
+                texts.append(_html_to_text(html))
+    except Exception as exc:
+        meta = _binary_preview(path.read_bytes())
+        meta["epub_text_extraction"] = f"failed: {type(exc).__name__}"
+        return "", meta
+
+    meta = {
+        "epub_documents": len(texts),
+        "epub_files_sample": html_files[:5],
+    }
+    combined = "\n\n".join(texts)
+    meta["epub_has_text"] = bool(combined.strip())
+    return _normalize_newlines(combined), meta
 
 
 def _read_pdf(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -296,7 +483,11 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_html(path)
     if suffix in {".md", ".markdown"}:
         return _read_markdown(path)
-    if mime.startswith("text/") or suffix in _TEXT_EXTENSIONS:
+    if suffix == ".rtf" or mime == "application/rtf":
+        return _read_rtf(path)
+    if suffix == ".eml" or mime == "message/rfc822":
+        return _read_eml(path)
+    if (mime or "").startswith("text/") or suffix in _TEXT_EXTENSIONS:
         return _read_plain_text(path)
 
     # PDF / Office
@@ -308,14 +499,18 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
         return _read_pptx(path)
     if suffix == ".xlsx":
         return _read_xlsx(path)
+    if suffix in {".odt", ".ods", ".odp"} or (mime or "").startswith("application/vnd.oasis.opendocument"):
+        return _read_odf_document(path)
 
     # Images
-    if mime.startswith("image/"):
+    if (mime or "").startswith("image/"):
         return _read_image_meta(path)
 
     # Archives
     if suffix == ".zip":
         return _read_zip_index(path)
+    if suffix == ".epub" or mime == "application/epub+zip":
+        return _read_epub(path)
 
     # Fallback: binary preview only
     blob = path.read_bytes()
