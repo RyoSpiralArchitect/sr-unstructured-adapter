@@ -15,18 +15,30 @@ _MAGIC_SIGNATURES: Dict[bytes, str] = {
 
 _EXTENSION_MAP: Dict[str, str] = {
     ".txt": "text",
-    ".log": "text",
+    ".log": "log",
     ".md": "md",
     ".markdown": "md",
     ".rst": "text",
     ".csv": "csv",
     ".tsv": "csv",
     ".json": "json",
+    ".yaml": "yaml",
+    ".yml": "yaml",
+    ".xml": "xml",
     ".html": "html",
     ".htm": "html",
     ".pdf": "pdf",
     ".docx": "docx",
+    ".pptx": "pptx",
     ".xlsx": "xlsx",
+    ".eml": "email",
+    ".msg": "email",
+    ".zip": "zip",
+    ".png": "image",
+    ".jpg": "image",
+    ".jpeg": "image",
+    ".tif": "image",
+    ".tiff": "image",
 }
 
 
@@ -54,6 +66,9 @@ def detect_type(path: str | Path) -> str:
             return "docx"
         if suffix == ".xlsx":
             return "xlsx"
+        if suffix == ".pptx":
+            return "pptx"
+        return "zip"
 
     suffix = path.suffix.lower()
     if suffix in _EXTENSION_MAP:

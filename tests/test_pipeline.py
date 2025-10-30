@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from docx import Document as DocxDocument
@@ -44,6 +45,59 @@ def _create_xlsx(path: Path) -> None:
     wb.save(str(path))
 
 
+def _create_pptx(path: Path) -> None:
+    content_types = """<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>
+"""
+    root_rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
+</Relationships>
+"""
+    presentation = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+                xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+  </p:sldIdLst>
+</p:presentation>
+"""
+    rels_main = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>
+"""
+    slide = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+       xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp>
+        <p:txBody>
+          <a:p>
+            <a:r><a:t>Detect me</a:t></a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>
+"""
+
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", root_rels)
+        archive.writestr("ppt/presentation.xml", presentation)
+        archive.writestr("ppt/_rels/presentation.xml.rels", rels_main)
+        archive.writestr("ppt/slides/slide1.xml", slide)
+
+
 def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     txt = tmp_path / "sample.txt"
     txt.write_text("plain", encoding="utf-8")
@@ -60,11 +114,23 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     xlsx = tmp_path / "sample.xlsx"
     _create_xlsx(xlsx)
 
+    pptx = tmp_path / "sample.pptx"
+    _create_pptx(pptx)
+
+    xml = tmp_path / "sample.xml"
+    xml.write_text("<root><item>1</item></root>", encoding="utf-8")
+
+    yaml = tmp_path / "sample.yaml"
+    yaml.write_text("foo: bar\n", encoding="utf-8")
+
     assert detect_type(txt) == "text"
     assert detect_type(md) == "md"
     assert detect_type(pdf) == "pdf"
     assert detect_type(docx) == "docx"
     assert detect_type(xlsx) == "xlsx"
+    assert detect_type(pptx) == "pptx"
+    assert detect_type(xml) == "xml"
+    assert detect_type(yaml) == "yaml"
 
 
 def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
@@ -75,7 +141,7 @@ def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
     )
 
     document = convert(log, recipe="call_log")
-    assert document.meta["type"] == "text"
+    assert document.meta["type"] == "log"
     assert len(document.blocks) >= 3
     assert document.blocks[0].type == "meta"
     assert document.blocks[1].type == "header"
@@ -107,6 +173,6 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     lines = out.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     payload = json.loads(lines[0])
-    assert payload["meta"]["type"] == "text"
+    assert payload["meta"]["type"] == "log"
     assert any(block["type"] == "kv" for block in payload["blocks"])
 
