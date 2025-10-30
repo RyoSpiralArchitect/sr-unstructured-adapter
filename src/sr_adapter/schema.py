@@ -1,47 +1,107 @@
-"""Core data structures used across the adapter pipeline."""
+"""Core data structures used across the adapter pipeline (v0.2)."""
 
 from __future__ import annotations
+from typing import Any, Dict, List, Optional, Tuple, Literal
+from datetime import datetime
+import hashlib, uuid
 
-from typing import Any, Dict, List, Optional, TypeVar
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from pydantic import BaseModel, Field
 
+# -------- Provenance & geometry --------
+
+class BBox(BaseModel):
+    """Axis-aligned bounding box in source coordinate space."""
+    x0: float; y0: float; x1: float; y1: float
+
+    @model_validator(mode="after")
+    def _check_order(self):
+        if self.x1 < self.x0 or self.y1 < self.y0:
+            raise ValueError("BBox must satisfy x1>=x0 and y1>=y0")
+        return self
+
+
+class Provenance(BaseModel):
+    """Where this block came from."""
+    uri: Optional[str] = None           # file path / URL / s3://...
+    page: Optional[int] = None          # 0-based page index if paged doc
+    bbox: Optional[BBox] = None         # region in page coords
+    order: Optional[int] = None         # reading order within page
+
+
+# -------- Spans / Blocks / Document --------
 
 class Span(BaseModel):
-    """Represents an annotated portion of a block of text."""
-
+    """Annotated portion inside Block.text [codepoint offsets]."""
     start: int
     end: int
     label: Optional[str] = None
 
+    @field_validator("end")
+    @classmethod
+    def _end_ge_start(cls, v: int, info):
+        start = info.data.get("start", None)
+        if start is not None and v < start:
+            raise ValueError("Span.end must be >= start")
+        return v
+
+
+BlockType = Literal[
+    "paragraph", "heading", "title", "list_item",
+    "table", "figure", "code", "footnote", "metadata"
+]
+
 
 class Block(BaseModel):
-    """A normalized chunk of content produced by a parser."""
-
-    type: str = Field(default="paragraph", description="Semantic type of the block")
-    text: str = Field(default="", description="Normalized textual content")
-    spans: List[Span] = Field(default_factory=list, description="Inline annotations")
-    attrs: Dict[str, str] = Field(default_factory=dict, description="Structured metadata")
-    source: Optional[str] = Field(
-        default=None, description="Origin of the block (file path, page index, etc.)"
-    )
+    """Normalized chunk from a parser."""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: BlockType = "paragraph"
+    text: str = ""
+    spans: List[Span] = Field(default_factory=list)
+    attrs: Dict[str, Any] = Field(default_factory=dict)
+    prov: Provenance = Field(default_factory=Provenance)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    lang: Optional[str] = None          # e.g. "en", "ja", "zh"
+
+    @model_validator(mode="after")
+    def _spans_within_text(self):
+        n = len(self.text)
+        for s in self.spans:
+            if not (0 <= s.start <= s.end <= n):
+                raise ValueError(f"Span({s.start},{s.end}) out of bounds for text length {n}")
+        return self
+
+
+class DocumentMeta(BaseModel):
+    """Top-level document metadata."""
+    uri: Optional[str] = None
+    source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
+    title: Optional[str] = None
+    mime_type: Optional[str] = None
+    checksum: Optional[str] = None
+    size_bytes: Optional[int] = None
+    page_count: Optional[int] = None
+    languages: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class Document(BaseModel):
-    """Top level representation returned by the conversion pipeline."""
-
+    """Conversion pipeline output."""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     blocks: List[Block]
-    meta: Dict[str, str] = Field(default_factory=dict)
+    meta: DocumentMeta = Field(default_factory=DocumentMeta)
+    warnings: List[str] = Field(default_factory=list)
 
 
-ModelType = TypeVar("ModelType", bound=BaseModel)
+# -------- Utilities --------
 
+def compute_checksum(data: bytes, algo: str = "blake2b") -> str:
+    if algo == "blake2b":
+        return hashlib.blake2b(data, digest_size=32).hexdigest()
+    if algo == "sha256":
+        return hashlib.sha256(data).hexdigest()
+    raise ValueError(f"Unsupported algo: {algo}")
 
-def clone_model(model: ModelType, **updates: Any) -> ModelType:
-    """Return a copy of *model* with ``updates`` applied."""
-
-    if hasattr(model, "model_copy"):
-        return model.model_copy(update=updates)  # type: ignore[attr-defined]
-    return model.copy(update=updates)
-
+def clone_model(model: BaseModel, **updates: Any):
+    """Return a copy of *model* with updates applied (Pydantic v2/v1 compatible)."""
+    return model.model_copy(update=updates) if hasattr(model, "model_copy") else model.copy(update=updates)
