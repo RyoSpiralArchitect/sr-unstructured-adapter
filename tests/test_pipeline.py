@@ -101,6 +101,7 @@ def test_parse_txt_extracts_kv_and_log(tmp_path: Path) -> None:
         "\n".join(
             [
                 "Subject: Update",
+                "Name -> Alice",
                 "2024-01-01 09:30 status ok",
                 "- bullet item",
             ]
@@ -116,6 +117,8 @@ def test_parse_txt_extracts_kv_and_log(tmp_path: Path) -> None:
     log_block = next(block for block in blocks if block.type == "log")
     assert log_block.attrs["timestamp"].startswith("2024-01-01")
     assert "status ok" in log_block.attrs["message"]
+    name_block = next(block for block in blocks if block.type == "kv" and block.attrs.get("key") == "Name")
+    assert name_block.attrs["value"] == "Alice"
 
 
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
@@ -225,6 +228,30 @@ def test_convert_json_extracts_nested_keys(tmp_path: Path) -> None:
     assert service_meta.attrs.get("sample_values") == ["localhost"]
     ports_meta = next(block for block in document.blocks if block.attrs.get("key") == "service.ports")
     assert ports_meta.attrs.get("sample_values") == ["80", "443"]
+
+
+def test_convert_json_repairs_loose_json(tmp_path: Path) -> None:
+    src = tmp_path / "messy.json"
+    src.write_text(
+        "\n".join(
+            [
+                "{",
+                "  'service': {host: 'localhost', ports: [80, 443,],},",
+                "  // legacy flags",
+                "  'flags': ['alpha', 'beta',],",
+                "}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(src, recipe="default")
+
+    assert document.meta["type"] == "json"
+    host_block = next(block for block in document.blocks if block.type == "kv" and block.attrs.get("key") == "service.host")
+    assert host_block.attrs["value"] == "localhost"
+    root_meta = next(block for block in document.blocks if block.attrs.get("key") == "<root>")
+    assert root_meta.attrs.get("coerced_from") in {"sanitized", "yaml"}
 
 
 def test_convert_yaml_emits_summary_and_kv(tmp_path: Path) -> None:

@@ -26,13 +26,17 @@ from .schema import Block, clone_model
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
 _TIMESTAMP_PREFIX = re.compile(r"^\[?\d{4}[-/]\d{2}[-/]\d{2}")
 _SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?。！？])\s+(?=[\w\"'(])")
-_KV_PATTERN = re.compile(r"^(?P<key>[\w .#/-]{1,64})\s*[:=]\s*(?P<value>.+)$")
+_KV_PATTERN = re.compile(
+    r"^(?P<key>[\w .#/@&()'\-]{1,64})\s*(?:=>|->|[:=]|：)\s*(?P<value>.+)$"
+)
 _LOG_LINE = re.compile(
     r"^\[?(?P<ts>\d{4}[-/]\d{2}[-/]\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?)\]?\s*(?P<body>.*)$"
 )
 _MAX_CHARS_PER_CHUNK = 600
 _STRUCTURED_BLOCK_LIMIT = 400
 _R_IDENTIFIER = re.compile(r"^[A-Za-z.][A-Za-z0-9._]*$")
+_JSON_COMMENT_RE = re.compile(r"//.*?$|/\*.*?\*/", re.DOTALL | re.MULTILINE)
+_TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 
 
 @dataclass(frozen=True)
@@ -232,6 +236,48 @@ def _stringify_scalar(value: object) -> str:
         return json.dumps(value, ensure_ascii=False)
     except TypeError:
         return str(value)
+
+
+def _strip_json_comments(text: str) -> str:
+    def _replace(match: re.Match[str]) -> str:
+        span = match.group(0)
+        # Preserve newlines to keep downstream line numbers vaguely aligned.
+        return "".join("\n" if ch == "\n" else " " for ch in span)
+
+    return _JSON_COMMENT_RE.sub(_replace, text)
+
+
+def _sanitize_json_like(text: str) -> str:
+    cleaned = text.lstrip("\ufeff")
+    cleaned = _strip_json_comments(cleaned)
+    cleaned = _TRAILING_COMMA_RE.sub(r"\1", cleaned)
+    return cleaned
+
+
+def _load_json_like(raw: str) -> tuple[object, str | None]:
+    primary = raw.lstrip("\ufeff")
+    try:
+        return json.loads(primary), None
+    except json.JSONDecodeError:
+        pass
+
+    sanitized = _sanitize_json_like(primary)
+    if sanitized != primary:
+        try:
+            return json.loads(sanitized), "sanitized"
+        except json.JSONDecodeError:
+            pass
+
+    candidate = sanitized.strip()
+    if candidate:
+        try:
+            data = yaml.safe_load(sanitized)
+        except yaml.YAMLError:
+            data = None
+        else:
+            return data, "yaml"
+
+    raise ValueError("Unable to coerce JSON input")
 
 
 def _structured_to_blocks(
@@ -555,15 +601,25 @@ def parse_xlsx(path: str | Path) -> List[Block]:
 def parse_json(path: str | Path) -> List[Block]:
     source = Path(path)
     raw = source.read_text(encoding="utf-8", errors="ignore")
+    coercion_origin: str | None = None
     try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
+        data, coercion = _load_json_like(raw)
+    except ValueError:
         return parse_txt(path)
+    else:
+        coercion_origin = coercion
 
     budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
     blocks, truncated = _structured_to_blocks(data, source, limit=budget)
     if not blocks:
         return parse_txt(path)
+    if coercion_origin:
+        for block in blocks:
+            key = block.attrs.get("key") if block.attrs else None
+            if key == "<root>" or block is blocks[0]:
+                block.attrs = dict(block.attrs)
+                block.attrs["coerced_from"] = coercion_origin
+                break
     if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
         blocks.append(
             Block(
