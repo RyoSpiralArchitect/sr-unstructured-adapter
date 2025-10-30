@@ -9,7 +9,7 @@ Turn chaotic files into a predictable JSON payload that downstream tools love.
 - Pretty prints JSON sources and captures schema hints (top-level keys, type).
 - Captures text statistics such as line, character, and word counts.
 - Generates chat-ready message chunks for LLM ingestion with metadata-prefixed context.
-- Emits `llm_hints` summarising detected structure (keys, slides, severities, attachments) for downstream prompt engineering.
+- Emits `llm_hints` and a richer `llm` bundle (`brief`, `focus`, `outline`) so prompts can highlight key facts without heavy prompting.
 - Normalises output into a unified document schema with doc-level confidence,
   provenance, and validation hints.
 - Provides a simple CLI (`python -m sr_adapter.adapter`) that can emit either
@@ -57,6 +57,20 @@ python -m sr_adapter.adapter examples/sample.txt
     }
   ],
   "attachments": [],
+  "llm": {
+    "brief": "Text prepared for downstream LLM consumption. Key facts: Word count: 24 words.",
+    "focus": [
+      {"label": "word_count", "summary": "Approximate length: 24 words", "confidence": 0.55, "source": "meta.word_count"}
+    ],
+    "outline": [
+      {"title": null, "kind": "paragraph", "preview": "Paragraph: lorem ipsum…", "block_indices": [0], "confidence": 0.5}
+    ],
+    "hints": [
+      "Detected type: text",
+      "Word count: 24",
+      "Line count: 10"
+    ]
+  },
   "llm_hints": [
     "Detected type: text",
     "Word count: 24",
@@ -112,13 +126,15 @@ python -m sr_adapter.adapter --as-json-lines examples/sample.txt
 
 ## Library usage
 ```python
-from sr_adapter import build_llm_bundle, build_payload, to_llm_messages, to_unified_payload
+from sr_adapter import build_payload, to_llm_messages, to_unified_payload
 
 payload = build_payload("examples/sample.txt")
-messages = to_llm_messages(payload, chunk_size=1000)
-unified = to_unified_payload(payload)
-print(unified["highlights"])
-markdown_bundle = build_llm_bundle(unified)
+print(payload.to_dict())
+
+# Pass unified LLM facets alongside the payload for richer prompts
+unified = to_unified_payload("examples/sample.txt")
+payload_dict = {**payload.to_dict(), "llm": unified.get("llm", {})}
+messages = to_llm_messages(payload_dict, chunk_size=1000)
 ```
 
 ## Development

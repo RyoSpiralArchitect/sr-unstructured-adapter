@@ -226,6 +226,11 @@ def test_email_payload_includes_entities(tmp_path: Path) -> None:
     assert any(party["role"] == "from" for party in unified["parties"])
     assert any(amount["value"] == "1234.56" for amount in unified["amounts"])
     assert any(date["origin"] == "meta.email_date" for date in unified["dates"])
+    llm = unified["llm"]
+    assert llm["brief"]
+    assert unified["llm_hints"] == llm["hints"]
+    assert any("Senders" in entry.get("summary", "") for entry in llm["focus"])
+    assert llm["outline"]
 
 
 def test_zip_payload_surfaces_entries(tmp_path: Path) -> None:
@@ -269,6 +274,34 @@ def test_yaml_payload_reports_keys(tmp_path: Path) -> None:
     unified = to_unified_payload(path)
     assert unified["doc_type"] == "yaml"
     assert any("YAML" in hint for hint in unified["llm_hints"])
+
+
+def test_to_llm_messages_includes_llm_outline(tmp_path: Path) -> None:
+    path = tmp_path / "message.eml"
+    path.write_text(
+        (
+            "From: Sender <sender@example.com>\n"
+            "To: receiver@example.com\n"
+            "Subject: Summary\n"
+            "Date: Wed, 02 Aug 2023 12:00:00 +0000\n"
+            "Content-Type: text/plain; charset=utf-8\n\n"
+            "Agenda:\n"
+            "- intro\n"
+            "- goals\n"
+        ),
+        encoding="utf-8",
+    )
+
+    payload = build_payload(path)
+    unified = to_unified_payload(path)
+    payload_dict = {**payload.to_dict(), "llm": unified["llm"]}
+
+    messages = to_llm_messages(payload_dict, chunk_size=1000)
+
+    assert messages[0]["role"] == "system"
+    assert "Brief:" in messages[0]["content"]
+    assert "Focus:" in messages[0]["content"]
+    assert "Outline:" in messages[0]["content"]
 
 
 def test_xml_payload_reports_structure(tmp_path: Path) -> None:

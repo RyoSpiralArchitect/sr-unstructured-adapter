@@ -70,6 +70,46 @@ def _summarize_meta(meta: Dict[str, Any] | None, *, limit: int = 8) -> str:
     return "\n".join(lines)
 
 
+def _normalise_llm_block(data: Dict[str, Any]) -> Dict[str, Any]:
+    llm = data.get("llm")
+    if isinstance(llm, dict):
+        return llm
+    meta = data.get("meta")
+    if isinstance(meta, dict):
+        llm = meta.get("llm")
+        if isinstance(llm, dict):
+            return llm
+    return {}
+
+
+def _format_focus(focus: List[Dict[str, Any]], limit: int = 5) -> str:
+    lines: List[str] = []
+    for entry in focus[:limit]:
+        summary = entry.get("summary")
+        if not summary:
+            continue
+        label = entry.get("label")
+        if label:
+            lines.append(f"- {label}: {summary}")
+        else:
+            lines.append(f"- {summary}")
+    return "\n".join(lines)
+
+
+def _format_outline(outline: List[Dict[str, Any]], limit: int = 4) -> str:
+    lines: List[str] = []
+    for section in outline[:limit]:
+        title = section.get("title") or section.get("kind")
+        preview = section.get("preview")
+        if not preview:
+            continue
+        if title:
+            lines.append(f"- {title}: {preview}")
+        else:
+            lines.append(f"- {preview}")
+    return "\n".join(lines)
+
+
 def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2000) -> List[Dict[str, str]]:
     """Convert a payload into chat messages that respect chunking."""
 
@@ -78,6 +118,7 @@ def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2
         mime = payload.mime
         text = payload.text
         meta = payload.meta
+        llm_info: Dict[str, Any] = payload.meta.get("llm") if isinstance(payload.meta.get("llm"), dict) else {}
     else:
         source = str(payload.get("source", ""))
         mime = str(payload.get("mime", ""))
@@ -85,13 +126,34 @@ def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2
         meta = payload.get("meta") if isinstance(payload, dict) else None
         if not isinstance(meta, dict):
             meta = {}
+        llm_info = _normalise_llm_block(payload if isinstance(payload, dict) else {})
 
     meta_summary = _summarize_meta(meta)
+    brief = ""
+    focus_summary = ""
+    outline_summary = ""
+    if llm_info:
+        brief = str(llm_info.get("brief") or "").strip()
+        focus_entries = llm_info.get("focus")
+        if isinstance(focus_entries, list):
+            focus_summary = _format_focus(focus_entries)
+        outline_entries = llm_info.get("outline")
+        if isinstance(outline_entries, list):
+            outline_summary = _format_outline(outline_entries)
 
     if not text:
         preface = f"[{mime}] {source}\n(no textual preview available)"
+        system_sections: List[str] = []
         if meta_summary:
-            preface = f"Source: {source}\nKey metadata:\n{meta_summary}\n\n{preface}"
+            system_sections.append(f"Key metadata:\n{meta_summary}")
+        if brief:
+            system_sections.append(f"Brief:\n{brief}")
+        if focus_summary:
+            system_sections.append(f"Focus:\n{focus_summary}")
+        if outline_summary:
+            system_sections.append(f"Outline:\n{outline_summary}")
+        if system_sections:
+            preface = f"Source: {source}\n" + "\n\n".join(system_sections) + f"\n\n{preface}"
         return [
             {
                 "role": "user",
@@ -100,13 +162,17 @@ def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2
         ]
 
     messages: List[Dict[str, str]] = []
+    system_sections: List[str] = []
     if meta_summary:
-        messages.append(
-            {
-                "role": "system",
-                "content": f"Source: {source}\nKey metadata:\n{meta_summary}",
-            }
-        )
+        system_sections.append(f"Key metadata:\n{meta_summary}")
+    if brief:
+        system_sections.append(f"Brief:\n{brief}")
+    if focus_summary:
+        system_sections.append(f"Focus:\n{focus_summary}")
+    if outline_summary:
+        system_sections.append(f"Outline:\n{outline_summary}")
+    if system_sections:
+        messages.append({"role": "system", "content": f"Source: {source}\n" + "\n\n".join(system_sections)})
 
     multi_part = len(text) > chunk_size
     for index, chunk in enumerate(_iter_chunks(text, chunk_size), start=1):
