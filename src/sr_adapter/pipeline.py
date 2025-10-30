@@ -15,6 +15,7 @@ from .parsers import (
     parse_eml,
     parse_html,
     parse_ics,
+    parse_ini,
     parse_json,
     parse_jsonl,
     parse_md,
@@ -54,6 +55,9 @@ class ParserRegistry:
             "application/yaml": "yaml",
             "application/toml": "toml",
             "application/x-toml": "toml",
+            "text/ini": "ini",
+            "text/x-ini": "ini",
+            "application/ini": "ini",
             "application/pdf": "pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
@@ -81,6 +85,7 @@ REGISTRY.register("html", parse_html)
 REGISTRY.register("csv", parse_csv)
 REGISTRY.register("json", parse_json)
 REGISTRY.register("jsonl", parse_jsonl)
+REGISTRY.register("ini", parse_ini, also=("cfg", "conf", "properties"))
 REGISTRY.register("pdf", parse_pdf)
 REGISTRY.register("docx", parse_docx)
 REGISTRY.register("pptx", parse_pptx)

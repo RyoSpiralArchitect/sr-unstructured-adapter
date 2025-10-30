@@ -19,6 +19,7 @@ import yaml
 _TEXT_EXTENSIONS = {
     ".csv",
     ".cfg",
+    ".conf",
     ".ini",
     ".log",
     ".md",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import configparser
 import csv
 import json
 import re
@@ -37,6 +38,9 @@ _STRUCTURED_BLOCK_LIMIT = 400
 _R_IDENTIFIER = re.compile(r"^[A-Za-z.][A-Za-z0-9._]*$")
 _JSON_COMMENT_RE = re.compile(r"//.*?$|/\*.*?\*/", re.DOTALL | re.MULTILINE)
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+_INI_ARROW_RE = re.compile(
+    r"^(?P<indent>\s*)(?P<key>[^\s:=#;\[\]][^:=#;]*?)\s*(?:=>|->)\s*(?P<value>.+)$"
+)
 
 
 @dataclass(frozen=True)
@@ -278,6 +282,138 @@ def _load_json_like(raw: str) -> tuple[object, str | None]:
             return data, "yaml"
 
     raise ValueError("Unable to coerce JSON input")
+
+
+def _prepare_ini_input(text: str) -> tuple[str, dict[str, object], bool, bool]:
+    cleaned = text.lstrip("\ufeff")
+    space_converted = 0
+    arrow_converted = 0
+    leading_pairs = False
+    seen_section = False
+    lines: List[str] = []
+
+    for raw_line in cleaned.splitlines():
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith(("#", ";")):
+            lines.append(raw_line)
+            continue
+        if stripped.startswith("["):
+            lines.append(raw_line)
+            seen_section = True
+            continue
+
+        line = raw_line
+        line_is_pair = False
+
+        arrow_match = _INI_ARROW_RE.match(raw_line)
+        if arrow_match:
+            indent = arrow_match.group("indent")
+            key = arrow_match.group("key").strip()
+            value = arrow_match.group("value").strip()
+            line = f"{indent}{key} = {value}"
+            arrow_converted += 1
+            line_is_pair = True
+        elif "=" in raw_line or ":" in raw_line:
+            line_is_pair = True
+        else:
+            parts = stripped.split(None, 1)
+            if len(parts) == 2 and not any(ch in parts[0] for ch in "[]=#:;"):
+                indent = raw_line[: len(raw_line) - len(raw_line.lstrip())]
+                key, value = parts
+                line = f"{indent}{key} = {value}"
+                space_converted += 1
+                line_is_pair = True
+
+        lines.append(line)
+
+        if line_is_pair and not seen_section:
+            leading_pairs = True
+
+    sanitized = "\n".join(lines)
+    has_section = seen_section or any(line.lstrip().startswith("[") for line in lines)
+    meta: dict[str, object] = {}
+    if arrow_converted:
+        meta["coerced_arrow_pairs"] = arrow_converted
+    if space_converted:
+        meta["coerced_space_pairs"] = space_converted
+    total = arrow_converted + space_converted
+    if total:
+        meta["coerced_pairs"] = total
+    return sanitized, meta, has_section, leading_pairs
+
+
+def _parse_ini_structured(
+    text: str,
+    *,
+    has_section: bool,
+    leading_pairs: bool,
+) -> tuple[object, dict[str, object]]:
+    parser = configparser.RawConfigParser(
+        strict=False,
+        interpolation=None,
+        allow_no_value=True,
+    )
+    parser.optionxform = str
+    synthetic_root = None
+    try:
+        if not has_section or leading_pairs:
+            synthetic_root = "__root__"
+            parser.read_string(f"[{synthetic_root}]\n{text}")
+        else:
+            parser.read_string(text)
+    except configparser.Error as exc:
+        raise ValueError("invalid ini data") from exc
+
+    meta: dict[str, object] = {}
+
+    if not has_section:
+        assert synthetic_root is not None
+        section = dict(parser._sections.get(synthetic_root, {}))  # type: ignore[attr-defined]
+        section.pop("__name__", None)
+        meta.update(
+            {
+                "sections": [],
+                "section_count": 0,
+                "key_count": len(section),
+            }
+        )
+        return section, meta
+
+    defaults: Dict[str, object]
+    if synthetic_root is not None:
+        defaults = dict(parser._sections.get(synthetic_root, {}))  # type: ignore[attr-defined]
+        defaults.pop("__name__", None)
+    else:
+        defaults = dict(parser._defaults)  # type: ignore[attr-defined]
+
+    sections: dict[str, dict[str, object]] = {}
+    for name, payload in parser._sections.items():  # type: ignore[attr-defined]
+        if synthetic_root is not None and name == synthetic_root:
+            continue
+        data = dict(payload)
+        data.pop("__name__", None)
+        sections[name] = data
+
+    section_names = [name for name in parser.sections() if name != synthetic_root]
+
+    ordered: Dict[str, object] = {}
+    if defaults:
+        ordered["<defaults>"] = defaults
+    for name in section_names:
+        ordered[name] = sections.get(name, {})
+
+    meta.update(
+        {
+            "sections": section_names,
+            "section_count": len(section_names),
+        }
+    )
+    if defaults:
+        meta["default_keys"] = list(defaults.keys())
+    meta["key_count"] = sum(
+        len(value) if isinstance(value, Mapping) else 1 for value in ordered.values()
+    )
+    return ordered, meta
 
 
 def _structured_to_blocks(
@@ -635,6 +771,50 @@ def parse_json(path: str | Path) -> List[Block]:
                 confidence=0.4,
             )
         )
+    return blocks
+
+
+def parse_ini(path: str | Path) -> List[Block]:
+    source = Path(path)
+    raw = source.read_text(encoding="utf-8", errors="ignore")
+    sanitized, coercion_meta, has_section, leading_pairs = _prepare_ini_input(raw)
+    try:
+        data, structure_meta = _parse_ini_structured(
+            sanitized, has_section=has_section, leading_pairs=leading_pairs
+        )
+    except ValueError:
+        return parse_txt(path)
+
+    info: Dict[str, object] = {}
+    info.update(coercion_meta)
+    info.update(structure_meta)
+
+    budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
+    blocks, truncated = _structured_to_blocks(data, source, limit=budget)
+    if not blocks:
+        return parse_txt(path)
+
+    if info:
+        head = blocks[0]
+        head.attrs = dict(head.attrs)
+        head.attrs.update(info)
+
+    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
+        blocks.append(
+            Block(
+                type="metadata",
+                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+                attrs={
+                    "truncated": True,
+                    "key": _format_label(()),
+                    "path_r": _format_r_path(()),
+                    "path_glue": _format_glue_path(()),
+                },
+                source=str(source),
+                confidence=0.4,
+            )
+        )
+
     return blocks
 
 

@@ -10,7 +10,7 @@ from openpyxl import Workbook
 from pypdf import PdfWriter
 
 from sr_adapter.pipeline import convert
-from sr_adapter.parsers import parse_txt
+from sr_adapter.parsers import parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
 from sr_adapter.sniff import detect_type
@@ -70,6 +70,12 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     toml = tmp_path / "config.toml"
     toml.write_text("title = \"Example\"\n", encoding="utf-8")
 
+    cfg = tmp_path / "settings.cfg"
+    cfg.write_text("host localhost\n", encoding="utf-8")
+
+    props = tmp_path / "application.properties"
+    props.write_text("user => demo\n", encoding="utf-8")
+
     assert detect_type(txt) == "text"
     assert detect_type(md) == "md"
     assert detect_type(pdf) == "pdf"
@@ -78,6 +84,8 @@ def test_detect_type_handles_various_formats(tmp_path: Path) -> None:
     assert detect_type(yaml_file) == "yaml"
     assert detect_type(jsonl) == "jsonl"
     assert detect_type(toml) == "toml"
+    assert detect_type(cfg) == "ini"
+    assert detect_type(props) == "ini"
 
 
 def test_convert_with_recipe_applies_patterns(tmp_path: Path) -> None:
@@ -119,6 +127,62 @@ def test_parse_txt_extracts_kv_and_log(tmp_path: Path) -> None:
     assert "status ok" in log_block.attrs["message"]
     name_block = next(block for block in blocks if block.type == "kv" and block.attrs.get("key") == "Name")
     assert name_block.attrs["value"] == "Alice"
+
+
+def test_parse_ini_coerces_space_pairs(tmp_path: Path) -> None:
+    source = tmp_path / "messy.cfg"
+    source.write_text(
+        "\n".join(
+            [
+                "# comment",
+                "host localhost",
+                "port 5432",
+                "",
+                "[service]",
+                "enabled true",
+                "timeout 30",
+                "path => /var/lib/app",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    blocks = parse_ini(source)
+
+    root = next(block for block in blocks if block.attrs.get("key") == "<root>")
+    assert root.attrs["section_count"] == 1
+    assert "service" in root.attrs["sections"]
+    assert "host" in root.attrs.get("default_keys", [])
+    assert root.attrs["coerced_pairs"] == 5
+
+    host = next(block for block in blocks if block.attrs.get("key") == "<defaults>.host")
+    assert host.attrs["value"] == "localhost"
+
+    service_path = next(block for block in blocks if block.attrs.get("key") == "service.path")
+    assert service_path.attrs["value"] == "/var/lib/app"
+
+
+def test_convert_ini_uses_structured_parser(tmp_path: Path) -> None:
+    source = tmp_path / "app.properties"
+    source.write_text(
+        "\n".join(
+            [
+                "name demo",
+                "enabled true",
+                "[limits]",
+                "max 10",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(source, recipe="default")
+
+    assert document.meta["type"] == "ini"
+    head = document.blocks[0]
+    assert head.attrs.get("coerced_pairs", 0) >= 3
+    assert any(block.attrs.get("key") == "<defaults>.name" for block in document.blocks if block.type == "kv")
+    assert any(block.attrs.get("key") == "limits.max" for block in document.blocks if block.type == "kv")
 
 
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
