@@ -18,6 +18,7 @@ from .parsers import (
     parse_md,
     parse_pptx,
     parse_pdf,
+    parse_pptx,
     parse_txt,
     parse_xml,
     parse_yaml,

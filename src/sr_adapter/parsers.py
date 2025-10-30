@@ -371,6 +371,42 @@ def parse_xlsx(path: str | Path) -> List[Block]:
     ]
 
 
+def parse_pptx(path: str | Path) -> List[Block]:
+    source = Path(path)
+    blocks: List[Block] = []
+    with zipfile.ZipFile(source) as archive:
+        slide_members = sorted(
+            member
+            for member in archive.namelist()
+            if member.startswith("ppt/slides/") and member.endswith(".xml")
+        )
+        namespace = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+        for index, member in enumerate(slide_members, start=1):
+            try:
+                xml_data = archive.read(member)
+            except KeyError:  # pragma: no cover - corrupted archive guard
+                continue
+            try:
+                tree = ET.fromstring(xml_data)
+            except Exception:  # pragma: no cover - malformed slide guard
+                continue
+            texts = [node.text.strip() for node in tree.findall(".//a:t", namespace) if node.text]
+            if not texts:
+                continue
+            title = texts[0]
+            body = "\n".join(texts)
+            blocks.append(
+                Block(
+                    type="slide",
+                    text=body,
+                    attrs={"title": title, "slide": str(index)},
+                    source=str(source),
+                    confidence=0.6,
+                )
+            )
+    return blocks or [_new_block("other", "", source, confidence=0.2)]
+
+
 def parse_json(path: str | Path) -> List[Block]:
     source = Path(path)
     data = json.loads(source.read_text(encoding="utf-8", errors="ignore"))
