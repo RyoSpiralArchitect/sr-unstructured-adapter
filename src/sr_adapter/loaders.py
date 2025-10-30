@@ -157,6 +157,95 @@ def _pretty_xml_text(root: ET.Element) -> str:
         return _normalize_newlines(ET.tostring(root, encoding="unicode"))
 
 
+def _prepare_image_for_ocr(image: "Image.Image") -> Tuple["Image.Image", "Image.Image", bool]:  # type: ignore[name-defined]
+    """Return an orientation-corrected copy and a contrast-enhanced grayscale copy."""
+
+    corrected = image
+    orientation_changed = False
+    try:
+        from PIL import ImageOps  # type: ignore
+
+        corrected_candidate = ImageOps.exif_transpose(image)
+        if corrected_candidate is not None:
+            corrected = corrected_candidate
+            orientation_changed = corrected is not image
+    except Exception:
+        corrected = image
+
+    ocr_ready = corrected
+    try:
+        if ocr_ready.mode not in {"RGB", "RGBA", "L"}:
+            ocr_ready = ocr_ready.convert("RGB")
+    except Exception:
+        pass
+
+    try:
+        if ocr_ready.mode != "L":
+            ocr_ready = ocr_ready.convert("L")
+    except Exception:
+        pass
+
+    try:
+        from PIL import ImageEnhance  # type: ignore
+
+        enhancer = ImageEnhance.Contrast(ocr_ready)
+        ocr_ready = enhancer.enhance(1.4)
+    except Exception:
+        pass
+
+    return corrected, ocr_ready, orientation_changed
+
+
+def _select_ocr_languages(pytesseract: Any) -> List[str]:
+    """Pick a stable set of OCR languages based on what Tesseract exposes."""
+
+    available: List[str] = []
+    try:
+        langs = pytesseract.get_languages(config="")  # type: ignore[attr-defined]
+        if isinstance(langs, (list, tuple)):
+            available = list(langs)
+    except Exception:
+        try:
+            langs = pytesseract.get_available_languages()  # type: ignore[attr-defined]
+            if isinstance(langs, (list, tuple, set)):
+                available = list(langs)
+        except Exception:
+            available = []
+
+    if not available:
+        return []
+
+    preferred = [
+        "eng",
+        "jpn",
+        "kor",
+        "chi_sim",
+        "chi_tra",
+        "fra",
+        "deu",
+        "spa",
+        "ita",
+        "por",
+        "nld",
+        "ara",
+        "hin",
+        "rus",
+    ]
+    seen: List[str] = []
+    for code in preferred:
+        if code in available and code not in seen:
+            seen.append(code)
+
+    if not seen:
+        for code in available:
+            if code not in seen:
+                seen.append(code)
+            if len(seen) >= 5:
+                break
+
+    return seen
+
+
 # ------------------------- readers -------------------------
 
 def _read_json(path: Path) -> Tuple[str, Dict[str, object]]:
@@ -478,14 +567,17 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[s
 
     try:
         with Image.open(str(path)) as im:
-            width, height = im.size
+            corrected, ocr_ready, orientation_changed = _prepare_image_for_ocr(im)
+            width, height = corrected.size
             meta.update(
                 {
-                    "image_mode": im.mode,
+                    "image_mode": corrected.mode,
                     "image_size": (width, height),
-                    "image_format": im.format or path.suffix.lstrip(".").upper(),
+                    "image_format": corrected.format or im.format or path.suffix.lstrip(".").upper(),
                 }
             )
+            if orientation_changed:
+                meta["image_orientation_corrected"] = True
 
             info = getattr(im, "info", {}) or {}
             info_records: List[Dict[str, object]] = []
@@ -548,7 +640,16 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[s
                 import pytesseract  # type: ignore
                 from pytesseract import Output  # type: ignore
 
-                data = pytesseract.image_to_data(im, output_type=Output.DICT)  # type: ignore[attr-defined]
+                languages = _select_ocr_languages(pytesseract)
+                lang_arg = "+".join(languages) if languages else ""
+                if languages:
+                    meta["image_ocr_languages"] = languages
+
+                kwargs = {"output_type": Output.DICT}
+                if lang_arg:
+                    kwargs["lang"] = lang_arg
+
+                data = pytesseract.image_to_data(ocr_ready, **kwargs)  # type: ignore[attr-defined]
                 texts = data.get("text", [])
                 if texts:
                     line_map: Dict[Tuple[int, int, int, int], Dict[str, Any]] = {}
@@ -625,7 +726,10 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[s
 
                     if order > 1:
                         ocr_segments = order - 1
-                        text_sources.append({"source": "ocr", "lines": ocr_segments})
+                        entry: Dict[str, Any] = {"source": "ocr", "lines": ocr_segments}
+                        if languages:
+                            entry["languages"] = languages
+                        text_sources.append(entry)
                         meta["image_ocr_engine"] = "pytesseract"
             except ModuleNotFoundError:
                 meta.setdefault("image_ocr_engine", "unavailable")

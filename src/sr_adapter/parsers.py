@@ -824,6 +824,10 @@ def parse_image(path: str | Path) -> List[Block]:
                 prov.bbox = None
 
         attrs: Dict[str, Any] = {"image_source": source_kind}
+        if source_kind == "ocr":
+            languages = meta.get("image_ocr_languages")
+            if languages:
+                attrs["ocr_languages"] = languages
         confidence = segment.get("confidence", 0.6)
         try:
             attrs["confidence"] = float(confidence)

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
+import sys
+import types
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
@@ -150,3 +152,40 @@ def test_image_loader_extracts_text(tmp_path: Path) -> None:
     assert meta["image_has_text"] is True
     assert meta.get("image_text_sources")
     assert meta.get("image_mode") == "RGB"
+
+
+def test_image_loader_reports_ocr_languages(monkeypatch, tmp_path: Path) -> None:
+    path = tmp_path / "multilang.png"
+    _create_png(path, "Bonjour こんにちは")
+
+    fake = types.ModuleType("pytesseract")
+    fake.Output = types.SimpleNamespace(DICT="dict")
+
+    def get_languages(config: str = "") -> list[str]:
+        return ["eng", "jpn", "fra"]
+
+    def image_to_data(image, output_type=None, lang=None):  # pragma: no cover - exercised via loader
+        assert lang == "eng+jpn+fra"
+        return {
+            "text": ["Bonjour こんにちは"],
+            "page_num": [1],
+            "block_num": [1],
+            "par_num": [1],
+            "line_num": [1],
+            "left": [0],
+            "top": [0],
+            "width": [120],
+            "height": [30],
+            "conf": ["90"],
+        }
+
+    fake.get_languages = get_languages
+    fake.image_to_data = image_to_data
+    monkeypatch.setitem(sys.modules, "pytesseract", fake)
+
+    text, meta = read_file_contents(path, "image/png")
+
+    assert "Bonjour" in text
+    assert meta.get("image_ocr_languages") == ["eng", "jpn", "fra"]
+    ocr_sources = [src for src in meta.get("image_text_sources", []) if src.get("source") == "ocr"]
+    assert ocr_sources and ocr_sources[0].get("languages") == ["eng", "jpn", "fra"]

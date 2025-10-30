@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
 from sr_adapter.pipeline import convert
-from sr_adapter.parsers import parse_ini, parse_txt
+from sr_adapter.parsers import parse_image, parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
 from sr_adapter.sniff import detect_type
@@ -264,6 +264,31 @@ def test_convert_image_uses_metadata_text(tmp_path: Path) -> None:
     assert meta_blocks
     assert any(block.attrs.get("image_source") == "metadata" for block in meta_blocks)
     assert any(block.attrs.get("image_has_text") is True for block in meta_blocks)
+
+
+def test_parse_image_propagates_language_metadata(monkeypatch, tmp_path: Path) -> None:
+    image = tmp_path / "ocr.png"
+    _create_png(image, "hello")
+
+    fake_meta = {"image_has_text": True, "image_ocr_languages": ["eng", "jpn"]}
+    fake_segments = [
+        {"text": "hello", "source": "ocr", "kind": "ocr", "confidence": 0.9, "order": 1},
+    ]
+
+    def fake_extract(path: Path):
+        assert Path(path) == image
+        return "hello", dict(fake_meta), list(fake_segments)
+
+    monkeypatch.setattr("sr_adapter.parsers._extract_image_text", fake_extract)
+
+    blocks = parse_image(image)
+
+    summary = next(block for block in blocks if block.type == "metadata" and block.text == "Image summary")
+    assert summary.attrs.get("image_ocr_languages") == ["eng", "jpn"]
+
+    ocr_blocks = [block for block in blocks if block.attrs.get("image_source") == "ocr"]
+    assert ocr_blocks
+    assert any(block.attrs.get("ocr_languages") == ["eng", "jpn"] for block in ocr_blocks)
 
 
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
