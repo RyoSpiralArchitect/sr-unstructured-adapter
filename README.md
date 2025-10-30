@@ -124,6 +124,18 @@ Use JSON lines mode to stream results to other processes:
 python -m sr_adapter.adapter --as-json-lines examples/sample.txt
 ```
 
+For richer control, the CLI entry-point supports writing raw documents, base
+payloads, or fully unified payloads. Use ``sr_adapter.cli`` to batch-convert
+files, stream to ``stdout`` or disk, and tolerate individual failures:
+
+```bash
+python -m sr_adapter.cli convert examples/ --format unified --out out.jsonl
+python -m sr_adapter.cli convert input.txt --format payload --out -
+```
+
+When an error occurs, conversion continues and an error record is emitted in the
+output stream; add ``--strict`` to surface a non-zero exit code instead.
+
 ## Library usage
 ```python
 from sr_adapter import build_payload, to_llm_messages, to_unified_payload

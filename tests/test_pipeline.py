@@ -177,6 +177,69 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     assert any(block["type"] == "kv" for block in payload["blocks"])
 
 
+def test_cli_convert_supports_unified_payload(tmp_path: Path) -> None:
+    source = tmp_path / "report.txt"
+    source.write_text("Quarterly revenue hit $123.45 on 2024-02-01", encoding="utf-8")
+    out = tmp_path / "unified.jsonl"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sr_adapter.cli",
+            "convert",
+            str(source),
+            "--format",
+            "unified",
+            "--out",
+            str(out),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    payload = json.loads(out.read_text(encoding="utf-8").splitlines()[0])
+    assert payload["schema_version"] == "1.0"
+    assert payload["source"].endswith("report.txt")
+    assert "llm" in payload and isinstance(payload["llm"], dict)
+    assert any(hint.startswith("Detected type") for hint in payload.get("llm_hints", []))
+
+
+def test_cli_convert_reports_errors(tmp_path: Path) -> None:
+    source = tmp_path / "sample.txt"
+    source.write_text("data", encoding="utf-8")
+    out = tmp_path / "errors.jsonl"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sr_adapter.cli",
+            "convert",
+            str(source),
+            "--recipe",
+            "missing-recipe",
+            "--out",
+            str(out),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "Failed to convert" in result.stderr
+
+    lines = out.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    error_record = json.loads(lines[0])
+    assert error_record["ok"] is False
+    assert error_record["source"].endswith("sample.txt")
+    assert error_record["error_type"] == "FileNotFoundError"
+
+
 def test_convert_pptx_emits_slide_blocks(tmp_path: Path) -> None:
     pptx = tmp_path / "deck.pptx"
     _create_pptx(pptx)

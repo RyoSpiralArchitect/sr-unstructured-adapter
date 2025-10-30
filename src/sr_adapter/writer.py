@@ -4,26 +4,54 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping, TextIO
+
+import sys
 
 from .schema import Document
 
 
-def write_jsonl(documents: Iterable[Document], destination: str | Path) -> None:
-    """Write *documents* to *destination* as JSON Lines."""
+def _serialise(document: object) -> str:
+    if hasattr(document, "model_dump_json"):
+        return document.model_dump_json(ensure_ascii=False)  # type: ignore[attr-defined]
+    if hasattr(document, "json"):
+        return document.json(ensure_ascii=False)  # type: ignore[call-arg]
+    if hasattr(document, "model_dump"):
+        return json.dumps(document.model_dump(), ensure_ascii=False)  # type: ignore[attr-defined]
+    if isinstance(document, Mapping):
+        return json.dumps(document, ensure_ascii=False)
+    return json.dumps(getattr(document, "__dict__", {}), ensure_ascii=False)
 
-    path = Path(destination)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as handle:
+
+def write_jsonl(documents: Iterable[Document | Mapping[str, object]], destination: str | Path | TextIO) -> None:
+    """Write *documents* to *destination* as JSON Lines.
+
+    ``destination`` can be a filesystem path, ``"-"`` to indicate ``stdout``, or
+    any text IO handle. The writer will ensure parent directories exist when a
+    path is provided and will avoid closing file-like objects it did not open.
+    """
+
+    handle: TextIO
+    must_close = False
+
+    if isinstance(destination, (str, Path)):
+        if str(destination) == "-":
+            handle = sys.stdout
+        else:
+            path = Path(destination)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            handle = path.open("w", encoding="utf-8")
+            must_close = True
+    elif hasattr(destination, "write"):
+        handle = destination  # type: ignore[assignment]
+    else:
+        raise TypeError("destination must be a path, '-', or a text IO handle")
+
+    try:
         for document in documents:
-            if hasattr(document, "model_dump_json"):
-                payload = document.model_dump_json(ensure_ascii=False)  # type: ignore[attr-defined]
-            elif hasattr(document, "json"):
-                payload = document.json(ensure_ascii=False)  # type: ignore[call-arg]
-            elif hasattr(document, "model_dump"):
-                payload = json.dumps(document.model_dump(), ensure_ascii=False)  # type: ignore[attr-defined]
-            else:
-                payload = json.dumps(getattr(document, "__dict__", {}), ensure_ascii=False)
-            handle.write(payload)
+            handle.write(_serialise(document))
             handle.write("\n")
+    finally:
+        if must_close:
+            handle.close()
 
