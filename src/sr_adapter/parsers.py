@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Sequence, Tuple
 
 import yaml
 from bs4 import BeautifulSoup
@@ -25,6 +25,7 @@ from pypdf import PdfReader
 
 from .loaders import _extract_image_text
 from .schema import BBox, Block, Provenance, clone_model
+from .visual import LayoutCandidate, VisualLayoutAnalyzer
 
 
 _LIST_MARKERS = re.compile(r"^(?:[-*\u2022\u30fb]|\d+[.)])\s+")
@@ -739,46 +740,71 @@ def parse_csv(path: str | Path) -> List[Block]:
     ]
 
 
-def parse_pdf(path: str | Path) -> List[Block]:
+def stream_pdf(path: str | Path) -> Iterator[Block]:
     source = Path(path)
     reader = PdfReader(str(source))
-    blocks: List[Block] = []
+    analyzer = VisualLayoutAnalyzer()
+    emitted = False
     for index, page in enumerate(reader.pages):
         text = page.extract_text() or ""
-        for chunk in _iter_refined_chunks(text):
+        candidates: List[LayoutCandidate] = []
+        for order, chunk in enumerate(_iter_refined_chunks(text)):
             base = _block_from_chunk(chunk, source)
             attrs = dict(base.attrs)
             attrs.setdefault("page", str(index + 1))
-            blocks.append(clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.55)))
-    return blocks or [_new_block("other", "", source, confidence=0.1)]
+            base_block = clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.55))
+            span_height = min(160.0, 24.0 + len(chunk) * 0.12)
+            span_width = min(640.0, 120.0 + len(chunk) * 0.9)
+            top = float(order) * (span_height + 6.0)
+            bbox = (36.0, top, 36.0 + span_width, top + span_height)
+            score = max(base_block.confidence, min(0.95, 0.35 + len(chunk) / 600.0))
+            candidates.append(
+                LayoutCandidate(
+                    block=base_block,
+                    bbox=bbox,
+                    page=index,
+                    score=score,
+                    order_hint=order,
+                    metadata={"layout_source": "pdf"},
+                )
+            )
+        for segment in analyzer.process(candidates):
+            emitted = True
+            yield segment.block
+    if not emitted:
+        yield _new_block("other", "", source, confidence=0.1)
 
 
-def parse_image(path: str | Path) -> List[Block]:
+def parse_pdf(path: str | Path) -> List[Block]:
+    return list(stream_pdf(path))
+
+
+def stream_image(path: str | Path) -> Iterator[Block]:
     source = Path(path)
     text, meta, segments = _extract_image_text(source)
 
-    blocks: List[Block] = []
+    analyzer = VisualLayoutAnalyzer()
+    emitted = 0
     truncated = False
+
     summary_attrs = dict(meta)
     if summary_attrs:
-        blocks.append(
-            Block(
-                type="metadata",
-                text="Image summary",
-                attrs=summary_attrs,
-                source=str(source),
-                confidence=0.45,
-            )
+        yield Block(
+            type="metadata",
+            text="Image summary",
+            attrs=summary_attrs,
+            source=str(source),
+            confidence=0.45,
         )
+        emitted += 1
 
-    added_content = False
-    for segment in segments:
-        if len(blocks) >= _STRUCTURED_BLOCK_LIMIT:
+    candidates: List[LayoutCandidate] = []
+    metadata_pending: List[Block] = []
+    for index, segment in enumerate(segments):
+        if emitted + len(candidates) >= _STRUCTURED_BLOCK_LIMIT:
             truncated = True
             break
         seg_text = str(segment.get("text", "")).strip()
-        if not seg_text:
-            continue
         kind = segment.get("kind", "ocr")
         source_kind = segment.get("source", "ocr")
         if kind == "metadata":
@@ -786,7 +812,7 @@ def parse_image(path: str | Path) -> List[Block]:
             key = segment.get("key")
             if key:
                 attrs["key"] = key
-            blocks.append(
+            metadata_pending.append(
                 Block(
                     type="metadata",
                     text=seg_text,
@@ -795,34 +821,35 @@ def parse_image(path: str | Path) -> List[Block]:
                     confidence=0.6,
                 )
             )
-            added_content = True
             continue
-
+        if not seg_text:
+            continue
         prov = Provenance()
         order = segment.get("order")
         if order is not None:
             try:
                 prov.order = int(order)
             except Exception:
-                pass
+                prov.order = None
         page = segment.get("page")
         if page is not None:
             try:
                 prov.page = int(page)
             except Exception:
-                pass
-        bbox = segment.get("bbox")
-        if bbox and isinstance(bbox, tuple) and len(bbox) == 4:
+                prov.page = None
+        bbox_raw = segment.get("bbox")
+        bbox: Sequence[float] | None = None
+        if bbox_raw and isinstance(bbox_raw, Sequence) and len(bbox_raw) == 4:
             try:
                 prov.bbox = BBox(
-                    x0=float(bbox[0]),
-                    y0=float(bbox[1]),
-                    x1=float(bbox[2]),
-                    y1=float(bbox[3]),
+                    x0=float(bbox_raw[0]),
+                    y0=float(bbox_raw[1]),
+                    x1=float(bbox_raw[2]),
+                    y1=float(bbox_raw[3]),
                 )
+                bbox = tuple(float(v) for v in bbox_raw)
             except Exception:
                 prov.bbox = None
-
         attrs: Dict[str, Any] = {"image_source": source_kind}
         if source_kind == "ocr":
             languages = meta.get("image_ocr_languages")
@@ -830,55 +857,78 @@ def parse_image(path: str | Path) -> List[Block]:
                 attrs["ocr_languages"] = languages
         confidence = segment.get("confidence", 0.6)
         try:
-            attrs["confidence"] = float(confidence)
             conf_value = float(confidence)
+            attrs["confidence"] = conf_value
         except Exception:
             attrs["confidence"] = confidence
             conf_value = 0.6
-
-        blocks.append(
-            Block(
-                type="paragraph",
-                text=seg_text,
-                attrs=attrs,
-                prov=prov,
-                source=str(source),
-                confidence=conf_value,
+        base_block = Block(
+            type="paragraph",
+            text=seg_text,
+            attrs=attrs,
+            prov=prov,
+            source=str(source),
+            confidence=conf_value,
+        )
+        order_hint = prov.order if prov.order is not None else index
+        if bbox is None:
+            top = float(order_hint) * 30.0
+            bbox = (12.0, top, 12.0 + min(600.0, 80.0 + len(seg_text) * 1.2), top + 24.0)
+        candidates.append(
+            LayoutCandidate(
+                block=base_block,
+                bbox=bbox,
+                page=prov.page or 0,
+                score=conf_value,
+                order_hint=order_hint,
+                metadata={"image_source": source_kind, "layout_source": "image"},
             )
         )
-        added_content = True
 
-    if not added_content and text:
+    for meta_block in metadata_pending:
+        if emitted >= _STRUCTURED_BLOCK_LIMIT:
+            truncated = True
+            break
+        yield meta_block
+        emitted += 1
+
+    for segment in analyzer.process(candidates):
+        if emitted >= _STRUCTURED_BLOCK_LIMIT:
+            truncated = True
+            break
+        yield segment.block
+        emitted += 1
+
+    if emitted == 0 and text:
         for chunk in _iter_refined_chunks(text):
-            if len(blocks) >= _STRUCTURED_BLOCK_LIMIT:
+            if emitted >= _STRUCTURED_BLOCK_LIMIT:
                 truncated = True
                 break
-            blocks.append(_block_from_chunk(chunk, source))
-        added_content = True
+            yield _block_from_chunk(chunk, source)
+            emitted += 1
 
-    if not blocks:
-        blocks.append(
-            Block(
-                type="metadata",
-                text="Image contained no extractable text",
-                attrs={"image_has_text": bool(text)},
-                source=str(source),
-                confidence=0.35,
-            )
+    if emitted == 0:
+        yield Block(
+            type="metadata",
+            text="Image contained no extractable text",
+            attrs={"image_has_text": bool(text)},
+            source=str(source),
+            confidence=0.35,
+        )
+        emitted += 1
+
+    if truncated and emitted < _STRUCTURED_BLOCK_LIMIT:
+        yield Block(
+            type="metadata",
+            text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
+            attrs={"truncated": True},
+            source=str(source),
+            confidence=0.4,
         )
 
-    if truncated and len(blocks) < _STRUCTURED_BLOCK_LIMIT:
-        blocks.append(
-            Block(
-                type="metadata",
-                text=f"Truncated after {_STRUCTURED_BLOCK_LIMIT - 1} structured blocks",
-                attrs={"truncated": True},
-                source=str(source),
-                confidence=0.4,
-            )
-        )
 
-    return blocks[:_STRUCTURED_BLOCK_LIMIT]
+def parse_image(path: str | Path) -> List[Block]:
+    return list(stream_image(path))[:_STRUCTURED_BLOCK_LIMIT]
 
 
 def parse_docx(path: str | Path) -> List[Block]:

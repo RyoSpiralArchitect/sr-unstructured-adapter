@@ -1,0 +1,10 @@
+# Example tenant configuration for local development.
+driver: docker
+settings:
+  url: http://localhost:8000/v1/chat/completions
+  model: local-adapter
+  system_prompt: |
+    You are the sr-adapter LLM escalation helper. Summarise the provided
+    context and highlight any ambiguities that require manual review.
+  temperature: 0.2
+  max_tokens: 256
