@@ -39,20 +39,23 @@ def _infer_type(block: Block) -> str:
     return "paragraph"
 
 
+def normalize_block(block: Block) -> Block:
+    """Normalise a single block."""
+
+    text = _normalise_text(block.text)
+    attrs = dict(block.attrs)
+    if "text" in attrs:
+        attrs["text"] = _normalise_text(attrs["text"])
+    candidate = clone_model(block, text=text)
+    inferred_type = _infer_type(candidate)
+    updated = clone_model(candidate, attrs=attrs, type=inferred_type)
+    if not updated.text:
+        updated = clone_model(updated, confidence=min(updated.confidence, 0.2))
+    return updated
+
+
 def normalize_blocks(blocks: Iterable[Block]) -> List[Block]:
     """Apply text normalisation and lightweight type inference."""
 
-    normalised: List[Block] = []
-    for block in blocks:
-        text = _normalise_text(block.text)
-        attrs = dict(block.attrs)
-        if "text" in attrs:
-            attrs["text"] = _normalise_text(attrs["text"])
-        candidate = clone_model(block, text=text)
-        inferred_type = _infer_type(candidate)
-        updated = clone_model(candidate, attrs=attrs, type=inferred_type)
-        if not updated.text:
-            updated = clone_model(updated, confidence=min(updated.confidence, 0.2))
-        normalised.append(updated)
-    return normalised
+    return [normalize_block(block) for block in blocks]
 
