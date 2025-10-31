@@ -100,9 +100,21 @@ def _normalize_block_py(block: Block) -> Block:
 class NativeTextNormalizer:
     """Wrapper that batches normalisation through the native text kernel."""
 
-    def __init__(self) -> None:
+    DEFAULT_BATCH_BYTES = 512 * 1024
+
+    def __init__(self, max_batch_bytes: Optional[int] = None) -> None:
         if ensure_text_kernel is None:
             raise TextKernelError("text kernel unavailable")
+        if max_batch_bytes is None:
+            env_value = os.getenv("SR_ADAPTER_TEXT_KERNEL_BATCH_BYTES")
+            if env_value:
+                try:
+                    max_batch_bytes = int(env_value)
+                except ValueError:
+                    max_batch_bytes = None
+        if max_batch_bytes is None:
+            max_batch_bytes = self.DEFAULT_BATCH_BYTES
+        self._max_batch_bytes = max_batch_bytes if max_batch_bytes > 0 else None
         self._kernel = ensure_text_kernel()
 
     def normalize_block(self, block: Block) -> Block:
@@ -113,6 +125,7 @@ class NativeTextNormalizer:
         if not block_list:
             return []
         payloads: List[tuple[bytes, int, bool, float]] = []
+        payload_sizes: List[int] = []
         block_positions: List[int] = []
         attr_positions: Dict[int, List[tuple[str, int]]] = {}
         for idx, block in enumerate(block_list):
@@ -122,14 +135,37 @@ class NativeTextNormalizer:
             type_code = _TYPE_TO_CODE.get(block.type, _TYPE_TO_CODE["other"])
             block_positions.append(len(payloads))
             payloads.append((text_bytes, type_code, allow_infer, block.confidence))
+            payload_sizes.append(len(text_bytes))
             for key, value in list(block.attrs.items()):
                 if isinstance(value, str):
                     attr_nfkc = unicodedata.normalize("NFKC", value)
                     attr_bytes = attr_nfkc.encode("utf-8")
                     payloads.append((attr_bytes, _TYPE_TO_CODE["other"], False, block.confidence))
+                    payload_sizes.append(len(attr_bytes))
                     attr_positions.setdefault(idx, []).append((key, len(payloads) - 1))
 
-        results = self._kernel.normalize(payloads)
+        results: List[TextKernelResult] = []
+        if self._max_batch_bytes is None:
+            results = self._kernel.normalize(payloads)
+        else:
+            start = 0
+            total = len(payloads)
+            while start < total:
+                batch_size = 0
+                end = start
+                while end < total:
+                    payload_size = payload_sizes[end]
+                    if batch_size and batch_size + payload_size > self._max_batch_bytes:
+                        break
+                    if batch_size == 0 and payload_size > self._max_batch_bytes:
+                        end += 1
+                        break
+                    batch_size += payload_size
+                    end += 1
+                if end == start:
+                    end += 1
+                results.extend(self._kernel.normalize(payloads[start:end]))
+                start = end
         updated_blocks: List[Block] = []
         for idx, block in enumerate(block_list):
             result = results[block_positions[idx]]

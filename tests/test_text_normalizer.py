@@ -1,5 +1,6 @@
 import pytest
 
+from sr_adapter import normalize as normalize_mod
 from sr_adapter.normalize import (
     NativeTextNormalizer,
     _normalize_block_py,
@@ -58,3 +59,28 @@ def test_native_normalizer_normalizes_attrs():
     normalized = normalize_block(block)
     assert normalized.attrs["text"] == "Some Value"
     assert normalized.attrs["other"] == "unchanged"
+
+
+def test_native_normalizer_batches_large_payloads(monkeypatch):
+    monkeypatch.setenv("SR_ADAPTER_TEXT_KERNEL_BATCH_BYTES", "64")
+    monkeypatch.setattr(normalize_mod, "_NATIVE_NORMALIZER", None)
+
+    normalizer = require_native()
+
+    calls: list[int] = []
+    original = normalizer._kernel.normalize
+
+    def wrapped(payloads):
+        calls.append(len(payloads))
+        return original(payloads)
+
+    monkeypatch.setattr(normalizer._kernel, "normalize", wrapped)
+
+    blocks = [
+        Block(type="paragraph", text="X" * 80, confidence=0.6)
+        for _ in range(4)
+    ]
+
+    normalized = normalizer.normalize_blocks(blocks)
+    assert len(normalized) == len(blocks)
+    assert len(calls) >= 2
