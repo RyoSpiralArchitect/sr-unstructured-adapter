@@ -1,9 +1,14 @@
+import json
 import math
 from pathlib import Path
 
-from sr_adapter.native import LayoutBox, ensure_layout_kernel
+from sr_adapter.native import LayoutBox, LayoutResult, ensure_layout_kernel
 from sr_adapter.schema import Block
-from sr_adapter.visual import LayoutCandidate, VisualLayoutAnalyzer
+from sr_adapter.visual import (
+    LayoutCalibrationStore,
+    LayoutCandidate,
+    VisualLayoutAnalyzer,
+)
 
 
 def test_layout_kernel_orders_segments(tmp_path: Path) -> None:
@@ -40,3 +45,49 @@ def test_visual_analyzer_calibrates_threshold() -> None:
     assert len(segments) == 2
     assert analyzer.threshold > 0.2
     assert segments[0].block.attrs["layout_label"] in {"heading", "paragraph", "table", "figure"}
+
+
+class _DummyKernel:
+    def analyze(self, boxes, threshold):  # pragma: no cover - used in tests only
+        return [
+            LayoutResult(
+                index=0,
+                order=0,
+                page=0,
+                label="paragraph",
+                confidence=min(0.95, float(threshold) + 0.2),
+                center=(0.0, 0.0),
+            )
+        ]
+
+    def calibrate(self, scores, current):  # pragma: no cover - used in tests only
+        return float(current) + 0.05
+
+
+def test_visual_calibration_store_persists(tmp_path: Path) -> None:
+    cache_path = tmp_path / "calibration.json"
+    store = LayoutCalibrationStore(cache_path)
+    kernel = _DummyKernel()
+
+    analyzer = VisualLayoutAnalyzer(
+        kernel=kernel,
+        store=store,
+        profile="pdf",
+        initial_threshold=0.2,
+    )
+    analyzer.record_feedback([0.6, 0.7])
+    persisted = store.get("pdf", 0.0)
+    assert math.isclose(persisted, analyzer.threshold, rel_tol=1e-6)
+    assert persisted > 0.2
+
+    data = json.loads(cache_path.read_text("utf-8"))
+    assert data["pdf"] == persisted
+
+    # Loading a new analyzer should pick up the persisted value
+    analyzer2 = VisualLayoutAnalyzer(
+        kernel=kernel,
+        store=store,
+        profile="pdf",
+        initial_threshold=0.1,
+    )
+    assert math.isclose(analyzer2.threshold, persisted, rel_tol=1e-6)

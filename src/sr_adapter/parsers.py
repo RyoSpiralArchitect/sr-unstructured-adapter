@@ -770,7 +770,7 @@ def parse_csv(path: str | Path) -> List[Block]:
 def stream_pdf(path: str | Path) -> Iterator[Block]:
     source = Path(path)
     reader = PdfReader(str(source))
-    analyzer = VisualLayoutAnalyzer()
+    analyzer = VisualLayoutAnalyzer(profile="pdf")
     emitted = False
     for index, page in enumerate(reader.pages):
         text = page.extract_text() or ""
@@ -810,7 +810,7 @@ def stream_image(path: str | Path) -> Iterator[Block]:
     source = Path(path)
     text, meta, segments = _extract_image_text(source)
 
-    analyzer = VisualLayoutAnalyzer()
+    analyzer = VisualLayoutAnalyzer(profile="image")
     emitted = 0
     truncated = False
 
