@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-import httpx
-
 from typing import Any, Mapping
 
 from .base import DriverError, LLMDriver
+
+try:  # pragma: no cover - exercised indirectly when dependency is present
+    import httpx
+except ImportError:  # pragma: no cover - handled gracefully at runtime
+    httpx = None  # type: ignore[assignment]
 
 
 class AzureDriver(LLMDriver):
@@ -19,6 +22,8 @@ class AzureDriver(LLMDriver):
                 raise DriverError(f"Azure driver requires '{key}' in configuration")
 
     def generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
+        if httpx is None:  # pragma: no cover - dependency guard
+            raise DriverError("httpx is required to use the Azure driver")
         endpoint = self.config["endpoint"].rstrip("/")
         deployment = self.config["deployment"]
         api_version = self.config["api_version"]

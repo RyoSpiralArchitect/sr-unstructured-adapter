@@ -38,3 +38,14 @@ def test_driver_manager_cache_key_is_stable(tmp_path: Path) -> None:
     driver_a = manager.get_driver("demo", {"enable": True})
     driver_b = manager.get_driver("demo", {"enable": True})
     assert driver_a is driver_b
+
+
+def test_tenant_manager_lists_tenants(tmp_path: Path) -> None:
+    tenant_dir = tmp_path / "tenants"
+    tenant_dir.mkdir()
+    (tenant_dir / "demo.yaml").write_text("driver: docker\n", encoding="utf-8")
+    (tenant_dir / "sample.yml").write_text("driver: docker\n", encoding="utf-8")
+
+    manager = TenantManager(tenant_dir)
+
+    assert manager.list_tenants() == ["demo", "sample"]

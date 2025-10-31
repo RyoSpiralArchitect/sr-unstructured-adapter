@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-import httpx
-
 from .base import DriverError, LLMDriver
+
+try:  # pragma: no cover - exercised indirectly when dependency is present
+    import httpx
+except ImportError:  # pragma: no cover - handled gracefully at runtime
+    httpx = None  # type: ignore[assignment]
 
 
 class DockerDriver(LLMDriver):
@@ -18,6 +21,8 @@ class DockerDriver(LLMDriver):
             raise DriverError("Docker driver requires 'url' in configuration")
 
     def generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
+        if httpx is None:  # pragma: no cover - dependency guard
+            raise DriverError("httpx is required to use the Docker driver")
         url = self.config["url"]
         model = self.config.get("model")
         system_prompt = self.config.get("system_prompt")

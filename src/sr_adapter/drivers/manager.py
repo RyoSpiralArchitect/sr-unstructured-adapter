@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Mapping, MutableMapping, Optional
+from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional
 
 import yaml
 
@@ -45,6 +45,18 @@ class TenantManager:
 
     def get_default_tenant(self) -> str:
         return os.getenv("SR_ADAPTER_TENANT", "default")
+
+    def list_tenants(self) -> list[str]:
+        """Return the names of configured tenants."""
+
+        tenants: Iterable[Path]
+        all_tenants: set[str] = set()
+        if not self.base_path.exists():
+            return []
+        for pattern in ("*.yaml", "*.yml"):
+            tenants = self.base_path.glob(pattern)
+            all_tenants.update(path.stem for path in tenants)
+        return sorted(all_tenants)
 
     def get(self, tenant: str) -> TenantConfig:
         if tenant in self._cache:
