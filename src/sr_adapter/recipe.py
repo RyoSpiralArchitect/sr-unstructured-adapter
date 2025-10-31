@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Union
 
 import yaml
 
@@ -64,39 +64,46 @@ def load_recipe(name: str) -> RecipeConfig:
     )
 
 
+def _apply_recipe_to_block(block: Block, recipe: RecipeConfig) -> Block:
+    updated = block
+    matched = False
+    for pattern in recipe.patterns:
+        if pattern.regex.search(block.text):
+            data = {"type": pattern.target_type}
+            if pattern.attrs:
+                attrs = dict(block.attrs)
+                attrs.update(pattern.attrs)
+                data["attrs"] = attrs
+            if pattern.confidence is not None:
+                data["confidence"] = pattern.confidence
+            updated = clone_model(block, **data)
+            matched = True
+            break
+    if (
+        not matched
+        and recipe.fallback_type
+        and block.type in {"paragraph", "other"}
+    ):
+        data = {"type": recipe.fallback_type}
+        attrs = dict(block.attrs)
+        if recipe.fallback_attrs:
+            attrs.update(recipe.fallback_attrs)
+            data["attrs"] = attrs
+        if recipe.fallback_confidence is not None:
+            data["confidence"] = recipe.fallback_confidence
+        updated = clone_model(block, **data)
+    return updated
+
+
+def apply_recipe_block(block: Block, recipe: Union[RecipeConfig, str]) -> Block:
+    if isinstance(recipe, str):
+        recipe = load_recipe(recipe)
+    return _apply_recipe_to_block(block, recipe)
+
+
 def apply_recipe(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
     """Apply the recipe named *recipe_name* to *blocks*."""
 
     recipe = load_recipe(recipe_name)
-    transformed: List[Block] = []
-    for block in blocks:
-        updated = block
-        matched = False
-        for pattern in recipe.patterns:
-            if pattern.regex.search(block.text):
-                data = {"type": pattern.target_type}
-                if pattern.attrs:
-                    attrs = dict(block.attrs)
-                    attrs.update(pattern.attrs)
-                    data["attrs"] = attrs
-                if pattern.confidence is not None:
-                    data["confidence"] = pattern.confidence
-                updated = clone_model(block, **data)
-                matched = True
-                break
-        if (
-            not matched
-            and recipe.fallback_type
-            and block.type in {"paragraph", "other"}
-        ):
-            data = {"type": recipe.fallback_type}
-            attrs = dict(block.attrs)
-            if recipe.fallback_attrs:
-                attrs.update(recipe.fallback_attrs)
-                data["attrs"] = attrs
-            if recipe.fallback_confidence is not None:
-                data["confidence"] = recipe.fallback_confidence
-            updated = clone_model(block, **data)
-        transformed.append(updated)
-    return transformed
+    return [_apply_recipe_to_block(block, recipe) for block in blocks]
 

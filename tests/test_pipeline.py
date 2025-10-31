@@ -5,13 +5,14 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Dict
 
 from docx import Document as DocxDocument
 from openpyxl import Workbook
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
-from sr_adapter.pipeline import convert
+from sr_adapter.pipeline import convert, stream_convert
 from sr_adapter.parsers import parse_image, parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
@@ -321,11 +322,49 @@ def test_parse_image_propagates_language_metadata(monkeypatch, tmp_path: Path) -
     assert any(block.attrs.get("ocr_languages") == ["eng", "jpn"] for block in ocr_blocks)
 
 
+def test_parse_image_orders_segments_with_native_kernel(monkeypatch, tmp_path: Path) -> None:
+    image = tmp_path / "layout.png"
+    _create_png(image, "placeholder")
+
+    fake_meta: Dict[str, object] = {"image_has_text": True}
+    fake_segments = [
+        {"text": "second line", "source": "ocr", "kind": "ocr", "confidence": 0.45, "bbox": (0, 60, 120, 90), "order": 2},
+        {"text": "first line", "source": "ocr", "kind": "ocr", "confidence": 0.8, "bbox": (0, 10, 120, 35), "order": 1},
+    ]
+
+    def fake_extract(path: Path):
+        assert Path(path) == image
+        return "", dict(fake_meta), list(fake_segments)
+
+    monkeypatch.setattr("sr_adapter.parsers._extract_image_text", fake_extract)
+
+    blocks = parse_image(image)
+
+    ordered = [block for block in blocks if block.type != "metadata"]
+    assert ordered
+    assert ordered[0].text == "first line"
+    assert ordered[0].attrs.get("layout_kernel") == "native-cpp-v1"
+    assert "layout_calibrated_threshold" in ordered[0].attrs
+
+
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
     block = Block(type="paragraph", text="unknown content", attrs={"a": "1"})
     processed = apply_recipe([block], "default")
     assert processed[0].type == "paragraph"
     assert processed[0].attrs["a"] == "1"
+
+
+def test_stream_convert_matches_convert(tmp_path: Path) -> None:
+    source = tmp_path / "note.txt"
+    source.write_text("Alpha\nBeta\n", encoding="utf-8")
+
+    streamed = list(stream_convert(source, recipe="default"))
+    document = convert(source, recipe="default")
+
+    assert [block.text for block in streamed] == [block.text for block in document.blocks]
+
+    limited = list(stream_convert(source, recipe="default", max_blocks=1))
+    assert len(limited) == 1
 
 
 def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
