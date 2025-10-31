@@ -6,10 +6,10 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from .delegate import escalate_low_conf
-from .normalize import normalize_blocks
+from .normalize import normalize_block, normalize_blocks
 from .parsers import (
     parse_csv,
     parse_docx,
@@ -27,8 +27,10 @@ from .parsers import (
     parse_txt,
     parse_xlsx,
     parse_yaml,
+    stream_image,
+    stream_pdf,
 )
-from .recipe import apply_recipe
+from .recipe import apply_recipe, apply_recipe_block, load_recipe
 from .schema import Block, Document
 from .sniff import detect_type
 
@@ -41,6 +43,7 @@ class ParserRegistry:
     """Resolve parsers by detected-type or MIME; allow runtime extension."""
     def __init__(self) -> None:
         self.by_key: Dict[str, ParserFunc] = {}
+        self.alias_to_key: Dict[str, str] = {}
         # Common MIME → key mapping (fallback to detect_type if not found)
         self.mime_to_key: Dict[str, str] = {
             "text/plain": "text",
@@ -73,17 +76,31 @@ class ParserRegistry:
 
     def register(self, key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -> None:
         self.by_key[key] = func
+        self.alias_to_key[key] = key
         for alias in also:
             self.by_key[alias] = func
+            self.alias_to_key[alias] = key
 
     def resolve(self, *, detected: Optional[str], mime: Optional[str]) -> ParserFunc:
+        func, _ = self.resolve_with_key(detected=detected, mime=mime)
+        return func
+
+    def resolve_with_key(self, *, detected: Optional[str], mime: Optional[str]) -> Tuple[ParserFunc, str]:
         if mime:
-            key = self.mime_to_key.get(mime.split(";")[0].strip())
-            if key and key in self.by_key:
-                return self.by_key[key]
-        if detected and detected in self.by_key:
-            return self.by_key[detected]
-        return self.by_key.get("text", parse_txt)
+            alias = self.mime_to_key.get(mime.split(";")[0].strip())
+            if alias:
+                key = self.alias_to_key.get(alias, alias)
+                func = self.by_key.get(key)
+                if func:
+                    return func, key
+        if detected:
+            key = self.alias_to_key.get(detected, detected)
+            func = self.by_key.get(key)
+            if func:
+                return func, key
+        fallback = self.by_key.get("text", parse_txt)
+        canonical = self.alias_to_key.get("text", "text")
+        return fallback, canonical
 
 
 REGISTRY = ParserRegistry()
@@ -109,15 +126,69 @@ def register_parser(key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -
     REGISTRY.register(key, func, also=also)
 
 
+# Streaming implementations for heavy parsers
+_STREAMERS: Dict[str, Callable[[str | Path], Iterable[Block]]] = {
+    "pdf": stream_pdf,
+    "image": stream_image,
+}
+
+
 # ---- Internal helpers --------------------------------------------------------
 
 def _parse(path: Path, *, detected: str, mime: Optional[str]) -> List[Block]:
-    parser = REGISTRY.resolve(detected=detected, mime=mime)
+    parser, key = REGISTRY.resolve_with_key(detected=detected, mime=mime)
+    streamer = _STREAMERS.get(key)
     try:
-        return parser(path)
+        if streamer:
+            return list(streamer(path))
+        result = parser(path)
+        return list(result) if not isinstance(result, list) else result
     except Exception:
         # 防御的フォールバック：plain text
         return parse_txt(path)
+
+
+def _stream_raw(path: Path, *, detected: str, mime: Optional[str]) -> Iterable[Block]:
+    parser, key = REGISTRY.resolve_with_key(detected=detected, mime=mime)
+    streamer = _STREAMERS.get(key)
+    if streamer:
+        try:
+            yield from streamer(path)
+            return
+        except Exception:
+            parser = parse_txt
+            key = "text"
+    try:
+        result = parser(path)
+    except Exception:
+        result = parse_txt(path)
+    if isinstance(result, list):
+        for block in result:
+            yield block
+    else:
+        yield from result
+
+
+def stream_convert(
+    path: str | Path,
+    recipe: str,
+    *,
+    mime: Optional[str] = None,
+    max_blocks: Optional[int] = None,
+) -> Iterator[Block]:
+    """Stream blocks through parse→normalise→recipe without LLM escalation."""
+
+    source = Path(path)
+    detected = detect_type(source)
+    recipe_config = load_recipe(recipe)
+    count = 0
+    for block in _stream_raw(source, detected=detected, mime=mime):
+        normalised = normalize_block(block)
+        transformed = apply_recipe_block(normalised, recipe_config)
+        yield transformed
+        count += 1
+        if max_blocks and count >= max_blocks:
+            break
 
 
 # ---- Public API --------------------------------------------------------------
