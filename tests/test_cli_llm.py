@@ -94,6 +94,60 @@ def test_cli_llm_run_executes_driver(monkeypatch, capsys):
     assert payload["usage"] == {"prompt_tokens": 5, "completion_tokens": 3}
 
 
+def test_cli_llm_run_accepts_metadata_file(monkeypatch, tmp_path, capsys):
+    class _MetadataDriver(LLMDriver):
+        def __init__(self):
+            super().__init__("dummy", {})
+
+        def generate(self, prompt: str, *, metadata=None):
+            assert metadata == {"trace": "id-456"}
+            return {"choices": [{"message": {"content": prompt}, "index": 0}], "usage": {}}
+
+    driver = _MetadataDriver()
+
+    class _DummyTenantManager:
+        def get_default_tenant(self):
+            return "default"
+
+        def list_tenants(self):
+            return ["default"]
+
+    class _DummyManager:
+        def __init__(self):
+            self.tenant_manager = _DummyTenantManager()
+
+        def get_driver(self, tenant, llm_config):
+            return driver
+
+    recipe = RecipeConfig(
+        name="demo",
+        patterns=[],
+        fallback_type=None,
+        fallback_confidence=None,
+        fallback_attrs={},
+        llm={"enable": True, "driver": "dummy"},
+    )
+
+    metadata_file = tmp_path / "metadata.json"
+    metadata_file.write_text(json.dumps({"trace": "id-456"}), encoding="utf-8")
+
+    monkeypatch.setattr("sr_adapter.cli.DriverManager", lambda: _DummyManager())
+    monkeypatch.setattr("sr_adapter.cli.load_recipe", lambda _: recipe)
+
+    exit_code = main([
+        "llm",
+        "run",
+        "--prompt",
+        "Hello metadata",
+        "--metadata-file",
+        str(metadata_file),
+    ])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["choices"][0]["text"] == "Hello metadata"
+
+
 def test_cli_llm_replay_executes_batch(monkeypatch, tmp_path):
     calls: list[tuple[str, dict | None]] = []
 
@@ -183,3 +237,159 @@ def test_cli_llm_replay_executes_batch(monkeypatch, tmp_path):
     assert second["record"]["id"] == 2
     assert second["response"]["choices"][0]["metadata"]["index"] == 1
     assert second["response"]["provider"] == "dummy"
+
+
+def test_cli_llm_replay_honors_limit(monkeypatch, tmp_path, capsys):
+    calls: list[str] = []
+
+    class _LimitDriver(LLMDriver):
+        def __init__(self):
+            super().__init__("dummy", {})
+
+        def generate(self, prompt: str, *, metadata=None):
+            calls.append(prompt)
+            return {
+                "choices": [
+                    {
+                        "index": len(calls) - 1,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": prompt.upper()},
+                    }
+                ],
+                "usage": {},
+            }
+
+    driver = _LimitDriver()
+
+    class _DummyTenantManager:
+        def get_default_tenant(self):
+            return "default"
+
+        def list_tenants(self):
+            return ["default"]
+
+    class _DummyManager:
+        def __init__(self):
+            self.tenant_manager = _DummyTenantManager()
+
+        def get_driver(self, tenant, llm_config):
+            return driver
+
+    recipe = RecipeConfig(
+        name="demo",
+        patterns=[],
+        fallback_type=None,
+        fallback_confidence=None,
+        fallback_attrs={},
+        llm={"enable": True, "driver": "dummy"},
+    )
+
+    dataset = tmp_path / "dataset.jsonl"
+    dataset.write_text(
+        "\n".join(
+            [
+                json.dumps({"text": "first"}),
+                json.dumps({"text": "second"}),
+                json.dumps({"text": "third"}),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("sr_adapter.cli.DriverManager", lambda: _DummyManager())
+    monkeypatch.setattr("sr_adapter.cli.load_recipe", lambda _: recipe)
+
+    exit_code = main([
+        "llm",
+        "replay",
+        "--input",
+        str(dataset),
+        "--limit",
+        "2",
+    ])
+
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    out_lines = [json.loads(line) for line in captured.out.strip().splitlines()]
+    assert [entry["response"]["choices"][0]["text"] for entry in out_lines] == ["FIRST", "SECOND"]
+    assert "Stopped after reaching limit of 2" in captured.err
+
+
+def test_cli_llm_replay_skip_errors(monkeypatch, tmp_path, capsys):
+    calls: list[str] = []
+
+    class _SkipDriver(LLMDriver):
+        def __init__(self):
+            super().__init__("dummy", {})
+
+        def generate(self, prompt: str, *, metadata=None):
+            if "fail" in prompt:
+                raise RuntimeError("boom")
+            calls.append(prompt)
+            return {
+                "choices": [
+                    {
+                        "index": len(calls) - 1,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": prompt},
+                    }
+                ],
+                "usage": {},
+            }
+
+    driver = _SkipDriver()
+
+    class _DummyTenantManager:
+        def get_default_tenant(self):
+            return "default"
+
+        def list_tenants(self):
+            return ["default"]
+
+    class _DummyManager:
+        def __init__(self):
+            self.tenant_manager = _DummyTenantManager()
+
+        def get_driver(self, tenant, llm_config):
+            return driver
+
+    recipe = RecipeConfig(
+        name="demo",
+        patterns=[],
+        fallback_type=None,
+        fallback_confidence=None,
+        fallback_attrs={},
+        llm={"enable": True, "driver": "dummy"},
+    )
+
+    dataset = tmp_path / "dataset.jsonl"
+    dataset.write_text(
+        "\n".join(
+            [
+                "{\n",  # invalid JSON
+                json.dumps({"metadata": {"note": "no prompt"}}),
+                json.dumps({"text": "third"}),
+                json.dumps({"text": "should fail"}),
+                json.dumps({"text": "fifth"}),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("sr_adapter.cli.DriverManager", lambda: _DummyManager())
+    monkeypatch.setattr("sr_adapter.cli.load_recipe", lambda _: recipe)
+
+    exit_code = main([
+        "llm",
+        "replay",
+        "--input",
+        str(dataset),
+        "--skip-errors",
+    ])
+
+    assert exit_code == 10
+    captured = capsys.readouterr()
+    out_lines = [json.loads(line) for line in captured.out.strip().splitlines()]
+    assert [entry["response"]["choices"][0]["text"] for entry in out_lines] == ["third", "fifth"]
+    assert "record(s) failed" in captured.err
+    assert calls == ["third", "fifth"]
