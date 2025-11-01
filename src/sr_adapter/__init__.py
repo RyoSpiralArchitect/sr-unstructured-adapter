@@ -5,6 +5,7 @@ from .adapter import build_payload, stream_payloads, to_unified_payload
 from .messages import to_llm_messages
 from .models import Payload
 from .pipeline import batch_convert, convert
+from .profiles import LLMPolicy, ProcessingProfile, load_processing_profile
 from .schema import Block, Document, Span
 
 __all__ = [
@@ -18,4 +19,7 @@ __all__ = [
     "Span",
     "convert",
     "batch_convert",
+    "ProcessingProfile",
+    "LLMPolicy",
+    "load_processing_profile",
 ]
