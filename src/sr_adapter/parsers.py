@@ -14,6 +14,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Sequence, Tuple
 
@@ -285,7 +286,8 @@ def _format_r_key(name: str) -> str:
     return f'[["{escaped}"]]'
 
 
-def _format_r_path(path: PathTuple) -> str:
+@lru_cache(maxsize=4096)
+def _render_r_path(path: PathTuple) -> str:
     cursor = ".data"
     for segment in path:
         if segment.kind == "key":
@@ -295,6 +297,27 @@ def _format_r_path(path: PathTuple) -> str:
             index_value = int(segment.value) - base + 1
             cursor += f"[[{index_value}]]"
     return cursor
+
+
+def _format_r_path(path: PathTuple) -> str:
+    return _render_r_path(path)
+
+
+@lru_cache(maxsize=4096)
+def _render_r_tokens(path: PathTuple) -> Tuple[str, ...]:
+    tokens = [".data"]
+    for segment in path:
+        if segment.kind == "key":
+            tokens.append(_format_r_key(str(segment.value)))
+        elif segment.kind == "index":
+            base = 0 if segment.base is None else segment.base
+            index_value = int(segment.value) - base + 1
+            tokens.append(f"[[{index_value}]]")
+    return tuple(tokens)
+
+
+def _format_r_tokens(path: PathTuple) -> List[str]:
+    return list(_render_r_tokens(path))
 
 
 def _format_glue_path(path: PathTuple) -> str:
@@ -523,6 +546,7 @@ def _structured_to_blocks(
         label = _format_label(cursor)
         r_path = _format_r_path(cursor)
         glue_path = _format_glue_path(cursor)
+        r_tokens = _format_r_tokens(cursor)
 
         if isinstance(value, Mapping):
             items = list(value.items())
@@ -532,6 +556,7 @@ def _structured_to_blocks(
                 "size": len(items),
                 "keys": [str(key) for key, _ in items[:20]],
                 "path_r": r_path,
+                "path_r_tokens": r_tokens,
                 "path_glue": glue_path,
             }
             sample_values = [
@@ -569,6 +594,7 @@ def _structured_to_blocks(
                 "size": len(seq),
                 "sample_types": sample_types,
                 "path_r": r_path,
+                "path_r_tokens": r_tokens,
                 "path_glue": glue_path,
             }
             sample_values = [
@@ -604,6 +630,7 @@ def _structured_to_blocks(
             "value": value_text,
             "value_type": type(value).__name__,
             "path_r": r_path,
+            "path_r_tokens": r_tokens,
             "path_glue": glue_path,
         }
         _add(
@@ -1047,6 +1074,7 @@ def parse_json(path: str | Path) -> List[Block]:
                     "truncated": True,
                     "key": _format_label(()),
                     "path_r": _format_r_path(()),
+                    "path_r_tokens": _format_r_tokens(()),
                     "path_glue": _format_glue_path(()),
                 },
                 source=str(source),
@@ -1090,6 +1118,7 @@ def parse_ini(path: str | Path) -> List[Block]:
                     "truncated": True,
                     "key": _format_label(()),
                     "path_r": _format_r_path(()),
+                    "path_r_tokens": _format_r_tokens(()),
                     "path_glue": _format_glue_path(()),
                 },
                 source=str(source),
@@ -1138,6 +1167,7 @@ def parse_jsonl(path: str | Path) -> List[Block]:
             "type": summary_type,
             "line": idx,
             "path_r": _format_r_path(record_path),
+            "path_r_tokens": _format_r_tokens(record_path),
             "path_glue": _format_glue_path(record_path),
         }
         if isinstance(record, Mapping):
@@ -1177,6 +1207,7 @@ def parse_jsonl(path: str | Path) -> List[Block]:
                     "truncated": True,
                     "key": _format_label(()),
                     "path_r": _format_r_path(()),
+                    "path_r_tokens": _format_r_tokens(()),
                     "path_glue": _format_glue_path(()),
                 },
                 source=str(source),
@@ -1219,6 +1250,7 @@ def parse_yaml(path: str | Path) -> List[Block]:
                 "documents": len(docs),
                 "sample_types": sample_types,
                 "path_r": _format_r_path(()),
+                "path_r_tokens": _format_r_tokens(()),
                 "path_glue": _format_glue_path(()),
             },
             source=str(source),
@@ -1256,6 +1288,7 @@ def parse_yaml(path: str | Path) -> List[Block]:
                     "truncated": True,
                     "key": _format_label(()),
                     "path_r": _format_r_path(()),
+                    "path_r_tokens": _format_r_tokens(()),
                     "path_glue": _format_glue_path(()),
                 },
                 source=str(source),
@@ -1294,6 +1327,7 @@ def parse_toml(path: str | Path) -> List[Block]:
                     "truncated": True,
                     "key": _format_label(()),
                     "path_r": _format_r_path(()),
+                    "path_r_tokens": _format_r_tokens(()),
                     "path_glue": _format_glue_path(()),
                 },
                 source=str(source),

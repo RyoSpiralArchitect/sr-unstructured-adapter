@@ -119,6 +119,86 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Emit runtime summary as JSON",
     )
 
+    llm_parser = subparsers.add_parser("llm", help="LLM driver utilities")
+    llm_subparsers = llm_parser.add_subparsers(dest="llm_command", required=True)
+
+    list_parser = llm_subparsers.add_parser("list-tenants", help="List configured tenants")
+    list_parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Return success without printing when no tenants are configured",
+    )
+
+    run_parser = llm_subparsers.add_parser("run", help="Run a prompt against a tenant driver")
+    run_parser.add_argument("--recipe", default="default", help="Recipe providing the LLM config")
+    run_parser.add_argument(
+        "--tenant",
+        help="Tenant to use (defaults to recipe tenant or SR_ADAPTER_TENANT)",
+    )
+    run_parser.add_argument("--prompt", help="Prompt text (overrides stdin)")
+    run_parser.add_argument(
+        "--prompt-file",
+        type=Path,
+        help="Read prompt text from the given file (overrides stdin)",
+    )
+    run_parser.add_argument(
+        "--metadata",
+        help="Optional JSON object passed through to the driver as metadata",
+    )
+    run_parser.add_argument(
+        "--metadata-file",
+        type=Path,
+        help="Read JSON metadata from a file (mutually exclusive with --metadata)",
+    )
+
+    replay_parser = llm_subparsers.add_parser(
+        "replay",
+        help="Replay prompts from a JSONL dataset against a tenant driver",
+    )
+    replay_parser.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+        help="Path to a JSONL file containing prompts (fields: text/prompt, metadata)",
+    )
+    replay_parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional JSONL destination for normalized responses",
+    )
+    replay_parser.add_argument("--recipe", default="default", help="Recipe providing the LLM config")
+    replay_parser.add_argument(
+        "--tenant",
+        help="Tenant to use (defaults to recipe tenant or SR_ADAPTER_TENANT)",
+    )
+    replay_parser.add_argument(
+        "--limit",
+        type=int,
+        help="Process at most this many successful prompts from the dataset",
+    )
+    replay_parser.add_argument(
+        "--skip-errors",
+        action="store_true",
+        help="Continue replay when a record is invalid or the driver call fails",
+    )
+
+    kernel_parser = subparsers.add_parser("kernels", help="Native kernel utilities")
+    kernel_subparsers = kernel_parser.add_subparsers(dest="kernel_command", required=True)
+
+    status_parser = kernel_subparsers.add_parser("status", help="Show runtime telemetry")
+    status_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON instead of a summary",
+    )
+
+    warm_parser = kernel_subparsers.add_parser("warm", help="Compile and warm kernels")
+    warm_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit runtime summary as JSON",
+    )
+
     return parser.parse_args(argv)
 
 
