@@ -5,13 +5,18 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Dict
+
+import pytest
 
 from docx import Document as DocxDocument
 from openpyxl import Workbook
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
-from sr_adapter.pipeline import convert
+from sr_adapter.pipeline import batch_convert, convert, stream_convert
+from sr_adapter.settings import reset_settings_cache
+from sr_adapter.profiles import LLMPolicy, ProcessingProfile
 from sr_adapter.parsers import parse_image, parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
@@ -195,6 +200,96 @@ def test_parse_txt_detects_whitespace_table(tmp_path: Path) -> None:
     assert table_block.attrs["delimiter"] == "whitespace"
 
 
+def _write_documents(tmp_path: Path, count: int = 3) -> list[Path]:
+    paths: list[Path] = []
+    for idx in range(count):
+        path = tmp_path / f"doc-{idx}.txt"
+        path.write_text(f"Document {idx}", encoding="utf-8")
+        paths.append(path)
+    return paths
+
+
+def test_batch_convert_thread_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    calls: dict[str, object] = {}
+
+    def _fake_threadpool(func, items, *, workers):
+        calls["workers"] = workers
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_threadpool", _fake_threadpool)
+    reset_settings_cache()
+    documents = batch_convert(files, recipe="default", backend="threadpool", concurrency=3)
+
+    assert len(documents) == 2
+    assert calls["workers"] == 3
+
+
+def test_batch_convert_async_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    def _fake_asyncio(func, items, *, workers):
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_asyncio", _fake_asyncio)
+    reset_settings_cache()
+    documents = batch_convert(files, recipe="default", backend="asyncio", concurrency=0)
+
+    assert len(documents) == 2
+
+
+def test_batch_convert_dask_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    captured: dict[str, object] = {}
+
+    def _fake_dask(func, items, *, scheduler, workers):
+        captured["scheduler"] = scheduler
+        captured["workers"] = workers
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_dask", _fake_dask)
+    reset_settings_cache()
+    documents = batch_convert(
+        files,
+        recipe="default",
+        backend="dask",
+        dask_scheduler="threads",
+        concurrency=5,
+    )
+
+    assert len(documents) == 2
+    assert captured["scheduler"] == "threads"
+    assert captured["workers"] == 5
+
+
+def test_batch_convert_ray_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    captured: dict[str, object] = {}
+
+    def _fake_ray(func, items, *, address, workers):
+        captured["address"] = address
+        captured["workers"] = workers
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_ray", _fake_ray)
+    reset_settings_cache()
+    documents = batch_convert(
+        files,
+        recipe="default",
+        backend="ray",
+        ray_address="auto",
+        concurrency=0,
+    )
+
+    assert len(documents) == 2
+    assert captured["address"] == "auto"
+    # With concurrency=0 the default max_workers from settings.yaml is used (4)
+    assert captured["workers"] == 4
+
+
 def test_parse_ini_coerces_space_pairs(tmp_path: Path) -> None:
     source = tmp_path / "messy.cfg"
     source.write_text(
@@ -291,11 +386,49 @@ def test_parse_image_propagates_language_metadata(monkeypatch, tmp_path: Path) -
     assert any(block.attrs.get("ocr_languages") == ["eng", "jpn"] for block in ocr_blocks)
 
 
+def test_parse_image_orders_segments_with_native_kernel(monkeypatch, tmp_path: Path) -> None:
+    image = tmp_path / "layout.png"
+    _create_png(image, "placeholder")
+
+    fake_meta: Dict[str, object] = {"image_has_text": True}
+    fake_segments = [
+        {"text": "second line", "source": "ocr", "kind": "ocr", "confidence": 0.45, "bbox": (0, 60, 120, 90), "order": 2},
+        {"text": "first line", "source": "ocr", "kind": "ocr", "confidence": 0.8, "bbox": (0, 10, 120, 35), "order": 1},
+    ]
+
+    def fake_extract(path: Path):
+        assert Path(path) == image
+        return "", dict(fake_meta), list(fake_segments)
+
+    monkeypatch.setattr("sr_adapter.parsers._extract_image_text", fake_extract)
+
+    blocks = parse_image(image)
+
+    ordered = [block for block in blocks if block.type != "metadata"]
+    assert ordered
+    assert ordered[0].text == "first line"
+    assert ordered[0].attrs.get("layout_kernel") == "native-cpp-v1"
+    assert "layout_calibrated_threshold" in ordered[0].attrs
+
+
 def test_recipe_fallback_preserves_attrs(tmp_path: Path) -> None:
     block = Block(type="paragraph", text="unknown content", attrs={"a": "1"})
     processed = apply_recipe([block], "default")
     assert processed[0].type == "paragraph"
     assert processed[0].attrs["a"] == "1"
+
+
+def test_stream_convert_matches_convert(tmp_path: Path) -> None:
+    source = tmp_path / "note.txt"
+    source.write_text("Alpha\nBeta\n", encoding="utf-8")
+
+    streamed = list(stream_convert(source, recipe="default"))
+    document = convert(source, recipe="default")
+
+    assert [block.text for block in streamed] == [block.text for block in document.blocks]
+
+    limited = list(stream_convert(source, recipe="default", max_blocks=1))
+    assert len(limited) == 1
 
 
 def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
@@ -502,4 +635,28 @@ def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:
 
     assert len(blocks) > 1
     assert all(len(block.text) <= 600 for block in blocks)
+
+
+def test_convert_profile_forwards_llm_policy(monkeypatch, tmp_path: Path) -> None:
+    path = tmp_path / "profile.txt"
+    path.write_text("alpha\nbeta", encoding="utf-8")
+
+    captured: dict = {}
+
+    def _fake_escalate(blocks, recipe_name, **kwargs):
+        captured.update(kwargs)
+        return list(blocks)
+
+    monkeypatch.setattr("sr_adapter.pipeline.escalate_low_conf", _fake_escalate)
+
+    policy = LLMPolicy(max_confidence=1.0, limit_block_types=("paragraph",), max_blocks=2)
+    profile = ProcessingProfile(name="test", llm_policy=policy, warm_runtime=False)
+
+    document = convert(path, recipe="default", profile=profile)
+
+    assert captured["max_confidence"] == 1.0
+    assert captured["allow_types"] == ("paragraph",)
+    assert captured["limit"] == 2
+    assert document.meta["processing_profile"] == "test"
+    assert document.meta["llm_policy"]["max_confidence"] == pytest.approx(1.0)
 

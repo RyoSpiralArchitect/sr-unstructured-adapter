@@ -1,0 +1,20 @@
+name: balanced
+layout_profile: balanced
+layout_batch_size: 48
+text_batch_size: 64
+stream_normalize: true
+warm_runtime: true
+default_deadline_ms: 2800
+metadata:
+  description: Balanced profile for day-to-day batch conversions.
+llm:
+  enabled: true
+  max_confidence: 0.6
+  limit_block_types:
+    - paragraph
+    - heading
+    - title
+  max_blocks: 12
+  deadline_ms: 3800
+  metadata:
+    cadence: "batch"
