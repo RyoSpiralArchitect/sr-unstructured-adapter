@@ -1,0 +1,12 @@
+# Sample Azure OpenAI tenant. Requires environment variables set in .env.
+driver: azure
+settings:
+  endpoint: ${AZURE_OPENAI_ENDPOINT}
+  deployment: ${AZURE_OPENAI_DEPLOYMENT}
+  api_version: 2024-02-15-preview
+  api_key: ${AZURE_OPENAI_KEY}
+  system_prompt: |
+    You are SpiralReality's document extraction reviewer. Inspect the context
+    and advise on the correct structured block types.
+  temperature: 0.1
+  max_tokens: 256

@@ -1,0 +1,6 @@
+{
+  "benchmarks": [
+    { "name": "tests/perf/test_perf_pipeline.py::test_convert_txt_small", "stats": { "mean": 0.0030 } },
+    { "name": "tests/perf/test_perf_pipeline.py::test_convert_json_medium", "stats": { "mean": 0.0090 } }
+  ]
+}

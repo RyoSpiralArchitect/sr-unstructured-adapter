@@ -1,0 +1,16 @@
+telemetry:
+  sentry_dsn: ""
+  environment: "development"
+  release: ""
+  enable_prometheus: true
+  labels:
+    service: "sr-adapter"
+drivers:
+  default_timeout: 30.0
+  user_agent: "sr-adapter/0.1"
+  max_retries: 2
+distributed:
+  default_backend: "auto"
+  max_workers: 4
+  dask_scheduler: "threads"
+  ray_address: ""
