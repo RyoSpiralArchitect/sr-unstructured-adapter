@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+src/sr_adapter/native/_*.so
+src/sr_adapter/native/_*.dylib
+src/sr_adapter/native/_*.dll

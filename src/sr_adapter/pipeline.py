@@ -5,11 +5,16 @@ from __future__ import annotations
 
 import os
 import time
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
-from .delegate import escalate_low_conf
-from .normalize import normalize_blocks
+from .delegate import escalate_low_conf, select_escalation_indices
+from .distributed import run_asyncio, run_dask, run_ray, run_threadpool
+from .normalize import normalize_block, normalize_blocks
+from .profiles import ProcessingProfile, resolve_profile
+from .runtime import NativeKernelRuntime, get_native_runtime
+from .settings import get_settings
 from .parsers import (
     parse_csv,
     parse_docx,
@@ -27,8 +32,10 @@ from .parsers import (
     parse_txt,
     parse_xlsx,
     parse_yaml,
+    stream_image,
+    stream_pdf,
 )
-from .recipe import apply_recipe
+from .recipe import apply_recipe, apply_recipe_block, load_recipe
 from .schema import Block, Document
 from .sniff import detect_type
 
@@ -41,6 +48,7 @@ class ParserRegistry:
     """Resolve parsers by detected-type or MIME; allow runtime extension."""
     def __init__(self) -> None:
         self.by_key: Dict[str, ParserFunc] = {}
+        self.alias_to_key: Dict[str, str] = {}
         # Common MIME → key mapping (fallback to detect_type if not found)
         self.mime_to_key: Dict[str, str] = {
             "text/plain": "text",
@@ -73,17 +81,31 @@ class ParserRegistry:
 
     def register(self, key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -> None:
         self.by_key[key] = func
+        self.alias_to_key[key] = key
         for alias in also:
             self.by_key[alias] = func
+            self.alias_to_key[alias] = key
 
     def resolve(self, *, detected: Optional[str], mime: Optional[str]) -> ParserFunc:
+        func, _ = self.resolve_with_key(detected=detected, mime=mime)
+        return func
+
+    def resolve_with_key(self, *, detected: Optional[str], mime: Optional[str]) -> Tuple[ParserFunc, str]:
         if mime:
-            key = self.mime_to_key.get(mime.split(";")[0].strip())
-            if key and key in self.by_key:
-                return self.by_key[key]
-        if detected and detected in self.by_key:
-            return self.by_key[detected]
-        return self.by_key.get("text", parse_txt)
+            alias = self.mime_to_key.get(mime.split(";")[0].strip())
+            if alias:
+                key = self.alias_to_key.get(alias, alias)
+                func = self.by_key.get(key)
+                if func:
+                    return func, key
+        if detected:
+            key = self.alias_to_key.get(detected, detected)
+            func = self.by_key.get(key)
+            if func:
+                return func, key
+        fallback = self.by_key.get("text", parse_txt)
+        canonical = self.alias_to_key.get("text", "text")
+        return fallback, canonical
 
 
 REGISTRY = ParserRegistry()
@@ -109,15 +131,234 @@ def register_parser(key: str, func: ParserFunc, *, also: Tuple[str, ...] = ()) -
     REGISTRY.register(key, func, also=also)
 
 
+# Streaming implementations for heavy parsers
+_STREAMERS: Dict[str, Callable[[str | Path], Iterable[Block]]] = {
+    "pdf": stream_pdf,
+    "image": stream_image,
+}
+
+
+# ---- Profile orchestration ---------------------------------------------------
+
+
+@dataclass
+class PipelineMetrics:
+    """Track step durations and elapsed time during conversion."""
+
+    start: float = field(default_factory=time.perf_counter)
+    last_checkpoint: float = field(init=False)
+    parse_ms: float = 0.0
+    normalize_ms: float = 0.0
+    recipe_ms: float = 0.0
+
+    def __post_init__(self) -> None:
+        self.last_checkpoint = self.start
+
+    def checkpoint(self) -> float:
+        now = time.perf_counter()
+        elapsed = (now - self.last_checkpoint) * 1000.0
+        self.last_checkpoint = now
+        return elapsed
+
+    def spent_ms(self) -> float:
+        return (time.perf_counter() - self.start) * 1000.0
+
+
+class PipelineOrchestrator:
+    """Coordinate runtime normalisation and LLM policy for a profile."""
+
+    def __init__(
+        self,
+        profile: ProcessingProfile,
+        *,
+        runtime: Optional[NativeKernelRuntime] = None,
+    ) -> None:
+        self.profile = profile
+        if runtime is None:
+            runtime = get_native_runtime(
+                layout_profile=profile.layout_profile,
+                layout_batch_size=profile.layout_batch_size,
+            )
+        self.runtime = runtime
+        if self.runtime and self.profile.warm_runtime:
+            try:
+                self.runtime.warm()
+            except Exception:  # pragma: no cover - defensive guard
+                pass
+
+    # ------------------------------------------------------------------ helpers
+    def _normalize(self, blocks: List[Block]) -> List[Block]:
+        if not blocks:
+            return []
+        if self.runtime is None:
+            return list(normalize_blocks(blocks))
+        if self.profile.stream_normalize:
+            return list(
+                self.runtime.normalize_stream(
+                    blocks,
+                    batch_size=max(1, self.profile.text_batch_size),
+                )
+            )
+        return self.runtime.normalize(blocks)
+
+    def _effective_deadline(
+        self,
+        deadline_ms: Optional[int],
+    ) -> Optional[float]:
+        deadline = deadline_ms or self.profile.default_deadline_ms
+        llm_deadline = self.profile.llm_policy.deadline_ms
+        if llm_deadline is None:
+            return float(deadline) if deadline is not None else None
+        if deadline is None:
+            return float(llm_deadline)
+        return float(min(deadline, llm_deadline))
+
+    # ------------------------------------------------------------------- convert
+    def convert(
+        self,
+        path: str | Path,
+        recipe: str,
+        llm_ok: bool = True,
+        *,
+        mime: Optional[str] = None,
+        deadline_ms: Optional[int] = None,
+        max_blocks: Optional[int] = None,
+    ) -> Document:
+        metrics = PipelineMetrics()
+        source = Path(path)
+        detected = detect_type(source)
+
+        blocks = _parse(source, detected=detected, mime=mime)
+        metrics.parse_ms = metrics.checkpoint()
+
+        blocks = self._normalize(blocks)
+        metrics.normalize_ms = metrics.checkpoint()
+
+        blocks = apply_recipe(blocks, recipe)
+        metrics.recipe_ms = metrics.checkpoint()
+
+        effective_max = max_blocks if max_blocks is not None else self.profile.max_blocks
+        effective_deadline = self._effective_deadline(deadline_ms)
+
+        no_llm_env = os.getenv("SR_ADAPTER_NO_LLM", "").strip().lower() in {"1", "true", "yes"}
+        policy = self.profile.llm_policy
+        do_llm = bool(llm_ok and not no_llm_env and policy.enabled)
+        targets = []
+        if do_llm:
+            targets = select_escalation_indices(
+                blocks,
+                max_confidence=policy.max_confidence,
+                allow_types=policy.limit_block_types,
+                limit=policy.max_blocks,
+            )
+            if not targets:
+                do_llm = False
+            elif effective_deadline is not None and metrics.spent_ms() >= effective_deadline:
+                do_llm = False
+
+        escalations = 0
+        if do_llm:
+            result = escalate_low_conf(
+                blocks,
+                recipe,
+                max_confidence=policy.max_confidence,
+                allow_types=policy.limit_block_types,
+                limit=policy.max_blocks,
+            )
+            escalations = sum(
+                1
+                for idx in targets
+                if idx < len(result)
+                and result[idx].attrs.get("llm_escalations")
+            )
+            blocks = result
+
+        truncated = 0
+        if isinstance(effective_max, int) and effective_max > 0 and len(blocks) > effective_max:
+            truncated = len(blocks) - effective_max
+            blocks = blocks[:effective_max]
+
+        meta = {
+            "source": str(source),
+            "type": detected,
+            "mime": mime or "",
+            "metrics_parse_ms": round(metrics.parse_ms, 2),
+            "metrics_normalize_ms": round(metrics.normalize_ms, 2),
+            "metrics_recipe_ms": round(metrics.recipe_ms, 2),
+            "metrics_total_ms": round(metrics.spent_ms(), 2),
+            "llm_escalations": int(escalations),
+            "truncated_blocks": int(truncated),
+            "block_count": int(len(blocks)),
+            "env_no_llm": bool(no_llm_env),
+            "processing_profile": self.profile.name,
+            "llm_policy": policy.to_meta(),
+            "runtime_text_enabled": bool(self.runtime and self.runtime.text_enabled),
+            "runtime_layout_enabled": bool(self.runtime and self.runtime.layout_enabled),
+        }
+
+        document = Document(
+            blocks=list(blocks),
+            meta=meta,
+        )
+        return document
+
+
 # ---- Internal helpers --------------------------------------------------------
 
 def _parse(path: Path, *, detected: str, mime: Optional[str]) -> List[Block]:
-    parser = REGISTRY.resolve(detected=detected, mime=mime)
+    parser, key = REGISTRY.resolve_with_key(detected=detected, mime=mime)
+    streamer = _STREAMERS.get(key)
     try:
-        return parser(path)
+        if streamer:
+            return list(streamer(path))
+        result = parser(path)
+        return list(result) if not isinstance(result, list) else result
     except Exception:
         # 防御的フォールバック：plain text
         return parse_txt(path)
+
+
+def _stream_raw(path: Path, *, detected: str, mime: Optional[str]) -> Iterable[Block]:
+    parser, key = REGISTRY.resolve_with_key(detected=detected, mime=mime)
+    streamer = _STREAMERS.get(key)
+    if streamer:
+        try:
+            yield from streamer(path)
+            return
+        except Exception:
+            parser = parse_txt
+            key = "text"
+    try:
+        result = parser(path)
+    except Exception:
+        result = parse_txt(path)
+    if isinstance(result, list):
+        for block in result:
+            yield block
+    else:
+        yield from result
+
+
+def stream_convert(
+    path: str | Path,
+    recipe: str,
+    *,
+    mime: Optional[str] = None,
+    max_blocks: Optional[int] = None,
+) -> Iterator[Block]:
+    """Stream blocks through parse→normalise→recipe without LLM escalation."""
+
+    source = Path(path)
+    detected = detect_type(source)
+    recipe_config = load_recipe(recipe)
+    count = 0
+    for block in _stream_raw(source, detected=detected, mime=mime):
+        normalised = normalize_block(block)
+        transformed = apply_recipe_block(normalised, recipe_config)
+        yield transformed
+        count += 1
+        if max_blocks and count >= max_blocks:
+            break
 
 
 # ---- Public API --------------------------------------------------------------
@@ -130,76 +371,48 @@ def convert(
     mime: Optional[str] = None,
     deadline_ms: Optional[int] = None,
     max_blocks: Optional[int] = None,
+    profile: str | ProcessingProfile | None = None,
+    runtime: Optional[NativeKernelRuntime] = None,
 ) -> Document:
-    """Convert *path* to the unified :class:`Document`.
+    """Convert *path* to the unified :class:`Document`."""
 
-    Parameters
-    ----------
-    recipe:
-        apply_recipe に渡す処理レシピ名。
-    llm_ok:
-        低信頼ブロックの LLM エスカレーションを許可するか。
-        環境変数 SR_ADAPTER_NO_LLM が真の場合は強制無効。
-    mime:
-        既知の場合は MIME を指定。未指定なら sniff/detect に委譲。
-    deadline_ms:
-        ここで指定した予算（ミリ秒）を超えたら LLM エスカレーションをスキップ。
-    max_blocks:
-        出力ブロックの上限（超えた分は切り捨てて meta に記録）。
-    """
-
-    t0 = time.perf_counter()
-    source = Path(path)
-    detected = detect_type(source)
-
-    blocks = _parse(source, detected=detected, mime=mime)
-    t_parse = (time.perf_counter() - t0) * 1000.0
-
-    blocks = normalize_blocks(blocks)
-    t_norm = (time.perf_counter() - t0) * 1000.0
-
-    blocks = apply_recipe(blocks, recipe)
-    t_recipe = (time.perf_counter() - t0) * 1000.0
-
-    # ガード：環境や締切で LLM エスカレーションを抑制
-    no_llm_env = os.getenv("SR_ADAPTER_NO_LLM", "").strip().lower() in {"1", "true", "yes"}
-    do_llm = bool(llm_ok and not no_llm_env)
-    if do_llm and deadline_ms is not None:
-        # 予算が既に尽きていればスキップ
-        spent = (time.perf_counter() - t0) * 1000.0
-        if spent >= float(deadline_ms):
-            do_llm = False
-
-    escalations = 0
-    if do_llm:
-        before = len(blocks)
-        blocks = escalate_low_conf(blocks, recipe)
-        escalations = max(0, len(blocks) - before)
-    t_all = (time.perf_counter() - t0) * 1000.0
-
-    # ハードキャップ
-    truncated = 0
-    if isinstance(max_blocks, int) and max_blocks > 0 and len(blocks) > max_blocks:
-        truncated = len(blocks) - max_blocks
-        blocks = blocks[:max_blocks]
-
-    document = Document(
-        blocks=list(blocks),
-        meta={
-            "source": str(source),
-            "type": detected,
-            "mime": mime or "",
-            "metrics_parse_ms": round(t_parse, 2),
-            "metrics_normalize_ms": round(t_norm - t_parse, 2),
-            "metrics_recipe_ms": round(t_recipe - t_norm, 2),
-            "metrics_total_ms": round(t_all, 2),
-            "llm_escalations": int(escalations),
-            "truncated_blocks": int(truncated),
-            "block_count": int(len(blocks)),
-            "env_no_llm": bool(no_llm_env),
-        },
+    profile_obj = resolve_profile(profile)
+    orchestrator = PipelineOrchestrator(profile_obj, runtime=runtime)
+    return orchestrator.convert(
+        path,
+        recipe,
+        llm_ok=llm_ok,
+        mime=mime,
+        deadline_ms=deadline_ms,
+        max_blocks=max_blocks,
     )
-    return document
+
+
+def _build_worker(
+    profile_obj: ProcessingProfile,
+    recipe: str,
+    *,
+    llm_ok: bool,
+    mime_by_path: Optional[Dict[str, str]],
+    deadline_ms: Optional[int],
+    max_blocks: Optional[int],
+) -> Callable[[str | Path], Document]:
+    def _worker(p: str | Path) -> Document:
+        runtime = get_native_runtime(
+            layout_profile=profile_obj.layout_profile,
+            layout_batch_size=profile_obj.layout_batch_size,
+        )
+        orchestrator = PipelineOrchestrator(profile_obj, runtime=runtime)
+        return orchestrator.convert(
+            p,
+            recipe=recipe,
+            llm_ok=llm_ok,
+            mime=(mime_by_path or {}).get(str(p)),
+            deadline_ms=deadline_ms,
+            max_blocks=max_blocks,
+        )
+
+    return _worker
 
 
 def batch_convert(
@@ -211,21 +424,48 @@ def batch_convert(
     deadline_ms: Optional[int] = None,
     max_blocks: Optional[int] = None,
     concurrency: int = 0,
+    profile: str | ProcessingProfile | None = None,
+    backend: str | None = None,
+    dask_scheduler: str | None = None,
+    ray_address: str | None = None,
 ) -> List[Document]:
     """Convert multiple paths; optional thread parallelism for I/O bound workloads."""
     items = list(paths)
-    if concurrency and concurrency > 1:
-        from concurrent.futures import ThreadPoolExecutor
-        def _one(p: str | Path) -> Document:
-            m = (mime_by_path or {}).get(str(p))
-            return convert(p, recipe=recipe, llm_ok=llm_ok, mime=m,
-                           deadline_ms=deadline_ms, max_blocks=max_blocks)
-        with ThreadPoolExecutor(max_workers=concurrency) as ex:
-            return list(ex.map(_one, items))
-    else:
-        return [
-            convert(p, recipe=recipe, llm_ok=llm_ok,
-                    mime=(mime_by_path or {}).get(str(p)),
-                    deadline_ms=deadline_ms, max_blocks=max_blocks)
-            for p in items
-        ]
+    profile_obj = resolve_profile(profile)
+    settings = get_settings()
+    dist_settings = settings.distributed
+    worker_count = concurrency if concurrency > 0 else (dist_settings.max_workers or 0)
+    chosen_backend = (backend or dist_settings.default_backend or "auto").lower()
+    if chosen_backend == "auto":
+        chosen_backend = "threadpool" if worker_count and worker_count > 1 else "sync"
+
+    worker = _build_worker(
+        profile_obj,
+        recipe,
+        llm_ok=llm_ok,
+        mime_by_path=mime_by_path,
+        deadline_ms=deadline_ms,
+        max_blocks=max_blocks,
+    )
+
+    if chosen_backend in {"sync", "sequential", "none"}:
+        return [worker(path) for path in items]
+
+    if chosen_backend in {"thread", "threads", "threadpool"}:
+        workers = worker_count or 4
+        return run_threadpool(worker, items, workers=workers)
+
+    if chosen_backend in {"async", "asyncio"}:
+        return run_asyncio(worker, items, workers=worker_count or None)
+
+    if chosen_backend == "dask":
+        scheduler = dask_scheduler or dist_settings.dask_scheduler
+        workers = worker_count or None
+        return run_dask(worker, items, scheduler=scheduler, workers=workers)
+
+    if chosen_backend == "ray":
+        address = ray_address or dist_settings.ray_address
+        workers = worker_count or None
+        return run_ray(worker, items, address=address, workers=workers)
+
+    raise ValueError(f"Unknown batch_convert backend '{chosen_backend}'")

@@ -1,0 +1,19 @@
+name: archival
+layout_profile: archival
+layout_batch_size: 16
+text_batch_size: 128
+stream_normalize: true
+warm_runtime: true
+default_deadline_ms: 6000
+metadata:
+  description: High fidelity profile tuned for large archival dumps.
+llm:
+  enabled: true
+  max_confidence: 0.7
+  limit_block_types:
+    - paragraph
+    - heading
+    - table
+  max_blocks: 48
+  metadata:
+    cadence: "deep-analysis"
