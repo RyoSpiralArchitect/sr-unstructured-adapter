@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover - tests fallback when dependency missing
             return True
         except OSError:
             return False
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class TelemetrySettings(BaseModel):
@@ -49,7 +49,8 @@ class TelemetrySettings(BaseModel):
     enable_prometheus: bool = False
     labels: Dict[str, str] = Field(default_factory=dict)
 
-    @validator("environment")
+    @field_validator("environment")
+    @classmethod
     def _strip_environment(cls, value: str) -> str:  # noqa: D401
         return value.strip() or "development"
 
@@ -61,13 +62,15 @@ class DriverSettings(BaseModel):
     user_agent: Optional[str] = None
     max_retries: int = 1
 
-    @validator("default_timeout")
+    @field_validator("default_timeout")
+    @classmethod
     def _positive_timeout(cls, value: float) -> float:  # noqa: D401
         if value <= 0:
             raise ValueError("default_timeout must be > 0")
         return float(value)
 
-    @validator("max_retries")
+    @field_validator("max_retries")
+    @classmethod
     def _non_negative_retry(cls, value: int) -> int:  # noqa: D401
         if value < 0:
             raise ValueError("max_retries must be >= 0")
@@ -82,7 +85,8 @@ class DistributedSettings(BaseModel):
     dask_scheduler: Optional[str] = None
     ray_address: Optional[str] = None
 
-    @validator("default_backend")
+    @field_validator("default_backend")
+    @classmethod
     def _normalize_backend(cls, value: str) -> str:  # noqa: D401
         return value.strip().lower() or "auto"
 

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple, Literal
-from datetime import datetime
+from datetime import UTC, datetime
 import hashlib, uuid
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -99,7 +99,7 @@ class DocumentMeta(BaseModel):
     size_bytes: Optional[int] = None
     page_count: Optional[int] = None
     languages: List[str] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metrics_parse_ms: Optional[float] = None
     metrics_normalize_ms: Optional[float] = None
     metrics_recipe_ms: Optional[float] = None
