@@ -93,9 +93,12 @@ class CircuitBreaker:
 
     @property
     def is_open(self) -> bool:
-        """Expose whether the breaker is currently open."""
+        """Expose whether the breaker is currently open without mutating state."""
 
-        return self._opened_at is not None and not self.allow_request()
+        if self._opened_at is None:
+            return False
+        elapsed = time.monotonic() - self._opened_at
+        return elapsed < self.recovery_time
 
 
 __all__ = ["BackoffPolicy", "CircuitBreaker"]
