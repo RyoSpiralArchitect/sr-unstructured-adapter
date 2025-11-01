@@ -14,6 +14,7 @@ from .writer import write_jsonl
 from .drivers import DriverManager
 from .normalizer import LLMNormalizer
 from .recipe import load_recipe
+from .runtime import RuntimeSnapshot, get_native_runtime, runtime_status_json
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -93,6 +94,23 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Continue replay when a record is invalid or the driver call fails",
     )
 
+    kernel_parser = subparsers.add_parser("kernels", help="Native kernel utilities")
+    kernel_subparsers = kernel_parser.add_subparsers(dest="kernel_command", required=True)
+
+    status_parser = kernel_subparsers.add_parser("status", help="Show runtime telemetry")
+    status_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON instead of a summary",
+    )
+
+    warm_parser = kernel_subparsers.add_parser("warm", help="Compile and warm kernels")
+    warm_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit runtime summary as JSON",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -116,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "llm":
         return _handle_llm(args)
+    if args.command == "kernels":
+        return _handle_kernels(args)
     raise ValueError(f"Unhandled command: {args.command}")
 
 
@@ -244,6 +264,60 @@ def _handle_llm(args: argparse.Namespace) -> int:
             return 10
         return 0
     raise ValueError(f"Unhandled llm command: {args.llm_command}")
+
+def _handle_kernels(args: argparse.Namespace) -> int:
+    runtime = get_native_runtime()
+    if args.kernel_command == "status":
+        return _emit_kernel_status(runtime, as_json=args.json)
+    if args.kernel_command == "warm":
+        snapshot: RuntimeSnapshot
+        if runtime is None:
+            runtime = get_native_runtime()
+        if runtime is None:
+            snapshot = RuntimeSnapshot(text_enabled=False, layout_enabled=False)
+        else:
+            snapshot = runtime.warm()
+        return _emit_kernel_snapshot(snapshot, as_json=args.json)
+    raise ValueError(f"Unhandled kernel sub-command: {args.kernel_command}")
+
+
+def _emit_kernel_status(runtime: object | None, *, as_json: bool) -> int:
+    if as_json:
+        print(runtime_status_json())
+        return 0
+    if runtime is None:
+        snapshot = RuntimeSnapshot(text_enabled=False, layout_enabled=False)
+    elif isinstance(runtime, RuntimeSnapshot):
+        snapshot = runtime
+    else:
+        snapshot = runtime.snapshot()  # type: ignore[call-arg]
+    _print_kernel_snapshot(snapshot)
+    return 0
+
+
+def _emit_kernel_snapshot(snapshot: RuntimeSnapshot, *, as_json: bool) -> int:
+    if as_json:
+        print(json.dumps(snapshot.to_dict(), ensure_ascii=False, indent=2))
+        return 0
+    _print_kernel_snapshot(snapshot)
+    return 0
+
+
+def _print_kernel_snapshot(snapshot: RuntimeSnapshot) -> None:
+    from .runtime import KernelStats  # local import to avoid cycle at module import
+
+    def _format_line(title: str, enabled: bool, stats: KernelStats) -> str:
+        status = "enabled" if enabled else "disabled"
+        summary = (
+            f"calls={stats.calls} total_ms={stats.total_ms:.2f} "
+            f"avg_ms={stats.avg_ms:.2f} units={stats.total_units}"
+        )
+        if stats.failures:
+            summary += f" failures={stats.failures}"
+        return f"{title}: {status} ({summary})"
+
+    print(_format_line("Text kernel", snapshot.text_enabled, snapshot.text_stats))
+    print(_format_line("Layout kernel", snapshot.layout_enabled, snapshot.layout_stats))
 
 
 def _resolve_prompt(prompt: str | None, prompt_file: Path | None) -> str:
