@@ -1,0 +1,20 @@
+name: realtime
+layout_profile: realtime
+layout_batch_size: 24
+text_batch_size: 32
+stream_normalize: true
+warm_runtime: false
+default_deadline_ms: 900
+max_blocks: 200
+metadata:
+  description: Latency-optimised profile for live ingestion.
+llm:
+  enabled: true
+  max_confidence: 0.45
+  limit_block_types:
+    - paragraph
+    - heading
+  max_blocks: 4
+  deadline_ms: 1200
+  metadata:
+    cadence: "low-latency"
