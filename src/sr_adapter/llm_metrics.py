@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Dict, List, MutableMapping
+from typing import Any, Dict, List, MutableMapping
 
 
 @dataclass
@@ -68,7 +68,7 @@ class LLMMetricsSnapshot:
     collected_at: float
     stats: List[LLMCallStats] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "collected_at": self.collected_at,
             "drivers": [stat.to_dict() for stat in self.stats],

@@ -389,7 +389,7 @@ def _load_json_like(raw: str) -> tuple[object, str | None]:
     raise ValueError("Unable to coerce JSON input")
 
 
-def _prepare_ini_input(text: str) -> tuple[str, dict[str, object], bool, bool]:
+def _prepare_ini_input(text: str) -> tuple[str, dict[str, Any], bool, bool]:
     cleaned = text.lstrip("\ufeff")
     space_converted = 0
     arrow_converted = 0
@@ -436,7 +436,7 @@ def _prepare_ini_input(text: str) -> tuple[str, dict[str, object], bool, bool]:
 
     sanitized = "\n".join(lines)
     has_section = seen_section or any(line.lstrip().startswith("[") for line in lines)
-    meta: dict[str, object] = {}
+    meta: dict[str, Any] = {}
     if arrow_converted:
         meta["coerced_arrow_pairs"] = arrow_converted
     if space_converted:
@@ -452,7 +452,7 @@ def _parse_ini_structured(
     *,
     has_section: bool,
     leading_pairs: bool,
-) -> tuple[object, dict[str, object]]:
+) -> tuple[Any, dict[str, Any]]:
     parser = configparser.RawConfigParser(
         strict=False,
         interpolation=None,
@@ -469,7 +469,7 @@ def _parse_ini_structured(
     except configparser.Error as exc:
         raise ValueError("invalid ini data") from exc
 
-    meta: dict[str, object] = {}
+    meta: dict[str, Any] = {}
 
     if not has_section:
         assert synthetic_root is not None
@@ -484,14 +484,14 @@ def _parse_ini_structured(
         )
         return section, meta
 
-    defaults: Dict[str, object]
+    defaults: Dict[str, Any]
     if synthetic_root is not None:
         defaults = dict(parser._sections.get(synthetic_root, {}))  # type: ignore[attr-defined]
         defaults.pop("__name__", None)
     else:
         defaults = dict(parser._defaults)  # type: ignore[attr-defined]
 
-    sections: dict[str, dict[str, object]] = {}
+    sections: dict[str, dict[str, Any]] = {}
     for name, payload in parser._sections.items():  # type: ignore[attr-defined]
         if synthetic_root is not None and name == synthetic_root:
             continue
@@ -501,7 +501,7 @@ def _parse_ini_structured(
 
     section_names = [name for name in parser.sections() if name != synthetic_root]
 
-    ordered: Dict[str, object] = {}
+    ordered: Dict[str, Any] = {}
     if defaults:
         ordered["<defaults>"] = defaults
     for name in section_names:
@@ -970,7 +970,7 @@ def parse_docx(path: str | Path) -> List[Block]:
         is_heading = "heading" in style if style else False
         for chunk in _shatter_chunk(text):
             base = _block_from_chunk(chunk, source)
-            data: Dict[str, object] = {"confidence": max(base.confidence, 0.65)}
+            data: Dict[str, Any] = {"confidence": max(base.confidence, 0.65)}
             if is_heading and base.type == "paragraph":
                 data["type"] = "heading"
             blocks.append(clone_model(base, **data))
@@ -1095,7 +1095,7 @@ def parse_ini(path: str | Path) -> List[Block]:
     except ValueError:
         return parse_txt(path)
 
-    info: Dict[str, object] = {}
+    info: Dict[str, Any] = {}
     info.update(coercion_meta)
     info.update(structure_meta)
 
@@ -1368,7 +1368,7 @@ def parse_eml(path: str | Path) -> List[Block]:
 
     text_parts: List[str] = []
     html_fallback: List[str] = []
-    attachments: List[Dict[str, object]] = []
+    attachments: List[Dict[str, Any]] = []
     for part in message.walk():
         if part.is_multipart():
             continue

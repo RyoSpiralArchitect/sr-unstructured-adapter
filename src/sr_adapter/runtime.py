@@ -8,7 +8,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 from .normalize import NativeTextNormalizer, normalize_blocks as _fallback_normalize
 from .schema import Block
@@ -60,7 +60,7 @@ class RuntimeSnapshot:
     text_stats: KernelStats = field(default_factory=lambda: KernelStats("text"))
     layout_stats: KernelStats = field(default_factory=lambda: KernelStats("layout"))
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "text": {
                 "enabled": self.text_enabled,

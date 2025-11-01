@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 try:  # pragma: no cover - optional dependency
     import sentry_sdk
 except ImportError:  # pragma: no cover - handled gracefully in exporter
     sentry_sdk = None  # type: ignore[assignment]
 
-from .llm_metrics import LLMMetricsRegistry, get_llm_registry
+from .llm_metrics import LLMMetricsRegistry, LLMMetricsSnapshot, get_llm_registry
 from .runtime import NativeKernelRuntime, RuntimeSnapshot, get_native_runtime
 from .settings import TelemetrySettings, get_settings
 
@@ -43,12 +43,12 @@ class TelemetryExporter:
     def snapshot(self) -> RuntimeSnapshot:
         return _snapshot(self._runtime)
 
-    def llm_snapshot(self) -> Dict[str, object]:
-        return self._llm_registry.snapshot().to_dict()
+    def llm_snapshot(self) -> LLMMetricsSnapshot:
+        return self._llm_registry.snapshot()
 
-    def snapshot_dict(self) -> Dict[str, object]:
+    def snapshot_dict(self) -> Dict[str, Any]:
         payload = self.snapshot().to_dict()
-        payload["llm"] = self.llm_snapshot()
+        payload["llm"] = self.llm_snapshot().to_dict()
         return payload
 
     def snapshot_json(self) -> str:

@@ -46,10 +46,10 @@ _PREVIEW_N = int(os.getenv("SR_ADAPTER_PREVIEW_BYTES", "32"))
 
 # ------------------------- helpers -------------------------
 
-def _read_text_best_effort(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_text_best_effort(path: Path) -> Tuple[str, Dict[str, Any]]:
     """Try utf-8 first, then a few common encodings; if `charset_normalizer` is
     available, use it. Always returns text+meta without raising."""
-    meta: Dict[str, object] = {}
+    meta: Dict[str, Any] = {}
     try:
         txt = path.read_text(encoding="utf-8", errors="strict")
         meta["encoding"] = "utf-8"
@@ -94,7 +94,7 @@ def _size_guard(path: Path) -> None:
         raise ValueError(f"File too large: {sz} bytes > limit={_MAX_BYTES} bytes")
 
 
-def _binary_preview(blob: bytes) -> Dict[str, object]:
+def _binary_preview(blob: bytes) -> Dict[str, Any]:
     return {
         "binary_preview_bytes": min(len(blob), _PREVIEW_N),
         "binary_preview_base64": base64.b64encode(blob[:_PREVIEW_N]).decode("ascii"),
@@ -248,9 +248,9 @@ def _select_ocr_languages(pytesseract: Any) -> List[str]:
 
 # ------------------------- readers -------------------------
 
-def _read_json(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_json(path: Path) -> Tuple[str, Dict[str, Any]]:
     raw = path.read_text(encoding="utf-8", errors="ignore")
-    meta: Dict[str, object] = {"json_valid": False}
+    meta: Dict[str, Any] = {"json_valid": False}
     try:
         data = json.loads(raw)
         meta["json_valid"] = True
@@ -264,11 +264,11 @@ def _read_json(path: Path) -> Tuple[str, Dict[str, object]]:
         return raw, meta
 
 
-def _read_jsonl(path: Path) -> Tuple[str, Dict[str, object]]:
-    meta: Dict[str, object] = {}
+def _read_jsonl(path: Path) -> Tuple[str, Dict[str, Any]]:
+    meta: Dict[str, Any] = {}
     lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
     valid = 0
-    samples: List[Dict[str, object]] = []
+    samples: List[Dict[str, Any]] = []
     for i, ln in enumerate(lines[:50]):  # sample前半50行だけ解析
         try:
             obj = json.loads(ln)
@@ -282,7 +282,7 @@ def _read_jsonl(path: Path) -> Tuple[str, Dict[str, object]]:
     return "\n".join(lines), meta
 
 
-def _read_yaml(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_yaml(path: Path) -> Tuple[str, Dict[str, Any]]:
     raw, meta = _read_text_best_effort(path)
     text = _normalize_newlines(raw)
     try:
@@ -300,10 +300,10 @@ def _read_yaml(path: Path) -> Tuple[str, Dict[str, object]]:
     return text, meta
 
 
-def _read_toml(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_toml(path: Path) -> Tuple[str, Dict[str, Any]]:
     raw = path.read_text(encoding="utf-8", errors="ignore")
     text = _normalize_newlines(raw)
-    meta: Dict[str, object] = {"toml_valid": False}
+    meta: Dict[str, Any] = {"toml_valid": False}
     try:
         try:
             import tomllib  # type: ignore[attr-defined]
@@ -324,12 +324,12 @@ def _read_toml(path: Path) -> Tuple[str, Dict[str, object]]:
     return text, meta
 
 
-def _read_plain_text(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_plain_text(path: Path) -> Tuple[str, Dict[str, Any]]:
     txt, meta = _read_text_best_effort(path)
     return _normalize_newlines(txt), meta
 
 
-def _read_markdown(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_markdown(path: Path) -> Tuple[str, Dict[str, Any]]:
     txt, meta = _read_text_best_effort(path)
     txt = _normalize_newlines(txt)
     # front matter (--- YAML ---) を拾う
@@ -346,7 +346,7 @@ def _read_markdown(path: Path) -> Tuple[str, Dict[str, object]]:
     return txt, meta
 
 
-def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_html(path: Path) -> Tuple[str, Dict[str, Any]]:
     txt, meta = _read_text_best_effort(path)
     try:
         from bs4 import BeautifulSoup  # type: ignore
@@ -362,8 +362,8 @@ def _read_html(path: Path) -> Tuple[str, Dict[str, object]]:
         return txt, meta
 
 
-def _read_xml(path: Path) -> Tuple[str, Dict[str, object]]:
-    meta: Dict[str, object] = {"xml_valid": False}
+def _read_xml(path: Path) -> Tuple[str, Dict[str, Any]]:
+    meta: Dict[str, Any] = {"xml_valid": False}
     try:
         tree = ET.parse(str(path))
         root = tree.getroot()
@@ -385,7 +385,7 @@ def _read_xml(path: Path) -> Tuple[str, Dict[str, object]]:
     return _normalize_newlines(raw), meta
 
 
-def _read_pdf(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_pdf(path: Path) -> Tuple[str, Dict[str, Any]]:
     try:
         from pypdf import PdfReader  # type: ignore
         reader = PdfReader(str(path))
@@ -406,7 +406,7 @@ def _read_pdf(path: Path) -> Tuple[str, Dict[str, object]]:
         return "", meta
 
 
-def _read_docx(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_docx(path: Path) -> Tuple[str, Dict[str, Any]]:
     try:
         import docx  # type: ignore
         d = docx.Document(str(path))
@@ -420,7 +420,7 @@ def _read_docx(path: Path) -> Tuple[str, Dict[str, object]]:
         return "", meta
 
 
-def _read_pptx(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_pptx(path: Path) -> Tuple[str, Dict[str, Any]]:
     try:
         from pptx import Presentation  # type: ignore
         prs = Presentation(str(path))
@@ -440,7 +440,7 @@ def _read_pptx(path: Path) -> Tuple[str, Dict[str, object]]:
         return "", meta
 
 
-def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_xlsx(path: Path) -> Tuple[str, Dict[str, Any]]:
     try:
         import openpyxl  # type: ignore
         wb = openpyxl.load_workbook(str(path), data_only=True, read_only=True)
@@ -462,16 +462,16 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, object]]:
         return "", meta
 
 
-def _read_rtf(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_rtf(path: Path) -> Tuple[str, Dict[str, Any]]:
     raw = path.read_text(encoding="latin-1", errors="ignore")
     text = _rtf_to_text(raw)
-    meta: Dict[str, object] = {"rtf_characters": len(text)}
+    meta: Dict[str, Any] = {"rtf_characters": len(text)}
     return text, meta
 
 
-def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_eml(path: Path) -> Tuple[str, Dict[str, Any]]:
     data = path.read_bytes()
-    meta: Dict[str, object] = {}
+    meta: Dict[str, Any] = {}
     parser = BytesParser(policy=policy.default)
     try:
         message = parser.parsebytes(data)
@@ -492,7 +492,7 @@ def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
 
     text_parts: List[str] = []
     html_fallback: List[str] = []
-    attachments: List[Dict[str, object]] = []
+    attachments: List[Dict[str, Any]] = []
     for part in message.walk():
         if part.is_multipart():
             continue
@@ -535,7 +535,7 @@ def _read_eml(path: Path) -> Tuple[str, Dict[str, object]]:
     return _normalize_newlines(body), meta
 
 
-def _read_ics(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_ics(path: Path) -> Tuple[str, Dict[str, Any]]:
     raw, meta = _read_text_best_effort(path)
     text = _normalize_newlines(raw)
     events = text.upper().split("BEGIN:VEVENT")
@@ -550,13 +550,13 @@ def _read_ics(path: Path) -> Tuple[str, Dict[str, object]]:
     return text, meta
 
 
-def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[str, Any]]]:
+def _extract_image_text(path: Path) -> Tuple[str, Dict[str, Any], List[Dict[str, Any]]]:
     """Return OCR/metadata text plus diagnostic details for *path*."""
 
-    meta: Dict[str, object] = {}
+    meta: Dict[str, Any] = {}
     segments: List[Dict[str, Any]] = []
     text_pieces: List[str] = []
-    text_sources: List[Dict[str, object]] = []
+    text_sources: List[Dict[str, Any]] = []
     ocr_segments = 0
 
     try:
@@ -580,7 +580,7 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[s
                 meta["image_orientation_corrected"] = True
 
             info = getattr(im, "info", {}) or {}
-            info_records: List[Dict[str, object]] = []
+            info_records: List[Dict[str, Any]] = []
             for key, value in info.items():
                 text_value: Optional[str] = None
                 if isinstance(value, bytes):
@@ -610,7 +610,7 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[s
                     sample = {ExifTags.TAGS.get(k, str(k)): v for k, v in list(exif.items())[:40]}
                     if sample:
                         meta["image_exif_sample"] = sample
-                    exif_records: List[Dict[str, object]] = []
+                    exif_records: List[Dict[str, Any]] = []
                     for key, value in sample.items():
                         text_value: Optional[str] = None
                         if isinstance(value, bytes):
@@ -765,13 +765,13 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, object], List[Dict[s
     return text, meta, segments
 
 
-def _read_image(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_image(path: Path) -> Tuple[str, Dict[str, Any]]:
     text, meta, _ = _extract_image_text(path)
     meta.update(_binary_preview(path.read_bytes()))
     return text, meta
 
 
-def _read_zip_index(path: Path) -> Tuple[str, Dict[str, object]]:
+def _read_zip_index(path: Path) -> Tuple[str, Dict[str, Any]]:
     try:
         import zipfile
         with zipfile.ZipFile(str(path)) as zf:
@@ -786,7 +786,7 @@ def _read_zip_index(path: Path) -> Tuple[str, Dict[str, object]]:
 
 # ------------------------- dispatcher -------------------------
 
-def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
+def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, Any]]:
     """Return a textual representation and extra metadata for *path*.
 
     Parameters
@@ -796,7 +796,7 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, object]]:
     """
     _size_guard(path)
     suffix = path.suffix.lower()
-    extra: Dict[str, object] = {}
+    extra: Dict[str, Any] = {}
 
     # JSON / JSONL
     if mime == "application/json" or suffix == ".json":

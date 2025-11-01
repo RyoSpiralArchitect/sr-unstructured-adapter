@@ -5,16 +5,16 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 import re
 
 
-def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, object]) -> Dict[str, object]:
+def collect_metadata(path: Path, text: str, mime: str, extra: Dict[str, Any]) -> Dict[str, Any]:
     """Gather metadata for the given file."""
 
     stat = path.stat()
-    metadata: Dict[str, object] = {
+    metadata: Dict[str, Any] = {
         "size": stat.st_size,
         "modified_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
     }
