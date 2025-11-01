@@ -315,11 +315,13 @@ class PipelineOrchestrator:
         try:
             from .profile_auto import record_profile_outcome
 
-            meta_payload = (
-                meta.model_dump()
-                if hasattr(meta, "model_dump")
-                else meta.dict()
-            )
+            # ``meta`` is a plain dictionary today but we keep the guard to
+            # accommodate potential future ``BaseModel`` usage without
+            # triggering ``AttributeError`` when ``dict()`` is absent.
+            if hasattr(meta, "model_dump"):
+                meta_payload = meta.model_dump()
+            else:
+                meta_payload = dict(meta)
             record_profile_outcome(self.profile, meta_payload)
         except Exception:  # pragma: no cover - adaptive feedback is best effort
             pass
