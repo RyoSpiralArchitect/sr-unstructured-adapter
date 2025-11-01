@@ -4,15 +4,15 @@
 Turn chaotic documents into structured payloads with a pipeline that speaks both native kernels and LLMs.
 
 ## Why this adapter?
-- **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes without loading whole archives into memory. 【F:src/sr_adapter/pipeline.py†L1-L155】【F:src/sr_adapter/normalize.py†L1-L140】
-- **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up. 【F:src/sr_adapter/runtime.py†L1-L211】
-- **LLM escalation built-in** – Drivers share circuit breakers, exponential backoff with jitter, streaming + async APIs, and telemetry hooks while routing low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints before normalising responses. 【F:src/sr_adapter/delegate.py†L1-L120】【F:src/sr_adapter/drivers/manager.py†L1-L160】【F:src/sr_adapter/drivers/base.py†L17-L197】【F:src/sr_adapter/drivers/resilience.py†L1-L101】【F:src/sr_adapter/drivers/openai_driver.py†L29-L313】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L310】【F:src/sr_adapter/drivers/azure_driver.py†L1-L354】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L308】【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
+- **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes without loading whole archives into memory. 
+- **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up. 
+- **LLM escalation built-in** – Drivers share circuit breakers, exponential backoff with jitter, streaming + async APIs, and telemetry hooks while routing low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints before normalising responses. 
 - **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L1-L119】
-- **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L236】【F:src/sr_adapter/llm_metrics.py†L1-L129】【F:src/sr_adapter/cli.py†L1-L360】
-- **Recipe autopilot** – Feed the CLI a few labelled examples and it proposes regex-based recipes, scores them against negative samples, and emits YAML ready for `configs/recipes/`. 【F:src/sr_adapter/cli.py†L60-L210】【F:src/sr_adapter/recipe_autogen.py†L1-L190】
+- **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L236】【F:src/sr_adapter/llm_metrics.py†L1-L129】
+- **Recipe autopilot** – Feed the CLI a few labelled examples and it proposes regex-based recipes, scores them against negative samples, and emits YAML ready for `configs/recipes/`. 
 - **Hybrid embeddings** – A lightweight `BlockEmbedder` mixes text, layout, and metadata into deterministic vectors plus a pluggable search index for semantic clustering or FAISS-backed recall. 【F:src/sr_adapter/embedding.py†L1-L170】
-- **Adaptive kernels** – The autotuner benchmarks batch sizes for the native runtime and records the best settings for future runs straight from `kernels autotune`. 【F:src/sr_adapter/kernel_autotune.py†L1-L220】【F:src/sr_adapter/runtime.py†L1-L220】
-
+- **Adaptive kernels** – The autotuner benchmarks batch sizes for the native runtime and records the best settings for future runs straight from `kernels autotune`.
+  
 ## Architecture at a glance
 ```
   +---------------------------+
