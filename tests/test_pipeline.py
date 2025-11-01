@@ -359,6 +359,36 @@ def test_convert_image_uses_metadata_text(tmp_path: Path) -> None:
     assert meta_blocks
     assert any(block.attrs.get("image_source") == "metadata" for block in meta_blocks)
     assert any(block.attrs.get("image_has_text") is True for block in meta_blocks)
+    assert "en" in set(document.meta["languages"])
+
+
+def test_convert_txt_detects_languages(tmp_path: Path) -> None:
+    sample = tmp_path / "multilingual.txt"
+    sample.write_text(
+        "\n".join(
+            [
+                "こんにちは、世界。今日は良い日です。",
+                "",
+                "This pipeline keeps getting better with richer metadata for every language.",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    document = convert(sample, recipe="default")
+
+    languages = set(document.meta["languages"])
+    assert {"ja", "en"}.issubset(languages)
+
+    ja_block = next(block for block in document.blocks if "こんにちは" in block.text)
+    assert ja_block.lang == "ja"
+    assert "ja" in ja_block.attrs.get("language_hints", [])
+    assert ja_block.attrs.get("language_scores")
+    assert ja_block.attrs["language_scores"][0]["lang"] == "ja"
+
+    en_block = next(block for block in document.blocks if "pipeline" in block.text)
+    assert en_block.lang == "en"
+    assert "en" in en_block.attrs.get("language_hints", [])
 
 
 def test_parse_image_propagates_language_metadata(monkeypatch, tmp_path: Path) -> None:
@@ -524,9 +554,11 @@ def test_convert_json_extracts_nested_keys(tmp_path: Path) -> None:
     host_block = next(block for block in document.blocks if block.attrs.get("key") == "service.host")
     assert host_block.attrs["path_r"] == ".data$service$host"
     assert host_block.attrs["path_glue"] == "{.data$service$host}"
+    assert host_block.attrs["path_r_tokens"] == [".data", "$service", "$host"]
     port_block = next(block for block in document.blocks if block.attrs.get("key") == "service.ports[0]")
     assert port_block.attrs["path_r"] == ".data$service$ports[[1]]"
     assert port_block.attrs["path_glue"] == "{.data$service$ports[[1]]}"
+    assert port_block.attrs["path_r_tokens"] == [".data", "$service", "$ports", "[[1]]"]
     service_meta = next(block for block in document.blocks if block.attrs.get("key") == "service")
     assert service_meta.attrs.get("sample_values") == ["localhost"]
     ports_meta = next(block for block in document.blocks if block.attrs.get("key") == "service.ports")
@@ -579,6 +611,7 @@ def test_convert_yaml_emits_summary_and_kv(tmp_path: Path) -> None:
     summary_block = next(block for block in document.blocks if block.text.startswith("YAML:"))
     assert summary_block.attrs["path_r"] == ".data"
     assert summary_block.attrs["path_glue"] == "{.data}"
+    assert summary_block.attrs["path_r_tokens"] == [".data"]
     assert summary_block.attrs["key"] == "<root>"
 
 
@@ -621,9 +654,11 @@ def test_convert_jsonl_breaks_into_records(tmp_path: Path) -> None:
     record_summary = next(block for block in document.blocks if block.attrs.get("key") == "record[1]")
     assert record_summary.attrs["path_r"] == ".data$record[[1]]"
     assert record_summary.attrs["path_glue"] == "{.data$record[[1]]}"
+    assert record_summary.attrs["path_r_tokens"] == [".data", "$record", "[[1]]"]
     record_id = next(block for block in document.blocks if block.attrs.get("key") == "record[1].id")
     assert record_id.attrs["path_r"] == ".data$record[[1]]$id"
     assert record_id.attrs["path_glue"] == "{.data$record[[1]]$id}"
+    assert record_id.attrs["path_r_tokens"] == [".data", "$record", "[[1]]", "$id"]
 
 
 def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:
