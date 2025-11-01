@@ -10,13 +10,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
-from .delegate import escalate_low_conf, select_escalation_indices
+from .delegate import escalate_low_conf
 from .distributed import run_asyncio, run_dask, run_ray, run_threadpool
 from .normalize import normalize_block, normalize_blocks
 from .profiles import ProcessingProfile, resolve_profile
 from .runtime import NativeKernelRuntime, get_native_runtime
 from .refiner import HybridRefiner
 from .settings import get_settings
+from .escalation import get_escalation_policy
 from .parsers import (
     parse_csv,
     parse_docx,
@@ -249,14 +250,17 @@ class PipelineOrchestrator:
         no_llm_env = os.getenv("SR_ADAPTER_NO_LLM", "").strip().lower() in {"1", "true", "yes"}
         policy = self.profile.llm_policy
         do_llm = bool(llm_ok and not no_llm_env and policy.enabled)
-        targets = []
+        selection = None
+        targets: List[int] = []
         if do_llm:
-            targets = select_escalation_indices(
+            policy_engine = get_escalation_policy()
+            selection = policy_engine.evaluate(
                 blocks,
                 max_confidence=policy.max_confidence,
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
             )
+            targets = list(selection.indices)
             if not targets:
                 do_llm = False
             elif effective_deadline is not None and metrics.spent_ms() >= effective_deadline:
@@ -270,6 +274,7 @@ class PipelineOrchestrator:
                 max_confidence=policy.max_confidence,
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
+                selection=selection,
             )
             escalations = sum(
                 1
@@ -315,14 +320,15 @@ class PipelineOrchestrator:
         try:
             from .profile_auto import record_profile_outcome
 
-            # ``meta`` is a plain dictionary today but we keep the guard to
-            # accommodate potential future ``BaseModel`` usage without
-            # triggering ``AttributeError`` when ``dict()`` is absent.
             if hasattr(meta, "model_dump"):
-                meta_payload = meta.model_dump()
+                payload = meta.model_dump()
+            elif hasattr(meta, "dict"):
+                payload = meta.dict()  # type: ignore[call-arg]
+            elif isinstance(meta, dict):
+                payload = dict(meta)
             else:
-                meta_payload = dict(meta)
-            record_profile_outcome(self.profile, meta_payload)
+                payload = {key: value for key, value in dict(meta).items()}  # type: ignore[arg-type]
+            record_profile_outcome(self.profile, payload)
         except Exception:  # pragma: no cover - adaptive feedback is best effort
             pass
         return document

@@ -9,7 +9,11 @@ from dataclasses import asdict
 from typing import Iterable, List, Optional, Sequence
 
 from .drivers.manager import DriverManager
-from .escalation import get_escalation_logger, get_escalation_policy
+from .escalation import (
+    SelectionResult,
+    get_escalation_logger,
+    get_escalation_policy,
+)
 from .normalizer import LLMNormalizer
 from .schema import Block, clone_model
 from .recipe import load_recipe
@@ -56,6 +60,7 @@ def escalate_low_conf(
     max_confidence: Optional[float] = None,
     allow_types: Sequence[str] | None = None,
     limit: Optional[int] = None,
+    selection: SelectionResult | None = None,
 ) -> List[Block]:
     """Escalate low-confidence predictions via a configured LLM driver."""
 
@@ -64,13 +69,16 @@ def escalate_low_conf(
         return list(blocks)
 
     original_blocks = list(blocks)
-    indices = select_escalation_indices(
-        original_blocks,
-        max_confidence=max_confidence,
-        allow_types=allow_types,
-        limit=limit,
-    )
-    selection = get_escalation_policy().last()
+    if selection is not None:
+        indices = list(selection.indices)
+    else:
+        indices = select_escalation_indices(
+            original_blocks,
+            max_confidence=max_confidence,
+            allow_types=allow_types,
+            limit=limit,
+        )
+        selection = get_escalation_policy().last()
     logger_instance = get_escalation_logger()
     if selection is not None:
         logger_instance.log_selection(

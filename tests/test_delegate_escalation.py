@@ -6,7 +6,11 @@ from sr_adapter.delegate import escalate_low_conf, select_escalation_indices
 from sr_adapter.drivers.base import LLMDriver
 from sr_adapter.recipe import RecipeConfig
 from sr_adapter.schema import Block
-from sr_adapter.escalation import reset_escalation_policy
+from sr_adapter.escalation import (
+    SelectionCandidate,
+    SelectionResult,
+    reset_escalation_policy,
+)
 from sr_adapter import settings as adapter_settings
 
 
@@ -152,3 +156,38 @@ def test_select_escalation_indices_supports_custom_model(tmp_path, monkeypatch):
 
     adapter_settings.get_settings.cache_clear()  # type: ignore[attr-defined]
     reset_escalation_policy()
+
+
+def test_escalate_low_conf_reuses_preselection(monkeypatch):
+    reset_escalation_policy()
+    dummy_driver = _DummyDriver()
+    dummy_manager = _DummyDriverManager(dummy_driver)
+    monkeypatch.setattr("sr_adapter.delegate._driver_manager", dummy_manager)
+    monkeypatch.setattr("sr_adapter.delegate.load_recipe", lambda _: _recipe(True))
+
+    selection = SelectionResult(
+        indices=[1],
+        candidates=[
+            SelectionCandidate(index=1, score=0.9, features={}, selected=True, rank=1),
+            SelectionCandidate(index=0, score=0.2, features={}, selected=False, rank=None),
+        ],
+        threshold=0.5,
+        limit=1,
+    )
+
+    def _fail(*args, **kwargs):  # pragma: no cover - defensive
+        raise AssertionError("select_escalation_indices should not be invoked when selection is provided")
+
+    monkeypatch.setattr("sr_adapter.delegate.select_escalation_indices", _fail)
+
+    blocks = [
+        Block(text="keep", confidence=0.95),
+        Block(text="fix", confidence=0.1),
+    ]
+
+    escalated = escalate_low_conf(blocks, "test", selection=selection)
+
+    assert escalated[0].attrs.get("llm_escalations") is None
+    payload = escalated[1].attrs["llm_escalations"][0]
+    assert payload["target_index"] == 1
+    assert dummy_driver.last_metadata["indices"] == [1]
