@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any, Dict, Mapping, MutableMapping, Protocol, TypeVar
+
+from .resilience import CircuitBreaker
 
 
 class DriverError(RuntimeError):
@@ -17,10 +21,102 @@ class LLMDriver(ABC):
     def __init__(self, name: str, config: Mapping[str, Any]):
         self.name = name
         self.config = dict(config)
+        threshold = int(self.config.get("circuit_breaker_failures", 3))
+        recovery = float(self.config.get("circuit_breaker_recovery", 30.0))
+        window = float(self.config.get("circuit_breaker_window", 10.0))
+        self._circuit_breaker = CircuitBreaker(
+            failure_threshold=max(1, threshold),
+            recovery_time=max(0.1, recovery),
+            window=max(0.1, window),
+        )
 
     @abstractmethod
     def generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
         """Invoke the underlying LLM and return the raw response."""
+
+    # ----------------------------------------------------------------- circuit
+    @property
+    def circuit_breaker(self) -> CircuitBreaker:
+        """Expose the driver's circuit breaker."""
+
+        return self._circuit_breaker
+
+    def _ensure_circuit_closed(self) -> None:
+        if not self._circuit_breaker.allow_request():
+            raise DriverError(
+                f"Driver '{self.name}' circuit breaker is open; temporarily refusing calls"
+            )
+
+    # --------------------------------------------------------------- streaming
+    def stream_generate(
+        self,
+        prompt: str,
+        *,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> Iterator[Mapping[str, Any]]:
+        """Yield streaming responses.
+
+        Drivers that do not implement native streaming fall back to yielding the
+        result of :meth:`generate` once.
+        """
+
+        yield self.generate(prompt, metadata=metadata)
+
+    def supports_streaming(self) -> bool:
+        """Return ``True`` if :meth:`stream_generate` yields incremental updates."""
+
+        return type(self).stream_generate is not LLMDriver.stream_generate
+
+    # -------------------------------------------------------------- async flows
+    async def async_generate(
+        self,
+        prompt: str,
+        *,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> Mapping[str, Any]:
+        """Async wrapper delegating to the synchronous ``generate`` implementation."""
+
+        return await asyncio.to_thread(self.generate, prompt, metadata=metadata)
+
+    async def async_stream_generate(
+        self,
+        prompt: str,
+        *,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> AsyncIterator[Mapping[str, Any]]:
+        """Async wrapper over :meth:`stream_generate` preserving incremental updates."""
+
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue[object] = asyncio.Queue()
+        sentinel = object()
+
+        def _run_stream() -> None:
+            try:
+                for chunk in self.stream_generate(prompt, metadata=metadata):
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except BaseException as exc:  # pragma: no cover - defensive propagation
+                loop.call_soon_threadsafe(queue.put_nowait, exc)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, sentinel)
+
+        producer_task = asyncio.create_task(asyncio.to_thread(_run_stream))
+
+        async def _aiter() -> AsyncIterator[Mapping[str, Any]]:
+            try:
+                while True:
+                    item = await queue.get()
+                    if item is sentinel:
+                        break
+                    if isinstance(item, BaseException):
+                        raise item
+                    yield item  # type: ignore[misc]
+            finally:
+                if not producer_task.done():
+                    producer_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await producer_task
+
+        return _aiter()
 
 
 class DriverFactory(Protocol):
