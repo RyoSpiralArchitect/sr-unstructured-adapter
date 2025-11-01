@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from .delegate import escalate_low_conf, select_escalation_indices
+from .distributed import run_asyncio, run_dask, run_ray, run_threadpool
 from .normalize import normalize_block, normalize_blocks
 from .profiles import ProcessingProfile, resolve_profile
 from .runtime import NativeKernelRuntime, get_native_runtime
+from .settings import get_settings
 from .parsers import (
     parse_csv,
     parse_docx,
@@ -467,6 +469,33 @@ def convert(
     )
 
 
+def _build_worker(
+    profile_obj: ProcessingProfile,
+    recipe: str,
+    *,
+    llm_ok: bool,
+    mime_by_path: Optional[Dict[str, str]],
+    deadline_ms: Optional[int],
+    max_blocks: Optional[int],
+) -> Callable[[str | Path], Document]:
+    def _worker(p: str | Path) -> Document:
+        runtime = get_native_runtime(
+            layout_profile=profile_obj.layout_profile,
+            layout_batch_size=profile_obj.layout_batch_size,
+        )
+        orchestrator = PipelineOrchestrator(profile_obj, runtime=runtime)
+        return orchestrator.convert(
+            p,
+            recipe=recipe,
+            llm_ok=llm_ok,
+            mime=(mime_by_path or {}).get(str(p)),
+            deadline_ms=deadline_ms,
+            max_blocks=max_blocks,
+        )
+
+    return _worker
+
+
 def batch_convert(
     paths: Iterable[str | Path],
     recipe: str,
@@ -477,49 +506,47 @@ def batch_convert(
     max_blocks: Optional[int] = None,
     concurrency: int = 0,
     profile: str | ProcessingProfile | None = None,
+    backend: str | None = None,
+    dask_scheduler: str | None = None,
+    ray_address: str | None = None,
 ) -> List[Document]:
     """Convert multiple paths; optional thread parallelism for I/O bound workloads."""
     items = list(paths)
     profile_obj = resolve_profile(profile)
-    if concurrency and concurrency > 1:
-        from concurrent.futures import ThreadPoolExecutor
+    settings = get_settings()
+    dist_settings = settings.distributed
+    worker_count = concurrency if concurrency > 0 else (dist_settings.max_workers or 0)
+    chosen_backend = (backend or dist_settings.default_backend or "auto").lower()
+    if chosen_backend == "auto":
+        chosen_backend = "threadpool" if worker_count and worker_count > 1 else "sync"
 
-        def _one(p: str | Path) -> Document:
-            m = (mime_by_path or {}).get(str(p))
-            orchestrator = PipelineOrchestrator(
-                profile_obj,
-                runtime=get_native_runtime(
-                    layout_profile=profile_obj.layout_profile,
-                    layout_batch_size=profile_obj.layout_batch_size,
-                ),
-            )
-            return orchestrator.convert(
-                p,
-                recipe=recipe,
-                llm_ok=llm_ok,
-                mime=m,
-                deadline_ms=deadline_ms,
-                max_blocks=max_blocks,
-            )
-
-        with ThreadPoolExecutor(max_workers=concurrency) as ex:
-            return list(ex.map(_one, items))
-
-    orchestrator = PipelineOrchestrator(
+    worker = _build_worker(
         profile_obj,
-        runtime=get_native_runtime(
-            layout_profile=profile_obj.layout_profile,
-            layout_batch_size=profile_obj.layout_batch_size,
-        ),
+        recipe,
+        llm_ok=llm_ok,
+        mime_by_path=mime_by_path,
+        deadline_ms=deadline_ms,
+        max_blocks=max_blocks,
     )
-    return [
-        orchestrator.convert(
-            p,
-            recipe=recipe,
-            llm_ok=llm_ok,
-            mime=(mime_by_path or {}).get(str(p)),
-            deadline_ms=deadline_ms,
-            max_blocks=max_blocks,
-        )
-        for p in items
-    ]
+
+    if chosen_backend in {"sync", "sequential", "none"}:
+        return [worker(path) for path in items]
+
+    if chosen_backend in {"thread", "threads", "threadpool"}:
+        workers = worker_count or 4
+        return run_threadpool(worker, items, workers=workers)
+
+    if chosen_backend in {"async", "asyncio"}:
+        return run_asyncio(worker, items, workers=worker_count or None)
+
+    if chosen_backend == "dask":
+        scheduler = dask_scheduler or dist_settings.dask_scheduler
+        workers = worker_count or None
+        return run_dask(worker, items, scheduler=scheduler, workers=workers)
+
+    if chosen_backend == "ray":
+        address = ray_address or dist_settings.ray_address
+        workers = worker_count or None
+        return run_ray(worker, items, address=address, workers=workers)
+
+    raise ValueError(f"Unknown batch_convert backend '{chosen_backend}'")

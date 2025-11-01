@@ -15,6 +15,11 @@ from sr_adapter.drivers import (
 )
 
 
+def test_available_drivers_expose_new_providers() -> None:
+    names = available_drivers()
+    assert {"openai", "anthropic", "vllm"}.issubset(set(names))
+
+
 def test_driver_manager_returns_docker_driver(tmp_path: Path) -> None:
     tenant_dir = tmp_path / "tenants"
     tenant_dir.mkdir()

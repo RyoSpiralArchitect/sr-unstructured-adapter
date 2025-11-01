@@ -16,6 +16,7 @@ from .drivers import DriverManager
 from .normalizer import LLMNormalizer
 from .recipe import load_recipe
 from .runtime import RuntimeSnapshot, get_native_runtime, runtime_status_json
+from .telemetry import TelemetryExporter
 
 _BATCH_CONVERT_PARAMS = set(inspect.signature(batch_convert).parameters)
 
@@ -37,6 +38,27 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--profile",
         default="balanced",
         help="Processing profile to orchestrate runtime + LLM policies",
+    )
+    convert_parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=0,
+        help="Number of worker slots when using a distributed backend",
+    )
+    convert_parser.add_argument(
+        "--backend",
+        default=None,
+        help="Distributed backend to use (auto, sync, threadpool, asyncio, dask, ray)",
+    )
+    convert_parser.add_argument(
+        "--dask-scheduler",
+        default=None,
+        help="Override the Dask scheduler when using the dask backend",
+    )
+    convert_parser.add_argument(
+        "--ray-address",
+        default=None,
+        help="Ray cluster address when using the ray backend",
     )
 
     llm_parser = subparsers.add_parser("llm", help="LLM driver utilities")
@@ -119,6 +141,29 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Emit runtime summary as JSON",
     )
 
+    export_parser = kernel_subparsers.add_parser(
+        "export",
+        help="Export runtime telemetry for Prometheus/Sentry",
+    )
+    export_parser.add_argument(
+        "--format",
+        choices=("json", "prometheus"),
+        default="json",
+        help="Output format for stdout",
+    )
+    export_parser.add_argument(
+        "--label",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="Additional labels attached to Prometheus metrics",
+    )
+    export_parser.add_argument(
+        "--sentry",
+        action="store_true",
+        help="Send the snapshot to Sentry after exporting",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -143,6 +188,14 @@ def main(argv: list[str] | None = None) -> int:
         }
         if "profile" in _BATCH_CONVERT_PARAMS:
             kwargs["profile"] = args.profile
+        if "concurrency" in _BATCH_CONVERT_PARAMS:
+            kwargs["concurrency"] = args.concurrency
+        if "backend" in _BATCH_CONVERT_PARAMS:
+            kwargs["backend"] = args.backend
+        if "dask_scheduler" in _BATCH_CONVERT_PARAMS:
+            kwargs["dask_scheduler"] = args.dask_scheduler
+        if "ray_address" in _BATCH_CONVERT_PARAMS:
+            kwargs["ray_address"] = args.ray_address
         documents = batch_convert(files, **kwargs)
         write_jsonl(documents, args.out)
         return 0
@@ -292,6 +345,30 @@ def _handle_kernels(args: argparse.Namespace) -> int:
         else:
             snapshot = runtime.warm()
         return _emit_kernel_snapshot(snapshot, as_json=args.json)
+    if args.kernel_command == "export":
+        exporter = TelemetryExporter()
+        try:
+            labels = _parse_labels(args.label)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 11
+        try:
+            if args.format == "prometheus":
+                output = exporter.render_prometheus(extra_labels=labels)
+            else:
+                output = exporter.snapshot_json()
+        except RuntimeError as exc:
+            print(f"Failed to export telemetry: {exc}", file=sys.stderr)
+            return 12
+        if output := output.strip():
+            print(output)
+        if args.sentry:
+            try:
+                exporter.push_sentry()
+            except RuntimeError as exc:
+                print(f"Failed to push telemetry to Sentry: {exc}", file=sys.stderr)
+                return 13
+        return 0
     raise ValueError(f"Unhandled kernel sub-command: {args.kernel_command}")
 
 
@@ -332,6 +409,20 @@ def _print_kernel_snapshot(snapshot: RuntimeSnapshot) -> None:
 
     print(_format_line("Text kernel", snapshot.text_enabled, snapshot.text_stats))
     print(_format_line("Layout kernel", snapshot.layout_enabled, snapshot.layout_stats))
+
+
+def _parse_labels(entries: list[str]) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for entry in entries:
+        if "=" not in entry:
+            raise ValueError(f"Invalid label '{entry}'. Use key=value format.")
+        key, value = entry.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            raise ValueError("Label keys must be non-empty")
+        labels[key] = value
+    return labels
 
 
 def _resolve_prompt(prompt: str | None, prompt_file: Path | None) -> str:

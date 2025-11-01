@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional
 
 import yaml
 
+from .anthropic_driver import AnthropicDriver  # noqa: F401  # ensure registration side effects
 from .azure_driver import AzureDriver  # noqa: F401  # ensure registration side effects
 from .base import (
     DriverError,
@@ -18,6 +19,9 @@ from .base import (
     create_registered_driver,
 )
 from .docker_driver import DockerDriver  # noqa: F401  # ensure registration side effects
+from .openai_driver import OpenAIDriver  # noqa: F401  # ensure registration side effects
+from .vllm_driver import VLLMDriver  # noqa: F401  # ensure registration side effects
+from ..settings import AdapterSettings, get_settings
 
 
 @dataclass
@@ -83,8 +87,14 @@ class TenantManager:
 class DriverManager:
     """Instantiate drivers for tenants on demand."""
 
-    def __init__(self, tenant_manager: Optional[TenantManager] = None):
+    def __init__(
+        self,
+        tenant_manager: Optional[TenantManager] = None,
+        *,
+        settings: Optional[AdapterSettings] = None,
+    ):
         self.tenant_manager = tenant_manager or TenantManager()
+        self.settings = settings or get_settings()
         self._driver_cache: MutableMapping[str, LLMDriver] = {}
 
     def get_driver(self, tenant: str, llm_config: Mapping[str, Any]) -> LLMDriver:
@@ -94,6 +104,11 @@ class DriverManager:
         recipe_settings = llm_config.get("settings")
         if isinstance(recipe_settings, Mapping):
             settings.update(recipe_settings)  # recipe level overrides
+        driver_defaults = self.settings.drivers
+        settings.setdefault("timeout", driver_defaults.default_timeout)
+        if driver_defaults.user_agent and "user_agent" not in settings:
+            settings["user_agent"] = driver_defaults.user_agent
+        settings.setdefault("max_retries", driver_defaults.max_retries)
         cache_key = self._cache_key(driver_name, settings)
         if cache_key not in self._driver_cache:
             self._driver_cache[cache_key] = create_registered_driver(driver_name, settings)

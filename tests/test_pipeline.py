@@ -14,7 +14,8 @@ from openpyxl import Workbook
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
-from sr_adapter.pipeline import convert, stream_convert
+from sr_adapter.pipeline import batch_convert, convert, stream_convert
+from sr_adapter.settings import reset_settings_cache
 from sr_adapter.profiles import LLMPolicy, ProcessingProfile
 from sr_adapter.parsers import parse_image, parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
@@ -197,6 +198,96 @@ def test_parse_txt_detects_whitespace_table(tmp_path: Path) -> None:
     assert len(rows) == 3
     assert rows[2][2] == "Needs follow-up"
     assert table_block.attrs["delimiter"] == "whitespace"
+
+
+def _write_documents(tmp_path: Path, count: int = 3) -> list[Path]:
+    paths: list[Path] = []
+    for idx in range(count):
+        path = tmp_path / f"doc-{idx}.txt"
+        path.write_text(f"Document {idx}", encoding="utf-8")
+        paths.append(path)
+    return paths
+
+
+def test_batch_convert_thread_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    calls: dict[str, object] = {}
+
+    def _fake_threadpool(func, items, *, workers):
+        calls["workers"] = workers
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_threadpool", _fake_threadpool)
+    reset_settings_cache()
+    documents = batch_convert(files, recipe="default", backend="threadpool", concurrency=3)
+
+    assert len(documents) == 2
+    assert calls["workers"] == 3
+
+
+def test_batch_convert_async_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    def _fake_asyncio(func, items, *, workers):
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_asyncio", _fake_asyncio)
+    reset_settings_cache()
+    documents = batch_convert(files, recipe="default", backend="asyncio", concurrency=0)
+
+    assert len(documents) == 2
+
+
+def test_batch_convert_dask_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    captured: dict[str, object] = {}
+
+    def _fake_dask(func, items, *, scheduler, workers):
+        captured["scheduler"] = scheduler
+        captured["workers"] = workers
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_dask", _fake_dask)
+    reset_settings_cache()
+    documents = batch_convert(
+        files,
+        recipe="default",
+        backend="dask",
+        dask_scheduler="threads",
+        concurrency=5,
+    )
+
+    assert len(documents) == 2
+    assert captured["scheduler"] == "threads"
+    assert captured["workers"] == 5
+
+
+def test_batch_convert_ray_backend(tmp_path: Path, monkeypatch) -> None:
+    files = _write_documents(tmp_path, count=2)
+
+    captured: dict[str, object] = {}
+
+    def _fake_ray(func, items, *, address, workers):
+        captured["address"] = address
+        captured["workers"] = workers
+        return [func(item) for item in items]
+
+    monkeypatch.setattr("sr_adapter.pipeline.run_ray", _fake_ray)
+    reset_settings_cache()
+    documents = batch_convert(
+        files,
+        recipe="default",
+        backend="ray",
+        ray_address="auto",
+        concurrency=0,
+    )
+
+    assert len(documents) == 2
+    assert captured["address"] == "auto"
+    # With concurrency=0 the default max_workers from settings.yaml is used (4)
+    assert captured["workers"] == 4
 
 
 def test_parse_ini_coerces_space_pairs(tmp_path: Path) -> None:

@@ -6,8 +6,9 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 ## Why this adapter?
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes without loading whole archives into memory. 【F:src/sr_adapter/pipeline.py†L1-L155】【F:src/sr_adapter/normalize.py†L1-L140】
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up. 【F:src/sr_adapter/runtime.py†L1-L211】
-- **LLM escalation built-in** – A driver manager routes low-confidence spans to Azure OpenAI or Docker-hosted chat endpoints, then normalises responses into a consistent schema. 【F:src/sr_adapter/delegate.py†L1-L120】【F:src/sr_adapter/drivers/manager.py†L1-L160】【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
-- **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant YAML keeps LLM credentials out of code. Toggle behaviour via environment variables for rapid PoCs. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/tenants/azure-example.yaml†L1-L11】
+- **LLM escalation built-in** – A driver manager routes low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints, then normalises responses into a consistent schema. 【F:src/sr_adapter/delegate.py†L1-L120】【F:src/sr_adapter/drivers/manager.py†L1-L160】【F:src/sr_adapter/drivers/openai_driver.py†L1-L80】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L80】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L80】【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
+- **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L1-L150】
+- **Observability ready** – Kernel telemetry can be exported as Prometheus metrics or pushed to Sentry directly from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L150】【F:src/sr_adapter/cli.py†L1-L360】
 
 ## Architecture at a glance
 ```
@@ -98,7 +99,7 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 
 ### LLM escalation
 - `delegate.escalate_low_conf` loads the configured recipe, resolves the tenant, and invokes the appropriate driver through the shared manager cache. 【F:src/sr_adapter/delegate.py†L1-L120】
-- Drivers live in `src/sr_adapter/drivers/` and register themselves with a lightweight factory registry, so adding Anthropic, Google, GitHub, or ChatGPT backends is as simple as importing a module and calling `register_driver(...)`. 【F:src/sr_adapter/drivers/base.py†L1-L170】【F:src/sr_adapter/drivers/azure_driver.py†L1-L200】【F:src/sr_adapter/drivers/docker_driver.py†L1-L200】
+- Drivers live in `src/sr_adapter/drivers/` and register themselves with a lightweight factory registry, so dropping in Azure, OpenAI, Anthropic, Docker, or vLLM backends requires no manager changes. 【F:src/sr_adapter/drivers/base.py†L1-L170】【F:src/sr_adapter/drivers/azure_driver.py†L1-L200】【F:src/sr_adapter/drivers/openai_driver.py†L1-L80】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L80】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L80】
 - Responses are normalised into a stable schema before the pipeline writes them back into documents or CLI output. 【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
 
 ## Installation
@@ -115,9 +116,14 @@ Optional native builds will be triggered automatically when the kernels are firs
 Recipes live under `src/sr_adapter/recipes` and control parser options, confidence thresholds, and escalation toggles.
 
 ### LLM tenants
-1. Copy `.env.llm.example` to `.env` (or export the variables manually). 【F:.env.llm.example†L1-L6】
+1. Copy `.env.llm.example` to `.env` (or export the variables manually). 【F:.env.llm.example†L1-L9】
 2. Drop tenant YAML into `configs/tenants/`. The `driver` key selects a backend and `settings` contain endpoint-specific knobs. 【F:configs/tenants/default.yaml†L1-L10】
 3. Reference tenants from recipes via the `llm.tenant` field or override at runtime with `SR_ADAPTER_TENANT`.
+
+### Adapter settings
+1. Global runtime defaults live in `configs/settings.yaml` (telemetry, driver defaults, distributed backends). 【F:configs/settings.yaml†L1-L13】
+2. `sr_adapter.settings.get_settings()` merges YAML with environment overrides and `.env` values using Pydantic validation. 【F:src/sr_adapter/settings.py†L1-L150】
+3. Override individual knobs via environment variables such as `SR_ADAPTER_DISTRIBUTED__DEFAULT_BACKEND=asyncio` or `SR_ADAPTER_DRIVERS__DEFAULT_TIMEOUT=45`. 【F:src/sr_adapter/settings.py†L1-L150】
 
 ### Environment toggles
 - `SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1` – force the legacy Python normalisers. 【F:src/sr_adapter/runtime.py†L213-L244】
@@ -129,9 +135,9 @@ All orchestration commands live under `python -m sr_adapter.cli`.
 
 ### Convert documents
 ```bash
-python -m sr_adapter.cli convert docs/*.pdf --recipe default --out output.jsonl --profile balanced
+python -m sr_adapter.cli convert docs/*.pdf --recipe default --out output.jsonl --profile balanced --backend threadpool --concurrency 4
 ```
-Stream parsed blocks into JSONL while optionally disabling escalation with `--no-llm`. Select another processing profile (e.g. `realtime`) to trade accuracy for latency. 【F:src/sr_adapter/cli.py†L19-L85】【F:src/sr_adapter/profiles.py†L1-L215】
+Stream parsed blocks into JSONL while optionally disabling escalation with `--no-llm`. Select another processing profile (e.g. `realtime`) to trade accuracy for latency, and choose a distributed backend (`threadpool`, `asyncio`, `dask`, `ray`) when scaling batch jobs. 【F:src/sr_adapter/cli.py†L19-L110】【F:src/sr_adapter/pipeline.py†L320-L420】
 
 ### Inspect LLM drivers
 ```bash
@@ -153,8 +159,11 @@ python -m sr_adapter.cli kernels status
 
 # Compile and warm both kernels, emitting JSON
 python -m sr_adapter.cli kernels warm --json
+
+# Export Prometheus metrics (and optionally send to Sentry)
+python -m sr_adapter.cli kernels export --format prometheus --label env=prod --sentry
 ```
-Status and warm-up reuse the cached runtime so repeated invocations stay snappy. 【F:src/sr_adapter/cli.py†L19-L85】【F:src/sr_adapter/cli.py†L210-L320】
+Status, warm-up, and exports reuse the cached runtime so repeated invocations stay snappy while still emitting observability signals. 【F:src/sr_adapter/cli.py†L19-L360】【F:src/sr_adapter/telemetry.py†L1-L150】
 
 ## Library usage
 Use the high-level helpers when embedding the adapter in another service:
