@@ -204,6 +204,41 @@ class AutoProfileSettings(BaseModel):
         return _default_cache_dir() / "profiles" / "bandit_state.json"
 
 
+class KernelAutoTuneSettings(BaseModel):
+    """Settings controlling the native kernel autotuner."""
+
+    enabled: bool = True
+    state_path: Optional[str] = None
+    layout_batch_sizes: Tuple[int, ...] = (16, 32, 48, 64)
+    text_batch_bytes: Tuple[int, ...] = (262_144, 393_216, 524_288)
+    warmup_trials: int = Field(default=1, ge=0)
+    measure_trials: int = Field(default=2, ge=1)
+
+    @field_validator("state_path", mode="before")
+    @classmethod
+    def _expand_state_path(cls, value: Optional[str]) -> Optional[str]:  # noqa: D401
+        if not value:
+            return None
+        return str(Path(value).expanduser())
+
+    @field_validator("layout_batch_sizes", "text_batch_bytes", mode="before")
+    @classmethod
+    def _normalise_int_tuple(
+        cls, value: Optional[Sequence[int]] | int
+    ) -> Tuple[int, ...]:  # noqa: D401
+        if value is None:
+            return ()
+        if isinstance(value, int):
+            return (int(value),)
+        return tuple(int(entry) for entry in value)
+
+    @property
+    def resolved_state_path(self) -> Path:
+        if self.state_path:
+            return Path(self.state_path)
+        return _default_cache_dir() / "kernel_autotune.json"
+
+
 class AdapterSettings(BaseModel):
     """Composite settings object loaded from YAML + environment variables."""
 
@@ -212,6 +247,7 @@ class AdapterSettings(BaseModel):
     distributed: DistributedSettings = Field(default_factory=DistributedSettings)
     escalation: EscalationSettings = Field(default_factory=EscalationSettings)
     profile_automation: AutoProfileSettings = Field(default_factory=AutoProfileSettings)
+    kernel_autotune: KernelAutoTuneSettings = Field(default_factory=KernelAutoTuneSettings)
 
 
 def _default_settings_path() -> Path:
@@ -302,6 +338,8 @@ __all__ = [
     "DriverSettings",
     "DistributedSettings",
     "TelemetrySettings",
+    "AutoProfileSettings",
+    "KernelAutoTuneSettings",
     "get_settings",
     "reset_settings_cache",
 ]
