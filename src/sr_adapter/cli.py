@@ -124,6 +124,49 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Continue replay when a record is invalid or the driver call fails",
     )
 
+    recipe_parser = subparsers.add_parser("recipes", help="Recipe automation utilities")
+    recipe_subparsers = recipe_parser.add_subparsers(dest="recipe_command", required=True)
+
+    suggest_parser = recipe_subparsers.add_parser(
+        "suggest",
+        help="Suggest a regex recipe from labelled examples",
+    )
+    suggest_parser.add_argument(
+        "--positives",
+        type=Path,
+        required=True,
+        help="JSONL file containing positive examples (text, type, attrs)",
+    )
+    suggest_parser.add_argument(
+        "--negatives",
+        type=Path,
+        help="Optional JSONL file with negative text samples",
+    )
+    suggest_parser.add_argument(
+        "--name",
+        required=True,
+        help="Name of the recipe when rendering YAML",
+    )
+    suggest_parser.add_argument(
+        "--target-type",
+        help="Override the target type declared in examples",
+    )
+    suggest_parser.add_argument(
+        "--out",
+        type=Path,
+        help="Optional path to write the generated YAML recipe",
+    )
+    suggest_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit evaluation metrics as JSON",
+    )
+    suggest_parser.add_argument(
+        "--print-yaml",
+        action="store_true",
+        help="Print the YAML recipe to stdout in addition to writing",
+    )
+
     kernel_parser = subparsers.add_parser("kernels", help="Native kernel utilities")
     kernel_subparsers = kernel_parser.add_subparsers(dest="kernel_command", required=True)
 
@@ -164,6 +207,21 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Send the snapshot to Sentry after exporting",
     )
 
+    autotune_parser = kernel_subparsers.add_parser(
+        "autotune",
+        help="Benchmark and persist autotuned kernel parameters",
+    )
+    autotune_parser.add_argument(
+        "--profile",
+        default="default",
+        help="Layout profile to tune (default: default)",
+    )
+    autotune_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the tuning report as JSON",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -199,11 +257,61 @@ def main(argv: list[str] | None = None) -> int:
         documents = batch_convert(files, **kwargs)
         write_jsonl(documents, args.out)
         return 0
+    if args.command == "recipes":
+        return _handle_recipes(args)
     if args.command == "llm":
         return _handle_llm(args)
     if args.command == "kernels":
         return _handle_kernels(args)
     raise ValueError(f"Unhandled command: {args.command}")
+
+
+def _handle_recipes(args: argparse.Namespace) -> int:
+    from .recipe_autogen import RecipeExample, RecipeSuggester, render_yaml
+
+    if args.recipe_command == "suggest":
+        examples = RecipeSuggester.load_examples(args.positives)
+        if args.target_type:
+            examples = [
+                RecipeExample(text=example.text, target_type=args.target_type, attrs=example.attrs)
+                for example in examples
+            ]
+        if not examples:
+            print("No positive examples found", file=sys.stderr)
+            return 1
+        suggester = RecipeSuggester(examples)
+        negatives = (
+            RecipeSuggester.load_negative_samples(args.negatives)
+            if args.negatives
+            else None
+        )
+        suggestion = suggester.suggest(negatives=negatives)
+        metrics = {
+            "pattern": suggestion.pattern,
+            "target_type": suggestion.target_type,
+            "attrs": suggestion.attrs,
+            "matched": suggestion.matched,
+            "missed": suggestion.missed,
+            "false_positives": suggestion.false_positives,
+            "score": suggestion.score,
+        }
+        if args.json:
+            print(json.dumps(metrics, ensure_ascii=False, indent=2))
+        else:
+            summary = (
+                f"Pattern matched {suggestion.matched}/{suggestion.matched + suggestion.missed} "
+                f"positives with {suggestion.false_positives} false positives (score={suggestion.score:.2f})."
+            )
+            print(summary)
+        yaml_text = render_yaml(args.name, suggestion)
+        if args.out:
+            destination = args.out.expanduser()
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(yaml_text, encoding="utf-8")
+        if args.print_yaml or not args.out:
+            print(yaml_text.strip())
+        return 0
+    raise ValueError(f"Unknown recipe command {args.recipe_command}")
 
 
 def _handle_llm(args: argparse.Namespace) -> int:
@@ -368,6 +476,30 @@ def _handle_kernels(args: argparse.Namespace) -> int:
             except RuntimeError as exc:
                 print(f"Failed to push telemetry to Sentry: {exc}", file=sys.stderr)
                 return 13
+        return 0
+    if args.kernel_command == "autotune":
+        from .kernel_autotune import KernelAutoTuner
+
+        tuner = KernelAutoTuner(layout_profile=args.profile)
+        report = tuner.tune()
+        payload = {
+            "layout_profile": report.layout_profile,
+            "layout_batch_size": report.layout_batch_size,
+            "text_batch_bytes": report.text_batch_bytes,
+            "layout_trials": report.layout_trials,
+            "text_trials": report.text_trials,
+        }
+        if args.json:
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+        else:
+            summary = [
+                f"Profile: {report.layout_profile}",
+                f"Layout batch size: {report.layout_batch_size or 'unmodified'}",
+                f"Text batch bytes: {report.text_batch_bytes or 'unmodified'}",
+                f"Layout trials: {len(report.layout_trials)}",
+                f"Text trials: {len(report.text_trials)}",
+            ]
+            print("\n".join(summary))
         return 0
     raise ValueError(f"Unhandled kernel sub-command: {args.kernel_command}")
 

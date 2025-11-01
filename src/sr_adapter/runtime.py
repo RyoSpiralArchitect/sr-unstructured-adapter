@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """High-level runtime that coordinates native layout and text kernels."""
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 from .normalize import NativeTextNormalizer, normalize_blocks as _fallback_normalize
 from .schema import Block
 from .visual import LayoutCandidate, LayoutSegment, VisualLayoutAnalyzer
+from .kernel_autotune import get_autotune_store
 
 
 @dataclass
@@ -202,7 +204,7 @@ class NativeKernelRuntime:
         return self.snapshot()
 
 
-_RUNTIME_CACHE: Dict[Tuple[str, int], NativeKernelRuntime | bool] = {}
+_RUNTIME_CACHE: Dict[Tuple[str, int, int], NativeKernelRuntime | bool] = {}
 _RUNTIME_LOCK = Lock()
 
 
@@ -213,7 +215,19 @@ def get_native_runtime(
     if os.getenv("SR_ADAPTER_DISABLE_NATIVE_RUNTIME"):
         return None
 
-    key = (layout_profile, max(1, layout_batch_size))
+    store = get_autotune_store()
+    tuned_layout = store.layout_batch_size(layout_profile)
+    tuned_text = store.text_batch_bytes()
+    if tuned_layout:
+        layout_batch_size = int(tuned_layout)
+    text_normalizer: Optional[NativeTextNormalizer] = None
+    if tuned_text:
+        try:
+            text_normalizer = NativeTextNormalizer(max_batch_bytes=int(tuned_text))
+        except Exception:
+            text_normalizer = None
+
+    key = (layout_profile, max(1, layout_batch_size), int(tuned_text or 0))
     with _RUNTIME_LOCK:
         cached = _RUNTIME_CACHE.get(key)
         if isinstance(cached, NativeKernelRuntime):
@@ -222,6 +236,7 @@ def get_native_runtime(
             return None
         try:
             runtime = NativeKernelRuntime(
+                text_normalizer=text_normalizer,
                 layout_profile=layout_profile,
                 layout_batch_size=max(1, layout_batch_size),
             )

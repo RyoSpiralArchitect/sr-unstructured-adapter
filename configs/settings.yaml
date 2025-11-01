@@ -34,3 +34,17 @@ profile_automation:
   high_kernel_latency_ms: 180.0
   max_llm_failure_rate: 0.35
   latency_target_ms: 3600.0
+kernel_autotune:
+  enabled: true
+  state_path: ""
+  layout_batch_sizes:
+    - 16
+    - 32
+    - 48
+    - 64
+  text_batch_bytes:
+    - 262144
+    - 393216
+    - 524288
+  warmup_trials: 1
+  measure_trials: 2

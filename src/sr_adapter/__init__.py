@@ -7,6 +7,10 @@ from .models import Payload
 from .pipeline import batch_convert, convert
 from .profiles import LLMPolicy, ProcessingProfile, load_processing_profile
 from .schema import Block, Document, Span
+from .recipe import apply_recipe, apply_recipe_block, load_recipe
+from .recipe_autogen import RecipeExample, RecipeSuggestion, RecipeSuggester
+from .embedding import BlockEmbedder, EmbeddingIndex
+from .kernel_autotune import KernelAutoTuner
 
 __all__ = [
     "Payload",
@@ -19,6 +23,15 @@ __all__ = [
     "Span",
     "convert",
     "batch_convert",
+    "apply_recipe",
+    "apply_recipe_block",
+    "load_recipe",
+    "RecipeExample",
+    "RecipeSuggestion",
+    "RecipeSuggester",
+    "BlockEmbedder",
+    "EmbeddingIndex",
+    "KernelAutoTuner",
     "ProcessingProfile",
     "LLMPolicy",
     "load_processing_profile",
