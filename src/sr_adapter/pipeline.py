@@ -15,6 +15,7 @@ from .distributed import run_asyncio, run_dask, run_ray, run_threadpool
 from .normalize import normalize_block, normalize_blocks
 from .profiles import ProcessingProfile, resolve_profile
 from .runtime import NativeKernelRuntime, get_native_runtime
+from .refiner import HybridRefiner
 from .settings import get_settings
 from .parsers import (
     parse_csv,
@@ -182,6 +183,7 @@ class PipelineOrchestrator:
                 layout_batch_size=profile.layout_batch_size,
             )
         self.runtime = runtime
+        self._refiner = HybridRefiner()
         if self.runtime and self.profile.warm_runtime:
             try:
                 self.runtime.warm()
@@ -193,15 +195,17 @@ class PipelineOrchestrator:
         if not blocks:
             return []
         if self.runtime is None:
-            return list(normalize_blocks(blocks))
-        if self.profile.stream_normalize:
-            return list(
+            normalized = list(normalize_blocks(blocks))
+        elif self.profile.stream_normalize:
+            normalized = list(
                 self.runtime.normalize_stream(
                     blocks,
                     batch_size=max(1, self.profile.text_batch_size),
                 )
             )
-        return self.runtime.normalize(blocks)
+        else:
+            normalized = self.runtime.normalize(blocks)
+        return self._refiner.refine(normalized)
 
     def _effective_deadline(
         self,
@@ -308,6 +312,19 @@ class PipelineOrchestrator:
             blocks=list(blocks),
             meta=meta,
         )
+        try:
+            from .profile_auto import record_profile_outcome
+
+            # ``meta`` is a plain dictionary today but we keep the guard to
+            # accommodate potential future ``BaseModel`` usage without
+            # triggering ``AttributeError`` when ``dict()`` is absent.
+            if hasattr(meta, "model_dump"):
+                meta_payload = meta.model_dump()
+            else:
+                meta_payload = dict(meta)
+            record_profile_outcome(self.profile, meta_payload)
+        except Exception:  # pragma: no cover - adaptive feedback is best effort
+            pass
         return document
 
 
@@ -452,6 +469,29 @@ def stream_convert(
 
 # ---- Public API --------------------------------------------------------------
 
+def _profile_context(
+    path: str | Path,
+    *,
+    deadline_ms: Optional[int],
+    max_blocks: Optional[int],
+    mime: Optional[str],
+) -> Dict[str, object]:
+    context: Dict[str, object] = {}
+    try:
+        resolved = Path(path)
+        if resolved.exists():
+            context["size_bytes"] = resolved.stat().st_size
+    except Exception:  # pragma: no cover - file system race
+        pass
+    if deadline_ms is not None:
+        context["deadline_ms"] = int(deadline_ms)
+    if max_blocks is not None:
+        context["max_blocks"] = int(max_blocks)
+    if mime:
+        context["mime"] = mime
+    return context
+
+
 def convert(
     path: str | Path,
     recipe: str,
@@ -465,7 +505,13 @@ def convert(
 ) -> Document:
     """Convert *path* to the unified :class:`Document`."""
 
-    profile_obj = resolve_profile(profile)
+    context = _profile_context(
+        path,
+        deadline_ms=deadline_ms,
+        max_blocks=max_blocks,
+        mime=mime,
+    )
+    profile_obj = resolve_profile(profile, context=context)
     orchestrator = PipelineOrchestrator(profile_obj, runtime=runtime)
     return orchestrator.convert(
         path,
@@ -478,7 +524,7 @@ def convert(
 
 
 def _build_worker(
-    profile_obj: ProcessingProfile,
+    profile_spec: str | ProcessingProfile | None,
     recipe: str,
     *,
     llm_ok: bool,
@@ -487,6 +533,13 @@ def _build_worker(
     max_blocks: Optional[int],
 ) -> Callable[[str | Path], Document]:
     def _worker(p: str | Path) -> Document:
+        context = _profile_context(
+            p,
+            deadline_ms=deadline_ms,
+            max_blocks=max_blocks,
+            mime=(mime_by_path or {}).get(str(p)),
+        )
+        profile_obj = resolve_profile(profile_spec, context=context)
         runtime = get_native_runtime(
             layout_profile=profile_obj.layout_profile,
             layout_batch_size=profile_obj.layout_batch_size,
@@ -520,7 +573,6 @@ def batch_convert(
 ) -> List[Document]:
     """Convert multiple paths; optional thread parallelism for I/O bound workloads."""
     items = list(paths)
-    profile_obj = resolve_profile(profile)
     settings = get_settings()
     dist_settings = settings.distributed
     worker_count = concurrency if concurrency > 0 else (dist_settings.max_workers or 0)
@@ -529,7 +581,7 @@ def batch_convert(
         chosen_backend = "threadpool" if worker_count and worker_count > 1 else "sync"
 
     worker = _build_worker(
-        profile_obj,
+        profile,
         recipe,
         llm_ok=llm_ok,
         mime_by_path=mime_by_path,
