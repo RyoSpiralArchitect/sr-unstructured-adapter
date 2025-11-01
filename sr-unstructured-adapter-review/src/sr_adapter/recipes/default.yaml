@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: default
+patterns: []
+fallback:
+  as: paragraph
+  confidence: 0.5
+llm:
+  enable: false

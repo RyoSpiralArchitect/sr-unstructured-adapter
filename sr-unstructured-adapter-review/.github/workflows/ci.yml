@@ -1,0 +1,322 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: CI
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install tooling
+        run: |
+          python -m pip install -U pip
+          pip install ruff==0.6.8 black==24.8.0 mypy==1.11.2 types-PyYAML types-requests
+      - name: Ruff (lint)
+        run: ruff check .
+      - name: Black (format check)
+        run: black --check .
+      - name: Mypy (best-effort)
+        run: mypy --ignore-missing-imports --install-types --non-interactive src || true
+
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "1"
+      PYTHONWARNINGS: "default"
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -e .[dev]
+      - name: Unit tests
+        run: pytest -q
+
+  perf:
+    runs-on: ubuntu-latest
+    needs: [test]
+    env:
+      SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -e .[dev] pytest-benchmark pyperf
+      - name: Run perf (fallback path)
+        run: |
+          pytest tests/perf -m perf --benchmark-autosave --benchmark-save=ci \
+                 --benchmark-min-rounds=8 --benchmark-warmup=on --benchmark-warmup-iterations=2
+      - name: Compare with baseline
+        run: |
+          python scripts/compare_perf.py \
+            --baseline tests/perf/perf_baseline.json \
+            --current .benchmarks/*/*/benchmarks.json \
+            --max-regression 0.10
+      - name: Upload perf artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-fallback
+          path: |
+            .benchmarks/**/*
+            perf_report.txt
+
+  native-linux:
+    runs-on: ubuntu-latest
+    needs: [lint]
+    env:
+      CC: clang
+      CXX: clang++
+      SR_ADAPTER_NO_LLM: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang ccache cmake ninja-build build-essential
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ runner.os }}-${{ hashFiles('**/*.[chCH]pp','**/*.[ch]','**/CMakeLists.txt','**/*.cmake') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+      - name: Configure ccache
+        run: |
+          echo "max_size = 1.0G" > ~/.cache/ccache/ccache.conf || true
+          export CCACHE_BASEDIR=$GITHUB_WORKSPACE
+          export CCACHE_CPP2=yes
+          export CCACHE_DIR=$HOME/.cache/ccache
+          echo "CCACHE_DIR=$CCACHE_DIR" >> $GITHUB_ENV
+          echo "CC=$CC" >> $GITHUB_ENV
+          echo "CXX=$CXX" >> $GITHUB_ENV
+      - name: Install project (dev)
+        run: |
+          python -m pip install -U pip
+          pip install -e .[dev]
+      - name: Warm native kernels (compile on first use)
+        run: |
+          python -m sr_adapter.cli kernels warm --json | tee native_status.json
+      - name: Assert native runtime is enabled
+        run: |
+          python scripts/assert_native_ready.py native_status.json
+      - name: Run unit tests (native path)
+        env:
+          SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "0"
+        run: pytest -q
+      - name: Upload native status
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-linux-status
+          path: native_status.json
+
+  native-macos:
+    runs-on: macos-13
+    needs: [lint]
+    env:
+      CC: clang
+      CXX: clang++
+      SR_ADAPTER_NO_LLM: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          brew update
+          brew install ccache cmake ninja || true
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-${{ runner.os }}-${{ hashFiles('**/*.[chCH]pp','**/*.[ch]','**/CMakeLists.txt','**/*.cmake') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+      - name: Configure ccache
+        run: |
+          echo "max_size = 1.0G" > ~/Library/Caches/ccache/ccache.conf || true
+      - name: Install project (dev)
+        run: |
+          python -m pip install -U pip
+          pip install -e .[dev]
+      - name: Warm native kernels (compile on first use)
+        run: |
+          python -m sr_adapter.cli kernels warm --json | tee native_status.json
+      - name: Assert native runtime is enabled
+        run: |
+          python scripts/assert_native_ready.py native_status.json
+      - name: Run unit tests (native path)
+        env:
+          SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "0"
+        run: pytest -q
+      - name: Upload native status
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-macos-status
+          path: native_status.json
+
+  native-windows:
+    runs-on: windows-latest
+    needs: [lint]
+    env:
+      CC: clang
+      CXX: clang++
+      SR_ADAPTER_NO_LLM: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        shell: pwsh
+        run: |
+          choco install llvm ninja ccache -y --no-progress
+          $llvmBin = "C:\\Program Files\\LLVM\\bin"
+          if (-not (Test-Path $llvmBin)) {
+            Write-Error "LLVM bin directory not found at $llvmBin"
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value $llvmBin
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: pip-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\ccache
+          key: ccache-${{ runner.os }}-${{ hashFiles('**/*.[chCH]pp','**/*.[ch]','**/CMakeLists.txt','**/*.cmake') }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+      - name: Configure ccache
+        shell: pwsh
+        run: |
+          $ccacheDir = Join-Path $env:LOCALAPPDATA "ccache"
+          New-Item -ItemType Directory -Force -Path $ccacheDir | Out-Null
+          Set-Content -Path (Join-Path $ccacheDir "ccache.conf") -Value "max_size = 1.0G"
+          "CCACHE_DIR=$ccacheDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CCACHE_BASEDIR=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CCACHE_CPP2=yes" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CC=clang" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CXX=clang++" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Install project (dev)
+        shell: pwsh
+        run: |
+          python -m pip install -U pip
+          pip install -e .[dev]
+      - name: Warm native kernels (compile on first use)
+        shell: pwsh
+        run: |
+          python -m sr_adapter.cli kernels warm --json | Tee-Object -FilePath native_status.json
+      - name: Assert native runtime is enabled
+        shell: pwsh
+        run: |
+          python scripts/assert_native_ready.py native_status.json
+      - name: Run unit tests (native path)
+        env:
+          SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "0"
+        shell: pwsh
+        run: pytest -q
+      - name: Upload native status
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-windows-status
+          path: native_status.json
+
+  perf-native:
+    runs-on: ubuntu-latest
+    needs: [native-linux]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -e .[dev] pytest-benchmark pyperf
+      - name: Warm native kernels
+        run: python -m sr_adapter.cli kernels warm --json > /dev/null
+      - name: Run perf (native path)
+        env:
+          SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "0"
+        run: |
+          pytest tests/perf -m perf --benchmark-autosave --benchmark-save=ci-native \
+                 --benchmark-min-rounds=8 --benchmark-warmup=on --benchmark-warmup-iterations=2
+      - name: Compare with native baseline
+        run: |
+          python scripts/compare_perf.py \
+            --baseline tests/perf/perf_native_baseline.json \
+            --current .benchmarks/*/*/benchmarks.json \
+            --max-regression 0.10
+      - name: Upload perf artifacts (native)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-native
+          path: |
+            .benchmarks/**/*
+            perf_report.txt
+
+  build-wheel:
+    runs-on: ubuntu-latest
+    needs: [lint, test, perf, native-linux, native-macos, native-windows, perf-native]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build wheel
+        run: |
+          python -m pip install -U pip build twine
+          python -m build
+          python -m twine check dist/*
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*

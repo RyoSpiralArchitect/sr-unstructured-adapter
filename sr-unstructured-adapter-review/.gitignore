@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+__pycache__/
+*.py[cod]
+*.egg-info/
+.benchmarks/
+perf_report.txt
+native_status.json
+src/sr_adapter/native/_*.so
+src/sr_adapter/native/_*.dylib
+src/sr_adapter/native/_*.dll

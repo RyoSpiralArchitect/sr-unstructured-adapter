@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: sensor_log
+patterns:
+  - when: '^Sensor:\s+'
+    as: header
+    confidence: 0.8
+  - when: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
+    as: meta
+    attrs:
+      kind: timestamp
+    confidence: 0.85
+  - when: '^\w+:\s+[-+]?[0-9]*\.?[0-9]+'
+    as: kv
+    confidence: 0.75
+fallback:
+  as: paragraph
+  confidence: 0.5
+llm:
+  enable: false

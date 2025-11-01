@@ -1,0 +1,3 @@
+SPDX-License-Identifier: AGPL-3.0-or-later
+This is a sample text file.
+日本語もOK。

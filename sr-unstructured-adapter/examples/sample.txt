@@ -1,0 +1,1 @@
+This is a sample text file.\n日本語もOK。\n

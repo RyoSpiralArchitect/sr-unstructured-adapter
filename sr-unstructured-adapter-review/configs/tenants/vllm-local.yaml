@@ -1,0 +1,5 @@
+driver: vllm
+settings:
+  endpoint: ${VLLM_ENDPOINT:http://localhost:8000}
+  model: mistral-7b-instruct
+  temperature: 0.0

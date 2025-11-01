@@ -1,0 +1,6 @@
+driver: openai
+settings:
+  api_key: ${OPENAI_API_KEY}
+  endpoint: ${OPENAI_API_BASE:https://api.openai.com/v1}
+  model: gpt-4o-mini
+  temperature: 0.2
