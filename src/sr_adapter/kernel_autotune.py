@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Runtime autotuning utilities for native kernels."""
+"""Native kernel autotuning helpers."""
 
 from __future__ import annotations
 
@@ -84,9 +84,9 @@ class KernelAutoTuneStore:
             return
         with self._lock:
             self._ensure_loaded()
-            if layout_batch_size:
+            if layout_batch_size is not None:
                 self._layout_map()[profile or "default"] = int(layout_batch_size)
-            if text_batch_bytes:
+            if text_batch_bytes is not None:
                 self._data.setdefault("text", {})["batch_bytes"] = int(text_batch_bytes)
             self._flush_locked()
 
@@ -240,23 +240,38 @@ class KernelAutoTuner:
                 if result:
                     text_trials.append(result)
 
-        best_layout = None
+        best_layout: Optional[int] = None
         if layout_trials:
-            best_layout = max(layout_trials, key=lambda entry: entry.get("throughput", 0.0)).get("batch_size")
-        best_text = None
+            top_layout = max(layout_trials, key=lambda entry: entry.get("throughput", 0.0))
+            value = top_layout.get("batch_size")
+            if value is not None:
+                best_layout = int(value)
+        else:
+            stored_layout = self.store.layout_batch_size(self.layout_profile)
+            if stored_layout is not None:
+                best_layout = int(stored_layout)
+
+        best_text: Optional[int] = None
         if text_trials:
-            best_text = max(text_trials, key=lambda entry: entry.get("throughput", 0.0)).get("batch_bytes")
+            top_text = max(text_trials, key=lambda entry: entry.get("throughput", 0.0))
+            value = top_text.get("batch_bytes")
+            if value is not None:
+                best_text = int(value)
+        else:
+            stored_text = self.store.text_batch_bytes()
+            if stored_text is not None:
+                best_text = int(stored_text)
 
         self.store.update(
             profile=self.layout_profile,
-            layout_batch_size=int(best_layout) if best_layout else None,
-            text_batch_bytes=int(best_text) if best_text else None,
+            layout_batch_size=best_layout,
+            text_batch_bytes=best_text,
         )
 
         return KernelAutoTuneResult(
             layout_profile=self.layout_profile,
-            layout_batch_size=int(best_layout) if best_layout else None,
-            text_batch_bytes=int(best_text) if best_text else None,
+            layout_batch_size=best_layout,
+            text_batch_bytes=best_text,
             layout_trials=layout_trials,
             text_trials=text_trials,
         )

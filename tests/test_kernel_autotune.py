@@ -34,3 +34,19 @@ def test_kernel_autotuner_selects_best(monkeypatch, tmp_path):
     assert report.layout_batch_size is not None
     assert report.text_batch_bytes is not None
     assert tuner.store.layout_batch_size("default") == report.layout_batch_size
+
+
+def test_kernel_autotuner_uses_existing_state(monkeypatch, tmp_path):
+    tuner = KernelAutoTuner(layout_profile="balanced")
+    store = KernelAutoTuneStore(tmp_path / "cache.json", enabled=True)
+    store.update(profile="balanced", layout_batch_size=48, text_batch_bytes=400_000)
+    tuner.store = store
+
+    monkeypatch.setattr(KernelAutoTuner, "_benchmark_layout", lambda self, size: None)
+    monkeypatch.setattr(KernelAutoTuner, "_benchmark_text", lambda self, size: None)
+
+    report = tuner.tune()
+    assert report.layout_trials == []
+    assert report.text_trials == []
+    assert report.layout_batch_size == 48
+    assert report.text_batch_bytes == 400_000
