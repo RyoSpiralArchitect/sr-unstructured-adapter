@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
+
 from sr_adapter.delegate import escalate_low_conf, select_escalation_indices
 from sr_adapter.drivers.base import LLMDriver
 from sr_adapter.recipe import RecipeConfig
 from sr_adapter.schema import Block
+from sr_adapter.escalation import reset_escalation_policy
+from sr_adapter import settings as adapter_settings
 
 
 class _DummyDriver(LLMDriver):
@@ -53,6 +57,7 @@ def _recipe(enable: bool = True) -> RecipeConfig:
 
 
 def test_escalate_low_conf_attaches_llm_payload(monkeypatch):
+    reset_escalation_policy()
     dummy_driver = _DummyDriver()
     dummy_manager = _DummyDriverManager(dummy_driver)
     monkeypatch.setattr("sr_adapter.delegate._driver_manager", dummy_manager)
@@ -61,33 +66,41 @@ def test_escalate_low_conf_attaches_llm_payload(monkeypatch):
 
     escalated = escalate_low_conf(blocks, "test")
 
-    assert escalated != blocks
+    assert "llm_escalations" in escalated[0].attrs
     payload = escalated[0].attrs["llm_escalations"][0]
     assert payload["provider"] == "dummy"
-    assert payload["choices"][0]["text"].startswith("Reviewed: First\n\nSecond")
+    choice_text = payload["choices"][0]["text"]
+    assert choice_text.startswith("Reviewed:")
+    assert "First" in choice_text and "Second" in choice_text
     assert payload["tenant"] == "default"
     assert payload["target_index"] == 0
-    assert dummy_driver.last_metadata["indices"] == [0, 1]
+    meta = escalated[0].attrs["llm_meta"]
+    assert meta["escalation_rank"] in {1, 2}
+    assert meta["escalation_score"] >= 0.5
+    assert sorted(dummy_driver.last_metadata["indices"]) == [0, 1]
 
 
 def test_escalate_low_conf_returns_original_when_disabled(monkeypatch):
+    reset_escalation_policy()
     monkeypatch.setattr("sr_adapter.delegate.load_recipe", lambda _: _recipe(False))
     blocks = [Block(text="First"), Block(text="Second")]
     assert escalate_low_conf(blocks, "test") == blocks
 
 
-def test_select_escalation_indices_filters_by_confidence():
+def test_select_escalation_indices_prioritises_low_confidence():
+    reset_escalation_policy()
     blocks = [
         Block(text="high", confidence=0.9),
         Block(text="mid", confidence=0.5),
         Block(text="low", confidence=0.2),
     ]
 
-    indices = select_escalation_indices(blocks, max_confidence=0.5)
-    assert indices == [1, 2]
+    indices = select_escalation_indices(blocks, max_confidence=0.95)
+    assert indices == [2, 1]
 
 
 def test_escalate_low_conf_respects_filters(monkeypatch):
+    reset_escalation_policy()
     dummy_driver = _DummyDriver()
     dummy_manager = _DummyDriverManager(dummy_driver)
     monkeypatch.setattr("sr_adapter.delegate._driver_manager", dummy_manager)
@@ -110,3 +123,32 @@ def test_escalate_low_conf_respects_filters(monkeypatch):
     assert escalated[1].attrs["llm_escalations"][0]["target_index"] == 1
     assert "llm_escalations" not in escalated[2].attrs
     assert dummy_driver.last_metadata["indices"] == [1]
+
+
+def test_select_escalation_indices_supports_custom_model(tmp_path, monkeypatch):
+    reset_escalation_policy()
+    model_path = tmp_path / "model.json"
+    model_path.write_text(
+        json.dumps(
+            {
+                "weights": {"confidence": 4.0},
+                "bias": -1.5,
+                "threshold": 0.5,
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SR_ADAPTER_ESCALATION__MODEL_PATH", str(model_path))
+    adapter_settings.get_settings.cache_clear()  # type: ignore[attr-defined]
+    reset_escalation_policy()
+
+    blocks = [
+        Block(text="high", confidence=0.9),
+        Block(text="low", confidence=0.1),
+    ]
+
+    indices = select_escalation_indices(blocks)
+    assert indices == [0]
+
+    adapter_settings.get_settings.cache_clear()  # type: ignore[attr-defined]
+    reset_escalation_policy()

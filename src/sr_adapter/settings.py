@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 import yaml
 
@@ -38,6 +38,13 @@ except ImportError:  # pragma: no cover - tests fallback when dependency missing
         except OSError:
             return False
 from pydantic import BaseModel, Field, field_validator
+
+
+def _default_cache_dir() -> Path:
+    base = Path(os.getenv("SR_ADAPTER_CACHE_DIR", "")).expanduser()
+    if base and base.name:
+        return base
+    return Path.home() / ".cache" / "sr_adapter"
 
 
 class TelemetrySettings(BaseModel):
@@ -117,6 +124,85 @@ class DistributedSettings(BaseModel):
     def _normalize_backend(cls, value: str) -> str:  # noqa: D401
         return value.strip().lower() or "auto"
 
+class EscalationSettings(BaseModel):
+    """Controls for the escalation meta-model and logging pipeline."""
+
+    logging_enabled: bool = True
+    log_path: Optional[str] = None
+    model_path: Optional[str] = None
+    model_format: str = "json"
+    min_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    default_weights: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "bias": 2.0,
+            "confidence": -4.0,
+            "layout_confidence": -1.5,
+            "text_length": 0.0008,
+            "has_spans": 0.25,
+        }
+    )
+    feature_version: str = "v1"
+
+    @field_validator("log_path", "model_path", mode="before")
+    @classmethod
+    def _expand_path(cls, value: Optional[str]) -> Optional[str]:  # noqa: D401
+        if not value:
+            return None
+        return str(Path(value).expanduser())
+
+    @property
+    def resolved_log_path(self) -> Path:
+        if self.log_path:
+            return Path(self.log_path)
+        return _default_cache_dir() / "escalation" / "events.jsonl"
+
+    @property
+    def resolved_model_path(self) -> Optional[Path]:
+        if not self.model_path:
+            return None
+        path = Path(self.model_path)
+        return path if path.exists() else None
+
+
+class AutoProfileSettings(BaseModel):
+    """Adaptive profile controller parameters."""
+
+    enabled: bool = True
+    epsilon: float = Field(default=0.15, ge=0.0, le=1.0)
+    state_path: Optional[str] = None
+    candidate_profiles: Tuple[str, ...] = ("balanced", "realtime", "archival")
+    large_document_bytes: int = Field(default=5_000_000, ge=0)
+    tight_deadline_ms: int = Field(default=1200, ge=0)
+    high_kernel_latency_ms: float = Field(default=180.0, ge=0.0)
+    max_llm_failure_rate: float = Field(default=0.35, ge=0.0, le=1.0)
+    latency_target_ms: float = Field(default=3600.0, ge=1.0)
+    min_reward: float = -1.0
+    max_reward: float = 1.5
+
+    @field_validator("state_path", mode="before")
+    @classmethod
+    def _expand_state_path(cls, value: Optional[str]) -> Optional[str]:  # noqa: D401
+        if not value:
+            return None
+        return str(Path(value).expanduser())
+
+    @field_validator("candidate_profiles", mode="before")
+    @classmethod
+    def _normalise_candidates(
+        cls, value: Optional[Sequence[str]] | str
+    ) -> Tuple[str, ...]:  # noqa: D401
+        if value is None:
+            return ("balanced", "realtime", "archival")
+        if isinstance(value, str):
+            return (value.strip() or "balanced",)
+        return tuple(str(item).strip() for item in value if str(item).strip())
+
+    @property
+    def resolved_state_path(self) -> Path:
+        if self.state_path:
+            return Path(self.state_path)
+        return _default_cache_dir() / "profiles" / "bandit_state.json"
+
 
 class AdapterSettings(BaseModel):
     """Composite settings object loaded from YAML + environment variables."""
@@ -124,6 +210,8 @@ class AdapterSettings(BaseModel):
     telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
     drivers: DriverSettings = Field(default_factory=DriverSettings)
     distributed: DistributedSettings = Field(default_factory=DistributedSettings)
+    escalation: EscalationSettings = Field(default_factory=EscalationSettings)
+    profile_automation: AutoProfileSettings = Field(default_factory=AutoProfileSettings)
 
 
 def _default_settings_path() -> Path:
