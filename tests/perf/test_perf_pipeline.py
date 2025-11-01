@@ -6,6 +6,12 @@ import os
 from pathlib import Path
 
 import pytest
+
+pytest.importorskip(
+    "pytest_benchmark",
+    reason="perf tests require pytest-benchmark; install extras[perf] to enable",
+)
+
 from pytest_benchmark.fixture import BenchmarkFixture
 
 from sr_adapter.pipeline import convert
