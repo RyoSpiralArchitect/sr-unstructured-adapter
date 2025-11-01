@@ -26,12 +26,23 @@ class SelectionResult:
     candidates: List[SelectionCandidate] = field(default_factory=list)
     threshold: float = 0.0
     limit: Optional[int] = None
+    _index_map: Dict[int, SelectionCandidate] = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._index_map = {candidate.index: candidate for candidate in self.candidates}
+
+    def _refresh_index_map(self) -> None:
+        if len(self._index_map) != len(self.candidates):
+            self._index_map = {candidate.index: candidate for candidate in self.candidates}
 
     def find(self, index: int) -> Optional[SelectionCandidate]:
-        for candidate in self.candidates:
-            if candidate.index == index:
-                return candidate
-        return None
+        if not self.candidates:
+            return None
+        candidate = self._index_map.get(index)
+        if candidate is not None:
+            return candidate
+        self._refresh_index_map()
+        return self._index_map.get(index)
 
 
 class EscalationPolicyEngine:

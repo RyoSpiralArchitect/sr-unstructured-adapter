@@ -191,3 +191,15 @@ def test_escalate_low_conf_reuses_preselection(monkeypatch):
     payload = escalated[1].attrs["llm_escalations"][0]
     assert payload["target_index"] == 1
     assert dummy_driver.last_metadata["indices"] == [1]
+
+
+def test_selection_result_find_uses_cached_lookup():
+    candidate = SelectionCandidate(index=2, score=0.7, features={})
+    result = SelectionResult(indices=[2], candidates=[candidate], threshold=0.5, limit=1)
+
+    assert result.find(2) is candidate
+
+    extra = SelectionCandidate(index=3, score=0.2, features={})
+    result.candidates.append(extra)
+
+    assert result.find(3) is extra
