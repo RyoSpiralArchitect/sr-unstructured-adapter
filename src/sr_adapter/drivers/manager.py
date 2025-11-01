@@ -109,6 +109,12 @@ class DriverManager:
         if driver_defaults.user_agent and "user_agent" not in settings:
             settings["user_agent"] = driver_defaults.user_agent
         settings.setdefault("max_retries", driver_defaults.max_retries)
+        settings.setdefault("retry_backoff_base", driver_defaults.retry_backoff_base)
+        settings.setdefault("retry_backoff_max", driver_defaults.retry_backoff_max)
+        settings.setdefault("retry_jitter", driver_defaults.retry_jitter)
+        settings.setdefault("circuit_breaker_failures", driver_defaults.circuit_breaker_failures)
+        settings.setdefault("circuit_breaker_recovery", driver_defaults.circuit_breaker_recovery)
+        settings.setdefault("circuit_breaker_window", driver_defaults.circuit_breaker_window)
         cache_key = self._cache_key(driver_name, settings)
         if cache_key not in self._driver_cache:
             self._driver_cache[cache_key] = create_registered_driver(driver_name, settings)

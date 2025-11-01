@@ -33,6 +33,8 @@ distributed:
     assert settings.telemetry.labels["service"] == "adapter"
     assert settings.drivers.default_timeout == 24.0
     assert settings.drivers.max_retries == 3
+    assert settings.drivers.retry_backoff_base == 0.5
+    assert settings.drivers.circuit_breaker_failures == 3
     assert settings.distributed.default_backend == "threadpool"
     assert settings.distributed.max_workers == 6
 

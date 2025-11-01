@@ -6,9 +6,9 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 ## Why this adapter?
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes without loading whole archives into memory. 【F:src/sr_adapter/pipeline.py†L1-L155】【F:src/sr_adapter/normalize.py†L1-L140】
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up. 【F:src/sr_adapter/runtime.py†L1-L211】
-- **LLM escalation built-in** – A driver manager routes low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints, then normalises responses into a consistent schema. 【F:src/sr_adapter/delegate.py†L1-L120】【F:src/sr_adapter/drivers/manager.py†L1-L160】【F:src/sr_adapter/drivers/openai_driver.py†L1-L80】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L80】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L80】【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
-- **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L1-L150】
-- **Observability ready** – Kernel telemetry can be exported as Prometheus metrics or pushed to Sentry directly from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L150】【F:src/sr_adapter/cli.py†L1-L360】
+- **LLM escalation built-in** – Drivers share circuit breakers, exponential backoff with jitter, streaming + async APIs, and telemetry hooks while routing low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints before normalising responses. 【F:src/sr_adapter/delegate.py†L1-L120】【F:src/sr_adapter/drivers/manager.py†L1-L160】【F:src/sr_adapter/drivers/base.py†L17-L197】【F:src/sr_adapter/drivers/resilience.py†L1-L101】【F:src/sr_adapter/drivers/openai_driver.py†L29-L313】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L310】【F:src/sr_adapter/drivers/azure_driver.py†L1-L354】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L308】【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
+- **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L1-L119】
+- **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L236】【F:src/sr_adapter/llm_metrics.py†L1-L129】【F:src/sr_adapter/cli.py†L1-L360】
 
 ## Architecture at a glance
 ```
@@ -125,10 +125,29 @@ Recipes live under `src/sr_adapter/recipes` and control parser options, confiden
 2. `sr_adapter.settings.get_settings()` merges YAML with environment overrides and `.env` values using Pydantic validation. 【F:src/sr_adapter/settings.py†L1-L150】
 3. Override individual knobs via environment variables such as `SR_ADAPTER_DISTRIBUTED__DEFAULT_BACKEND=asyncio` or `SR_ADAPTER_DRIVERS__DEFAULT_TIMEOUT=45`. 【F:src/sr_adapter/settings.py†L1-L150】
 
+### Driver resilience defaults
+- Configure exponential backoff, jitter, and retry counts globally with `drivers.retry_backoff_base`, `drivers.retry_backoff_max`, `drivers.retry_jitter`, and `drivers.max_retries`. 【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L58-L104】
+- Circuit breakers automatically pause failing tenants using `drivers.circuit_breaker_failures`, `drivers.circuit_breaker_window`, and `drivers.circuit_breaker_recovery`; override them per tenant when linking to fragile providers. 【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L58-L104】
+
 ### Environment toggles
 - `SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1` – force the legacy Python normalisers. 【F:src/sr_adapter/runtime.py†L213-L244】
 - `SR_ADAPTER_TEXT_KERNEL_BATCH_BYTES=<bytes>` – cap payload size per native call. 【F:src/sr_adapter/normalize.py†L103-L140】
 - `SR_ADAPTER_MAX_SIZE_MB=<float>` – guardrails for the classic adapter CLI. 【F:src/sr_adapter/adapter.py†L12-L70】
+
+## Recipe authoring guide
+- Start by enumerating structural hints (`patterns`) that map regexes to block types and confidence scores; fall back to a safe default for everything else. 【F:src/sr_adapter/recipes/call_log.yaml†L1-L18】
+- Enable LLM escalation per recipe with `llm.enable` and provide prompt context/thresholds to nudge the driver toward the desired taxonomy. 【F:src/sr_adapter/recipes/call_log.yaml†L18-L21】
+- Document recipes alongside tenant configs so operators understand which driver features (streaming, retries, circuit breakers) the pipeline will exercise. 【F:configs/tenants/default.yaml†L1-L10】【F:src/sr_adapter/drivers/base.py†L17-L97】
+
+## Troubleshooting
+- Native build failing? Set `SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1` to fall back to Python while you inspect compiler logs, then re-enable once dependencies are installed. 【F:src/sr_adapter/runtime.py†L205-L244】
+- Validate kernel availability with `python -m sr_adapter.cli kernels status --json` and inspect `telemetry` snapshots for failure counters before escalating. 【F:src/sr_adapter/cli.py†L280-L360】【F:src/sr_adapter/telemetry.py†L1-L236】
+- When drivers flap, adjust the circuit-breaker window or retry backoff in `configs/settings.yaml` or the tenant override; the new metrics will show success/failure deltas immediately. 【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L58-L104】【F:src/sr_adapter/telemetry.py†L1-L236】
+
+## Operations guide
+- Expose Prometheus metrics (`python -m sr_adapter.cli kernels export --format prometheus`) and scrape both kernel + LLM series for SLA dashboards. 【F:src/sr_adapter/cli.py†L280-L360】【F:src/sr_adapter/telemetry.py†L57-L175】
+- Attach environment-specific labels (e.g. `service`, `tenant`) through `telemetry.labels` so PromQL slices align with deployments. 【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L43-L56】【F:src/sr_adapter/telemetry.py†L57-L175】
+- Enable the Sentry exporter to capture structured runtime snapshots, including aggregated LLM metrics, for post-incident analysis. 【F:src/sr_adapter/telemetry.py†L177-L220】
 
 ## CLI quickstart
 All orchestration commands live under `python -m sr_adapter.cli`.
@@ -176,6 +195,10 @@ for document in documents:
     print(document.to_dict())
 ```
 `batch_convert` applies detection, parsing, native normalisation, recipes, and escalation before returning structured documents. 【F:src/sr_adapter/pipeline.py†L155-L320】
+
+### Async & streaming drivers
+- Directly call `driver.async_generate(...)` or `driver.async_stream_generate(...)` when integrating with asyncio services; synchronous code can opt into `.stream_generate(...)` for incremental chunks. 【F:src/sr_adapter/drivers/base.py†L17-L97】
+- Provider implementations honour the same resilience, telemetry, and streaming interfaces so you can swap tenants without rewriting orchestration glue. 【F:src/sr_adapter/drivers/openai_driver.py†L106-L313】【F:src/sr_adapter/drivers/anthropic_driver.py†L60-L310】【F:src/sr_adapter/drivers/azure_driver.py†L90-L354】【F:src/sr_adapter/drivers/vllm_driver.py†L60-L308】
 
 ## Sample data
 The `data/escalation_samples.jsonl` file provides quick prompts for replay testing. 【F:data/escalation_samples.jsonl†L1-L15】
