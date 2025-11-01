@@ -10,23 +10,75 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant YAML keeps LLM credentials out of code. Toggle behaviour via environment variables for rapid PoCs. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/tenants/azure-example.yaml†L1-L11】
 
 ## Architecture at a glance
-```mermaid
-flowchart TD
-    Sources[Input sources<br/>(files, streams)] --> Detect[Type + MIME detection]
-    Detect --> Parsers{Parser registry}
-    Parsers --> Blocks[Parsed Blocks]
-    Blocks --> Runtime[NativeKernelRuntime<br/>text + layout kernels]
-    Runtime --> Recipe[Recipe transforms]
-    Recipe -->|Blocks with confidence| Escalate{Confidence check}
-    Escalate -->|Low| DriverMgr[DriverManager<br/>(Azure, Docker, ...)]
-    DriverMgr --> Drivers[LLM drivers]
-    Drivers --> Normalizer[LLM Normalizer]
-    Normalizer --> Recipe
-    Escalate -->|High| Writer[Writers<br/>(JSONL, API)]
-    Runtime -.-> Visual[VisualLayoutAnalyzer<br/>calibration store]
-    Visual --> Runtime
-    classDef accent fill:#1b998b,stroke:#0f665f,color:#fff;
-    class Runtime,DriverMgr,Visual accent;
+```
+  +---------------------------+
+  |  Input sources            |
+  |  (files, streams)         |
+  +-------------+-------------+
+                |
+                v
+       +--------+---------+
+       | Type + MIME      |
+       | detection        |
+       +--------+---------+
+                |
+                v
+       +--------+---------+
+       | Parser registry  |
+       +--------+---------+
+                |
+                v
+       +--------+---------+
+       | Parsed blocks    |
+       +--------+---------+
+                |
+                v
+       +--------+---------+
+       | NativeKernelRuntime|
+       | (text & layout     |
+       |  kernels)          |
+       +--------+---------+
+                |
+                v
+       +--------+---------+
+       | Recipe transforms |
+       +---+-----------+---+
+           |           |
+           |           v
+           |   +-------+--------+
+           |   | Confidence      |
+           |   | check           |
+           |   +---+--------+----+
+           |       |        |
+           |   High|        |Low
+           |       v        v
+           |   +---+----+  +---------------+
+           |   | Writers |  | DriverManager|
+           |   | (JSONL/ |  | (Azure,      |
+           |   |  API)   |  |  Docker, …)  |
+           |   +---+----+  +-------+-------+
+           |                        |
+           |                        v
+           |               +--------+--------+
+           |               | LLM drivers     |
+           |               +--------+--------+
+           |                        |
+           |                        v
+           |               +--------+--------+
+           |               | LLM normaliser  |
+           |               +--------+--------+
+           |                        |
+           +------------------------+
+                (enriched blocks)
+
+       .-------------------------------------------.
+       |  VisualLayoutAnalyzer (calibration store)  |
+       '-------------------------+-----------------'
+                                 |
+                                 v
+       +-------------------------+-----------------+
+       |     NativeKernelRuntime (shared state)     |
+       +-------------------------------------------+
 ```
 
 ## Key components
