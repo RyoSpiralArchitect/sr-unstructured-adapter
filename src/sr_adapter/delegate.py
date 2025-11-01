@@ -9,6 +9,11 @@ from dataclasses import asdict
 from typing import Iterable, List, Optional, Sequence
 
 from .drivers.manager import DriverManager
+from .escalation import (
+    SelectionResult,
+    get_escalation_logger,
+    get_escalation_policy,
+)
 from .normalizer import LLMNormalizer
 from .schema import Block, clone_model
 from .recipe import load_recipe
@@ -38,18 +43,14 @@ def select_escalation_indices(
     if isinstance(limit, int) and limit <= 0:
         return []
 
-    allowed = {t for t in allow_types or ()}
-    use_filter = bool(allowed)
-    indices: List[int] = []
-    for idx, block in enumerate(blocks):
-        if max_confidence is not None and block.confidence > max_confidence:
-            continue
-        if use_filter and block.type not in allowed:
-            continue
-        indices.append(idx)
-        if isinstance(limit, int) and limit > 0 and len(indices) >= limit:
-            break
-    return indices
+    policy = get_escalation_policy()
+    result = policy.evaluate(
+        blocks,
+        max_confidence=max_confidence,
+        allow_types=allow_types,
+        limit=limit,
+    )
+    return list(result.indices)
 
 
 def escalate_low_conf(
@@ -59,6 +60,7 @@ def escalate_low_conf(
     max_confidence: Optional[float] = None,
     allow_types: Sequence[str] | None = None,
     limit: Optional[int] = None,
+    selection: SelectionResult | None = None,
 ) -> List[Block]:
     """Escalate low-confidence predictions via a configured LLM driver."""
 
@@ -67,12 +69,28 @@ def escalate_low_conf(
         return list(blocks)
 
     original_blocks = list(blocks)
-    indices = select_escalation_indices(
-        original_blocks,
-        max_confidence=max_confidence,
-        allow_types=allow_types,
-        limit=limit,
-    )
+    if selection is not None:
+        indices = list(selection.indices)
+    else:
+        indices = select_escalation_indices(
+            original_blocks,
+            max_confidence=max_confidence,
+            allow_types=allow_types,
+            limit=limit,
+        )
+        selection = get_escalation_policy().last()
+    logger_instance = get_escalation_logger()
+    if selection is not None:
+        logger_instance.log_selection(
+            recipe.name,
+            selection,
+            original_blocks,
+            metadata={
+                "max_confidence": max_confidence,
+                "allow_types": list(allow_types or ()),
+                "limit": limit,
+            },
+        )
     if not indices:
         return original_blocks
 
@@ -108,6 +126,12 @@ def escalate_low_conf(
         raw_response = driver.generate(prompt, metadata=metadata)
     except Exception as exc:  # pragma: no cover - network failure path
         logger.warning("LLM escalation failed for tenant '%s' with driver '%s': %s", tenant, driver.name, exc)
+        if selection is not None:
+            logger_instance.log_failure(
+                recipe.name,
+                reason=str(exc),
+                selection=selection,
+            )
         return original_blocks
 
     normalized = _normalizer.normalize(driver.name, raw_response, prompt=prompt)
@@ -123,5 +147,26 @@ def escalate_low_conf(
         enriched["target_index"] = idx
         escalations.append(enriched)
         attrs["llm_escalations"] = escalations
-        escalated[idx] = clone_model(block, attrs=attrs)
+        candidate = selection.find(idx) if selection else None
+        if candidate is not None:
+            attrs.setdefault("llm_meta", {})
+            meta = dict(attrs.get("llm_meta") or {})
+            meta.update(
+                {
+                    "escalation_score": candidate.score,
+                    "escalation_rank": candidate.rank,
+                }
+            )
+            attrs["llm_meta"] = meta
+        updated_block = clone_model(block, attrs=attrs)
+        escalated[idx] = updated_block
+        if candidate is not None:
+            logger_instance.log_result(
+                recipe.name,
+                updated_block,
+                index=idx,
+                candidate_score=candidate.score,
+                llm_result=normalized,
+                rank=candidate.rank,
+            )
     return escalated
