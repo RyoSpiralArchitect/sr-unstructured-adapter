@@ -100,6 +100,18 @@ class DocumentMeta(BaseModel):
     page_count: Optional[int] = None
     languages: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    metrics_parse_ms: Optional[float] = None
+    metrics_normalize_ms: Optional[float] = None
+    metrics_recipe_ms: Optional[float] = None
+    metrics_total_ms: Optional[float] = None
+    llm_escalations: int = 0
+    truncated_blocks: int = 0
+    block_count: int = 0
+    env_no_llm: bool = False
+    processing_profile: Optional[str] = None
+    llm_policy: Dict[str, Any] = Field(default_factory=dict)
+    runtime_text_enabled: Optional[bool] = None
+    runtime_layout_enabled: Optional[bool] = None
 
     def __getitem__(self, key: str) -> Any:
         data = self.model_dump()

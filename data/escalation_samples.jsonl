@@ -1,0 +1,15 @@
+{"id": 1, "text": "Invoice #12345 issued on 2024-03-22 for $1,250."}
+{"id": 2, "text": "Sensor reading: chamber pressure 3.2kPa (warning threshold exceeded)."}
+{"id": 3, "text": "Call transcript snippet: 'Shipment ETA confirmed for Friday.'"}
+{"id": 4, "text": "Log entry: user=svc_batch action=upload status=FAILED."}
+{"id": 5, "text": "Paragraph: Please double-check the compliance clause references."}
+{"id": 6, "text": "Metadata note: Document source is SharePoint/Operations/Q1."}
+{"id": 7, "text": "Observation: Packaging defect observed on batch 20017."}
+{"id": 8, "text": "Footnote: Calculations assume a 2% month-on-month growth."}
+{"id": 9, "text": "Question: Should we rerun the OCR with the updated template?"}
+{"id": 10, "text": "Reminder: escalate invoices above $50k to finance immediately."}
+{"id": 11, "text": "Checkpoint: Confirm that the docker LLM container is reachable."}
+{"id": 12, "text": "Alert: Azure deployment rotated API key on 2024-05-18."}
+{"id": 13, "text": "Summary: Analyst flagged discrepancies in shipment manifests."}
+{"id": 14, "text": "Note: Use recipe 'call_log' for telephony transcripts."}
+{"id": 15, "text": "Instruction: escalate_low_conf should enrich attrs with LLM output."}
