@@ -14,3 +14,23 @@ distributed:
   max_workers: 4
   dask_scheduler: "threads"
   ray_address: ""
+escalation:
+  logging_enabled: true
+  log_path: ""
+  model_path: ""
+  min_score: 0.5
+  model_format: "json"
+  feature_version: "v1"
+profile_automation:
+  enabled: true
+  epsilon: 0.15
+  state_path: ""
+  candidate_profiles:
+    - balanced
+    - realtime
+    - archival
+  large_document_bytes: 5000000
+  tight_deadline_ms: 1200
+  high_kernel_latency_ms: 180.0
+  max_llm_failure_rate: 0.35
+  latency_target_ms: 3600.0

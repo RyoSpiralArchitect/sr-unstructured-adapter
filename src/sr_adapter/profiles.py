@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 import yaml
 
@@ -266,10 +266,36 @@ def load_processing_profile(name: Optional[str] = None) -> ProcessingProfile:
     return get_profile_store().load(name)
 
 
-def resolve_profile(profile: Optional[str | ProcessingProfile]) -> ProcessingProfile:
+def _maybe_auto_selector():
+    try:
+        from .profile_auto import get_auto_selector
+    except Exception:  # pragma: no cover - defensive guard
+        return None
+    try:
+        return get_auto_selector()
+    except Exception:  # pragma: no cover - selector construction failure
+        return None
+
+
+def resolve_profile(
+    profile: Optional[str | ProcessingProfile],
+    *,
+    context: Optional[Mapping[str, object]] = None,
+) -> ProcessingProfile:
     if isinstance(profile, ProcessingProfile):
         return profile
-    return load_processing_profile(profile)
+
+    if isinstance(profile, str):
+        candidate = profile.strip()
+        if candidate and candidate.lower() != "auto":
+            return load_processing_profile(candidate)
+    selector = _maybe_auto_selector()
+    if selector and selector.enabled:
+        return selector.select(context=context)
+
+    if isinstance(profile, str) and profile.strip():
+        return load_processing_profile(profile.strip())
+    return load_processing_profile()
 
 
 __all__ = [
