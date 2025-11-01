@@ -12,18 +12,18 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 ## Architecture at a glance
 ```mermaid
 flowchart TD
-    Sources[Input sources\n(files, streams)] --> Detect[Type + MIME detection]
+    Sources[Input sources<br/>(files, streams)] --> Detect[Type + MIME detection]
     Detect --> Parsers{Parser registry}
     Parsers --> Blocks[Parsed Blocks]
-    Blocks --> Runtime[NativeKernelRuntime\ntext + layout kernels]
+    Blocks --> Runtime[NativeKernelRuntime<br/>text + layout kernels]
     Runtime --> Recipe[Recipe transforms]
     Recipe -->|Blocks with confidence| Escalate{Confidence check}
-    Escalate -->|Low| DriverMgr[DriverManager\n(Azure, Docker, ...)]
+    Escalate -->|Low| DriverMgr[DriverManager<br/>(Azure, Docker, ...)]
     DriverMgr --> Drivers[LLM drivers]
     Drivers --> Normalizer[LLM Normalizer]
     Normalizer --> Recipe
-    Escalate -->|High| Writer[Writers\n(JSONL, API)]
-    Runtime -.-> Visual[VisualLayoutAnalyzer\ncalibration store]
+    Escalate -->|High| Writer[Writers<br/>(JSONL, API)]
+    Runtime -.-> Visual[VisualLayoutAnalyzer<br/>calibration store]
     Visual --> Runtime
     classDef accent fill:#1b998b,stroke:#0f665f,color:#fff;
     class Runtime,DriverMgr,Visual accent;
