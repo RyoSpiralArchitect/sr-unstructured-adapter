@@ -8,7 +8,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
 from .delegate import escalate_low_conf
 from .distributed import run_asyncio, run_dask, run_ray, run_threadpool
@@ -481,8 +481,8 @@ def _profile_context(
     deadline_ms: Optional[int],
     max_blocks: Optional[int],
     mime: Optional[str],
-) -> Dict[str, object]:
-    context: Dict[str, object] = {}
+) -> Dict[str, Any]:
+    context: Dict[str, Any] = {}
     try:
         resolved = Path(path)
         if resolved.exists():

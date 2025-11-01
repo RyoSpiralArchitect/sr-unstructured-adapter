@@ -7,7 +7,7 @@ import hashlib
 import math
 import random
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Iterable, List, Optional, Sequence, Tuple
 
 try:  # pragma: no cover - optional dependency
     import numpy as _np
@@ -112,7 +112,7 @@ class BlockEmbedder:
 class EmbeddingHit:
     score: float
     index: int
-    metadata: dict[str, object]
+    metadata: dict[str, Any]
 
 
 class EmbeddingIndex:
@@ -121,12 +121,12 @@ class EmbeddingIndex:
     def __init__(self, dimension: int) -> None:
         self.dimension = int(dimension)
         self._vectors: List[List[float]] = []
-        self._metadata: List[dict[str, object]] = []
+        self._metadata: List[dict[str, Any]] = []
         self._faiss_index = None
         if faiss is not None and _np is not None:  # pragma: no cover - optional path
             self._faiss_index = faiss.IndexFlatIP(self.dimension)
 
-    def add(self, vector: Sequence[float], metadata: Optional[dict[str, object]] = None) -> None:
+    def add(self, vector: Sequence[float], metadata: Optional[dict[str, Any]] = None) -> None:
         dense = list(vector)
         if len(dense) != self.dimension:
             raise ValueError(f"Expected vector of length {self.dimension}")
@@ -138,7 +138,7 @@ class EmbeddingIndex:
             array = _np.array([dense], dtype="float32")
             self._faiss_index.add(array)
 
-    def extend(self, vectors: Iterable[Sequence[float]], metadata: Iterable[dict[str, object]]) -> None:
+    def extend(self, vectors: Iterable[Sequence[float]], metadata: Iterable[dict[str, Any]]) -> None:
         for vector, meta in zip(vectors, metadata):
             self.add(vector, meta)
 

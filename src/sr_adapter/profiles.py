@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import yaml
 
@@ -20,10 +20,10 @@ class LLMPolicy:
     limit_block_types: Tuple[str, ...] = ()
     max_blocks: Optional[int] = None
     deadline_ms: Optional[int] = None
-    metadata: Dict[str, object] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: Optional[Dict[str, object]]) -> "LLMPolicy":
+    def from_dict(cls, data: Optional[Dict[str, Any]]) -> "LLMPolicy":
         if not data:
             return cls()
         enabled = bool(data.get("enabled", True))
@@ -42,10 +42,7 @@ class LLMPolicy:
             deadline = int(deadline)
             if deadline <= 0:
                 deadline = None
-        metadata = {
-            key: value
-            for key, value in (data.get("metadata") or {}).items()
-        }
+        metadata = {key: value for key, value in (data.get("metadata") or {}).items()}
         return cls(
             enabled=enabled,
             max_confidence=max_confidence,
@@ -55,7 +52,7 @@ class LLMPolicy:
             metadata=metadata,
         )
 
-    def to_meta(self) -> Dict[str, object]:
+    def to_meta(self) -> Dict[str, Any]:
         return {
             "enabled": self.enabled,
             "max_confidence": self.max_confidence,
@@ -78,11 +75,11 @@ class ProcessingProfile:
     warm_runtime: bool = False
     default_deadline_ms: Optional[int] = None
     max_blocks: Optional[int] = None
-    metadata: Dict[str, object] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     llm_policy: LLMPolicy = field(default_factory=LLMPolicy)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, object], *, name: Optional[str] = None) -> "ProcessingProfile":
+    def from_dict(cls, data: Dict[str, Any], *, name: Optional[str] = None) -> "ProcessingProfile":
         profile_name = name or str(data.get("name") or "profile")
         layout_profile = str(data.get("layout_profile") or "default")
         layout_batch_size = int(data.get("layout_batch_size") or 32)
@@ -99,10 +96,7 @@ class ProcessingProfile:
             max_blocks = int(max_blocks)
             if max_blocks <= 0:
                 max_blocks = None
-        metadata = {
-            key: value
-            for key, value in (data.get("metadata") or {}).items()
-        }
+        metadata = {key: value for key, value in (data.get("metadata") or {}).items()}
         llm_policy = LLMPolicy.from_dict(data.get("llm"))
         return cls(
             name=profile_name,
@@ -117,7 +111,7 @@ class ProcessingProfile:
             llm_policy=llm_policy,
         )
 
-    def to_meta(self) -> Dict[str, object]:
+    def to_meta(self) -> Dict[str, Any]:
         return {
             "name": self.name,
             "layout_profile": self.layout_profile,
@@ -133,7 +127,7 @@ class ProcessingProfile:
 
 
 _DEFAULT_PROFILE_NAME = "balanced"
-_DEFAULT_PROFILES: Dict[str, Dict[str, object]] = {
+_DEFAULT_PROFILES: Dict[str, Dict[str, Any]] = {
     "balanced": {
         "layout_profile": "balanced",
         "layout_batch_size": 48,
@@ -201,7 +195,7 @@ class ProfileStore:
         self,
         *,
         search_paths: Optional[Sequence[Path]] = None,
-        builtins: Optional[Dict[str, Dict[str, object]]] = None,
+        builtins: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> None:
         base_dir = Path(__file__).resolve().parents[2]
         repo_profiles = base_dir / "configs" / "profiles"
@@ -280,7 +274,7 @@ def _maybe_auto_selector():
 def resolve_profile(
     profile: Optional[str | ProcessingProfile],
     *,
-    context: Optional[Mapping[str, object]] = None,
+        context: Optional[Mapping[str, Any]] = None,
 ) -> ProcessingProfile:
     if isinstance(profile, ProcessingProfile):
         return profile

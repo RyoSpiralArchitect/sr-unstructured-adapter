@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import time
 from threading import Lock
-from typing import Iterable, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional
 
 from ..schema import Block
 from ..settings import EscalationSettings, get_settings
@@ -34,7 +34,7 @@ class EscalationLogger:
     def enabled(self) -> bool:
         return self._enabled
 
-    def _write(self, payload: Mapping[str, object]) -> None:
+    def _write(self, payload: Mapping[str, Any]) -> None:
         if not self._enabled:
             return
         record = dict(payload)
@@ -50,7 +50,7 @@ class EscalationLogger:
         selection: "SelectionResult" | None,
         blocks: Iterable[Block],
         *,
-        metadata: Optional[Mapping[str, object]] = None,
+        metadata: Optional[Mapping[str, Any]] = None,
     ) -> None:
         if not self._enabled or selection is None:
             return
