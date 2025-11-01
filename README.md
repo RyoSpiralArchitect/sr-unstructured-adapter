@@ -7,8 +7,8 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes without loading whole archives into memory. 
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up. 
 - **LLM escalation built-in** – Drivers share circuit breakers, exponential backoff with jitter, streaming + async APIs, and telemetry hooks while routing low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints before normalising responses. 
-- **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L1-L119】
-- **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L236】【F:src/sr_adapter/llm_metrics.py†L1-L129】
+- **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 
+- **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI.
 - **Recipe autopilot** – Feed the CLI a few labelled examples and it proposes regex-based recipes, scores them against negative samples, and emits YAML ready for `configs/recipes/`. 
 - **Hybrid embeddings** – A lightweight `BlockEmbedder` mixes text, layout, and metadata into deterministic vectors plus a pluggable search index for semantic clustering or FAISS-backed recall. 【F:src/sr_adapter/embedding.py†L1-L170】
 - **Adaptive kernels** – The autotuner benchmarks batch sizes for the native runtime and records the best settings for future runs straight from `kernels autotune`.
