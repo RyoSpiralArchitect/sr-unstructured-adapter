@@ -217,8 +217,18 @@ class KernelAutoTuner:
         warmup = 1
         measurements = 2
         if self.settings is not None:
-            layout_candidates = tuple(int(v) for v in getattr(self.settings, "layout_batch_sizes", layout_candidates)) or layout_candidates
-            text_candidates = tuple(int(v) for v in getattr(self.settings, "text_batch_bytes", text_candidates)) or text_candidates
+            configured_layout = tuple(
+                int(value)
+                for value in getattr(self.settings, "layout_batch_sizes", layout_candidates)
+            )
+            if configured_layout:
+                layout_candidates = configured_layout
+            configured_text = tuple(
+                int(value)
+                for value in getattr(self.settings, "text_batch_bytes", text_candidates)
+            )
+            if configured_text:
+                text_candidates = configured_text
             warmup = max(0, int(getattr(self.settings, "warmup_trials", warmup)))
             measurements = max(1, int(getattr(self.settings, "measure_trials", measurements)))
 
