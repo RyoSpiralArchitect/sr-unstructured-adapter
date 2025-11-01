@@ -61,6 +61,12 @@ class DriverSettings(BaseModel):
     default_timeout: float = 30.0
     user_agent: Optional[str] = None
     max_retries: int = 1
+    retry_backoff_base: float = 0.5
+    retry_backoff_max: float = 8.0
+    retry_jitter: float = 0.5
+    circuit_breaker_failures: int = 3
+    circuit_breaker_recovery: float = 30.0
+    circuit_breaker_window: float = 10.0
 
     @field_validator("default_timeout")
     @classmethod
@@ -75,6 +81,27 @@ class DriverSettings(BaseModel):
         if value < 0:
             raise ValueError("max_retries must be >= 0")
         return int(value)
+
+    @field_validator("retry_backoff_base", "retry_backoff_max", "retry_jitter")
+    @classmethod
+    def _non_negative_float(cls, value: float) -> float:  # noqa: D401
+        if value < 0:
+            raise ValueError("Retry backoff settings must be >= 0")
+        return float(value)
+
+    @field_validator("circuit_breaker_failures")
+    @classmethod
+    def _positive_failures(cls, value: int) -> int:  # noqa: D401
+        if value <= 0:
+            raise ValueError("circuit_breaker_failures must be > 0")
+        return int(value)
+
+    @field_validator("circuit_breaker_recovery", "circuit_breaker_window")
+    @classmethod
+    def _positive_window(cls, value: float) -> float:  # noqa: D401
+        if value <= 0:
+            raise ValueError("Circuit breaker timing must be > 0")
+        return float(value)
 
 
 class DistributedSettings(BaseModel):

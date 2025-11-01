@@ -11,6 +11,7 @@ try:  # pragma: no cover - optional dependency
 except ImportError:  # pragma: no cover - handled gracefully in exporter
     sentry_sdk = None  # type: ignore[assignment]
 
+from .llm_metrics import LLMMetricsRegistry, get_llm_registry
 from .runtime import NativeKernelRuntime, RuntimeSnapshot, get_native_runtime
 from .settings import TelemetrySettings, get_settings
 
@@ -31,17 +32,24 @@ class TelemetryExporter:
         *,
         settings: Optional[TelemetrySettings] = None,
         runtime: Optional[NativeKernelRuntime] = None,
+        llm_registry: Optional[LLMMetricsRegistry] = None,
     ) -> None:
         self.settings = settings or get_settings().telemetry
         self._runtime = runtime
+        self._llm_registry = llm_registry or get_llm_registry()
         self._sentry_inited = False
 
     # ----------------------------------------------------------------- snapshots
     def snapshot(self) -> RuntimeSnapshot:
         return _snapshot(self._runtime)
 
+    def llm_snapshot(self) -> Dict[str, object]:
+        return self._llm_registry.snapshot().to_dict()
+
     def snapshot_dict(self) -> Dict[str, object]:
-        return self.snapshot().to_dict()
+        payload = self.snapshot().to_dict()
+        payload["llm"] = self.llm_snapshot()
+        return payload
 
     def snapshot_json(self) -> str:
         return json.dumps(self.snapshot_dict(), ensure_ascii=False, indent=2)
@@ -120,6 +128,49 @@ class TelemetryExporter:
             labels["kernel"] = name
             lines.append(
                 f"sr_adapter_kernel_units_total{_format_labels(labels)} {stats.total_units}"
+            )
+        llm_snapshot = self._llm_registry.snapshot()
+        lines.append("# HELP sr_adapter_llm_calls_total Total LLM invocations grouped by status.")
+        lines.append("# TYPE sr_adapter_llm_calls_total counter")
+        for stats in llm_snapshot.stats:
+            labels = dict(base_labels)
+            labels["driver"] = stats.driver
+            success = dict(labels)
+            success["status"] = "success"
+            failure = dict(labels)
+            failure["status"] = "failure"
+            lines.append(
+                f"sr_adapter_llm_calls_total{_format_labels(success)} {stats.successes}"
+            )
+            lines.append(
+                f"sr_adapter_llm_calls_total{_format_labels(failure)} {stats.failures}"
+            )
+        lines.append("# HELP sr_adapter_llm_latency_ms_total Cumulative latency spent waiting for LLMs.")
+        lines.append("# TYPE sr_adapter_llm_latency_ms_total counter")
+        for stats in llm_snapshot.stats:
+            labels = dict(base_labels)
+            labels["driver"] = stats.driver
+            lines.append(
+                "sr_adapter_llm_latency_ms_total"
+                f"{_format_labels(labels)} {round(stats.total_latency_ms, 4)}"
+            )
+        lines.append("# HELP sr_adapter_llm_request_bytes_total Total request payload bytes sent to LLMs.")
+        lines.append("# TYPE sr_adapter_llm_request_bytes_total counter")
+        for stats in llm_snapshot.stats:
+            labels = dict(base_labels)
+            labels["driver"] = stats.driver
+            lines.append(
+                "sr_adapter_llm_request_bytes_total"
+                f"{_format_labels(labels)} {stats.total_request_bytes}"
+            )
+        lines.append("# HELP sr_adapter_llm_response_bytes_total Total response payload bytes received from LLMs.")
+        lines.append("# TYPE sr_adapter_llm_response_bytes_total counter")
+        for stats in llm_snapshot.stats:
+            labels = dict(base_labels)
+            labels["driver"] = stats.driver
+            lines.append(
+                "sr_adapter_llm_response_bytes_total"
+                f"{_format_labels(labels)} {stats.total_response_bytes}"
             )
         return "\n".join(lines) + "\n"
 
