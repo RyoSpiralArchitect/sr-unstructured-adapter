@@ -188,3 +188,6 @@ pytest -q
 ```
 
 The suite covers driver management, pipeline behaviours, native kernel orchestration, and CLI workflows. 【F:tests/test_cli_llm.py†L1-L395】【F:tests/test_runtime.py†L1-L44】
+
+### Continuous integration
+GitHub Actions exercises linting, multi-Python fallback tests, native kernel builds on Linux, macOS, and Windows, performance gates for both code paths, and finally builds wheels once every stage passes. 【F:.github/workflows/ci.yml†L1-L253】
