@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from .base import DriverError, LLMDriver
+from .base import DriverError, LLMDriver, register_driver
 
 try:  # pragma: no cover - exercised indirectly when dependency is present
     import httpx
@@ -46,3 +46,13 @@ class DockerDriver(LLMDriver):
                 return response.json()
         except httpx.HTTPError as exc:  # pragma: no cover - network failure path
             raise DriverError(f"Docker driver request failed: {exc}") from exc
+
+
+register_driver(
+    "docker",
+    "http",
+    "openai",
+    factory=DockerDriver,
+    metadata={"provider": "generic", "transport": "http"},
+    overwrite=True,
+)

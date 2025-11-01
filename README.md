@@ -98,7 +98,7 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 
 ### LLM escalation
 - `delegate.escalate_low_conf` loads the configured recipe, resolves the tenant, and invokes the appropriate driver through the shared manager cache. 【F:src/sr_adapter/delegate.py†L1-L120】
-- Drivers live in `src/sr_adapter/drivers/` and can be extended; the defaults include Azure REST and generic Docker JSON chat endpoints. 【F:src/sr_adapter/drivers/manager.py†L1-L160】
+- Drivers live in `src/sr_adapter/drivers/` and register themselves with a lightweight factory registry, so adding Anthropic, Google, GitHub, or ChatGPT backends is as simple as importing a module and calling `register_driver(...)`. 【F:src/sr_adapter/drivers/base.py†L1-L170】【F:src/sr_adapter/drivers/azure_driver.py†L1-L200】【F:src/sr_adapter/drivers/docker_driver.py†L1-L200】
 - Responses are normalised into a stable schema before the pipeline writes them back into documents or CLI output. 【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
 
 ## Installation

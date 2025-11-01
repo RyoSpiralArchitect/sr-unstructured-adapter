@@ -10,9 +10,14 @@ from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional
 
 import yaml
 
-from .azure_driver import AzureDriver
-from .base import DriverError, LLMDriver
-from .docker_driver import DockerDriver
+from .azure_driver import AzureDriver  # noqa: F401  # ensure registration side effects
+from .base import (
+    DriverError,
+    LLMDriver,
+    available_drivers,
+    create_registered_driver,
+)
+from .docker_driver import DockerDriver  # noqa: F401  # ensure registration side effects
 
 
 @dataclass
@@ -91,7 +96,7 @@ class DriverManager:
             settings.update(recipe_settings)  # recipe level overrides
         cache_key = self._cache_key(driver_name, settings)
         if cache_key not in self._driver_cache:
-            self._driver_cache[cache_key] = self._create_driver(driver_name, settings)
+            self._driver_cache[cache_key] = create_registered_driver(driver_name, settings)
         return self._driver_cache[cache_key]
 
     @staticmethod
@@ -99,9 +104,7 @@ class DriverManager:
         return json.dumps({"driver": driver_name, "settings": settings}, sort_keys=True, default=str)
 
     @staticmethod
-    def _create_driver(driver_name: str, settings: Mapping[str, Any]) -> LLMDriver:
-        if driver_name in {"azure", "azure_openai"}:
-            return AzureDriver(driver_name, settings)
-        if driver_name in {"docker", "http"}:
-            return DockerDriver(driver_name, settings)
-        raise DriverError(f"Unknown driver '{driver_name}'")
+    def registered_driver_names() -> tuple[str, ...]:
+        """Expose registered drivers for CLI/introspection helpers."""
+
+        return available_drivers()
