@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any, Dict, Mapping, MutableMapping, Protocol, TypeVar
@@ -83,18 +84,39 @@ class LLMDriver(ABC):
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> AsyncIterator[Mapping[str, Any]]:
-        """Async wrapper over :meth:`stream_generate`."""
+        """Async wrapper over :meth:`stream_generate` preserving incremental updates."""
 
-        def _sync_iter() -> Iterator[Mapping[str, Any]]:
-            return self.stream_generate(prompt, metadata=metadata)
+        loop = asyncio.get_running_loop()
+        queue: asyncio.Queue[object] = asyncio.Queue()
+        sentinel = object()
 
-        iterator = await asyncio.to_thread(lambda: list(_sync_iter()))
+        def _run_stream() -> None:
+            try:
+                for chunk in self.stream_generate(prompt, metadata=metadata):
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except BaseException as exc:  # pragma: no cover - defensive propagation
+                loop.call_soon_threadsafe(queue.put_nowait, exc)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, sentinel)
 
-        async def _aiter(payload: list[Mapping[str, Any]]) -> AsyncIterator[Mapping[str, Any]]:
-            for item in payload:
-                yield item
+        producer_task = asyncio.create_task(asyncio.to_thread(_run_stream))
 
-        return _aiter(iterator)
+        async def _aiter() -> AsyncIterator[Mapping[str, Any]]:
+            try:
+                while True:
+                    item = await queue.get()
+                    if item is sentinel:
+                        break
+                    if isinstance(item, BaseException):
+                        raise item
+                    yield item  # type: ignore[misc]
+            finally:
+                if not producer_task.done():
+                    producer_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await producer_task
+
+        return _aiter()
 
 
 class DriverFactory(Protocol):

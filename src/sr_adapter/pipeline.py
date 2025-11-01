@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import time
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple
@@ -35,8 +36,9 @@ from .parsers import (
     stream_image,
     stream_pdf,
 )
+from .language import detect_language_guesses, merge_language_hints
 from .recipe import apply_recipe, apply_recipe_block, load_recipe
-from .schema import Block, Document
+from .schema import Block, Document, clone_model
 from .sniff import detect_type
 
 
@@ -278,6 +280,8 @@ class PipelineOrchestrator:
             truncated = len(blocks) - effective_max
             blocks = blocks[:effective_max]
 
+        blocks, detected_languages = _annotate_languages(blocks)
+
         meta = {
             "source": str(source),
             "type": detected,
@@ -295,6 +299,10 @@ class PipelineOrchestrator:
             "runtime_text_enabled": bool(self.runtime and self.runtime.text_enabled),
             "runtime_layout_enabled": bool(self.runtime and self.runtime.layout_enabled),
         }
+
+        meta["languages"] = detected_languages
+        if detected_languages:
+            meta["primary_language"] = detected_languages[0]
 
         document = Document(
             blocks=list(blocks),

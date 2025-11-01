@@ -3,15 +3,25 @@
 
 from __future__ import annotations
 
+import importlib.util
+import unicodedata
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Iterable, List, Sequence
 
-from langdetect import DetectorFactory, LangDetectException, detect_langs
 
+_LANGDETECT_AVAILABLE = importlib.util.find_spec("langdetect") is not None
 
-# Stabilise detection output for reproducibility across runs.
-DetectorFactory.seed = 0
+if _LANGDETECT_AVAILABLE:  # pragma: no cover - exercised in environments with langdetect
+    from langdetect import DetectorFactory, LangDetectException, detect_langs
+
+    # Stabilise detection output for reproducibility across runs.
+    DetectorFactory.seed = 0
+else:  # pragma: no cover - fallback path is tested separately
+    class LangDetectException(Exception):
+        """Raised when language detection is unavailable."""
+
+    detect_langs = None  # type: ignore[assignment]
 
 
 @dataclass(frozen=True)
@@ -35,18 +45,66 @@ def _normalise_text(sample: str) -> str:
     return text
 
 
+def _fallback_detect(text: str) -> Sequence[LanguageGuess]:
+    """Heuristic language guesses when langdetect is unavailable."""
+
+    ascii_letters = 0
+    cjk_letters = 0
+    other_letters = 0
+    for char in text:
+        if char.isalpha():
+            if char.isascii():
+                ascii_letters += 1
+                continue
+            block = unicodedata.name(char, "")
+            if "CJK" in block or "HIRAGANA" in block or "KATAKANA" in block:
+                cjk_letters += 1
+            else:
+                other_letters += 1
+    total = ascii_letters + cjk_letters + other_letters
+    if total == 0:
+        return ()
+
+    guesses: List[LanguageGuess] = []
+    if cjk_letters:
+        guesses.append(
+            LanguageGuess(
+                lang="ja",
+                prob=cjk_letters / total,
+            )
+        )
+    if ascii_letters:
+        guesses.append(
+            LanguageGuess(
+                lang="en",
+                prob=ascii_letters / total,
+            )
+        )
+    if other_letters:
+        guesses.append(
+            LanguageGuess(
+                lang="other",
+                prob=other_letters / total,
+            )
+        )
+    guesses.sort(key=lambda guess: guess.prob, reverse=True)
+    return tuple(guesses)
+
+
 @lru_cache(maxsize=1024)
 def _detect_language_inner(text: str) -> Sequence[LanguageGuess]:
     if len(text) < _MIN_SAMPLE_CHARS:
         return ()
-    try:
-        candidates = detect_langs(text)
-    except LangDetectException:
-        return ()
-    guesses: List[LanguageGuess] = []
-    for candidate in candidates:
-        guesses.append(LanguageGuess(lang=candidate.lang, prob=float(candidate.prob)))
-    return tuple(guesses)
+    if _LANGDETECT_AVAILABLE and detect_langs is not None:
+        try:
+            candidates = detect_langs(text)
+        except LangDetectException:
+            return ()
+        guesses: List[LanguageGuess] = []
+        for candidate in candidates:
+            guesses.append(LanguageGuess(lang=candidate.lang, prob=float(candidate.prob)))
+        return tuple(guesses)
+    return _fallback_detect(text)
 
 
 def detect_language_guesses(

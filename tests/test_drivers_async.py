@@ -1,11 +1,22 @@
 import asyncio
 
+import pytest
+
 from sr_adapter.drivers.base import LLMDriver
 
 
 class _StubDriver(LLMDriver):
     def generate(self, prompt: str, *, metadata=None):  # type: ignore[override]
         return {"prompt": prompt, "metadata": metadata}
+
+
+class _StreamingDriver(LLMDriver):
+    def generate(self, prompt: str, *, metadata=None):  # type: ignore[override]
+        raise NotImplementedError
+
+    def stream_generate(self, prompt: str, *, metadata=None):  # type: ignore[override]
+        yield {"step": 1, "prompt": prompt}
+        raise RuntimeError("stream exploded")
 
 
 def test_async_generate_falls_back_to_thread() -> None:
@@ -35,3 +46,19 @@ def test_async_stream_generate_wraps_sync_stream() -> None:
 
     assert len(chunks) == 1
     assert chunks[0]["prompt"] == "hello"
+
+
+def test_async_stream_generate_propagates_chunks_and_errors() -> None:
+    driver = _StreamingDriver("stream", {})
+
+    async def _collect() -> list[dict[str, object]]:
+        stream = await driver.async_stream_generate("hello")
+        seen: list[dict[str, object]] = []
+        with pytest.raises(RuntimeError):
+            async for chunk in stream:
+                seen.append(chunk)
+        return seen
+
+    chunks = asyncio.run(_collect())
+
+    assert chunks == [{"step": 1, "prompt": "hello"}]
