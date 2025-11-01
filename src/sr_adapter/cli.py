@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -15,6 +16,8 @@ from .drivers import DriverManager
 from .normalizer import LLMNormalizer
 from .recipe import load_recipe
 from .runtime import RuntimeSnapshot, get_native_runtime, runtime_status_json
+
+_BATCH_CONVERT_PARAMS = set(inspect.signature(batch_convert).parameters)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -29,6 +32,91 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--no-llm",
         action="store_true",
         help="Disable low confidence LLM escalation",
+    )
+    convert_parser.add_argument(
+        "--profile",
+        default="balanced",
+        help="Processing profile to orchestrate runtime + LLM policies",
+    )
+
+    llm_parser = subparsers.add_parser("llm", help="LLM driver utilities")
+    llm_subparsers = llm_parser.add_subparsers(dest="llm_command", required=True)
+
+    list_parser = llm_subparsers.add_parser("list-tenants", help="List configured tenants")
+    list_parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Return success without printing when no tenants are configured",
+    )
+
+    run_parser = llm_subparsers.add_parser("run", help="Run a prompt against a tenant driver")
+    run_parser.add_argument("--recipe", default="default", help="Recipe providing the LLM config")
+    run_parser.add_argument(
+        "--tenant",
+        help="Tenant to use (defaults to recipe tenant or SR_ADAPTER_TENANT)",
+    )
+    run_parser.add_argument("--prompt", help="Prompt text (overrides stdin)")
+    run_parser.add_argument(
+        "--prompt-file",
+        type=Path,
+        help="Read prompt text from the given file (overrides stdin)",
+    )
+    run_parser.add_argument(
+        "--metadata",
+        help="Optional JSON object passed through to the driver as metadata",
+    )
+    run_parser.add_argument(
+        "--metadata-file",
+        type=Path,
+        help="Read JSON metadata from a file (mutually exclusive with --metadata)",
+    )
+
+    replay_parser = llm_subparsers.add_parser(
+        "replay",
+        help="Replay prompts from a JSONL dataset against a tenant driver",
+    )
+    replay_parser.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+        help="Path to a JSONL file containing prompts (fields: text/prompt, metadata)",
+    )
+    replay_parser.add_argument(
+        "--output",
+        type=Path,
+        help="Optional JSONL destination for normalized responses",
+    )
+    replay_parser.add_argument("--recipe", default="default", help="Recipe providing the LLM config")
+    replay_parser.add_argument(
+        "--tenant",
+        help="Tenant to use (defaults to recipe tenant or SR_ADAPTER_TENANT)",
+    )
+    replay_parser.add_argument(
+        "--limit",
+        type=int,
+        help="Process at most this many successful prompts from the dataset",
+    )
+    replay_parser.add_argument(
+        "--skip-errors",
+        action="store_true",
+        help="Continue replay when a record is invalid or the driver call fails",
+    )
+
+    kernel_parser = subparsers.add_parser("kernels", help="Native kernel utilities")
+    kernel_subparsers = kernel_parser.add_subparsers(dest="kernel_command", required=True)
+
+    status_parser = kernel_subparsers.add_parser("status", help="Show runtime telemetry")
+    status_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON instead of a summary",
+    )
+
+    warm_parser = kernel_subparsers.add_parser("warm", help="Compile and warm kernels")
+    warm_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit runtime summary as JSON",
     )
 
     llm_parser = subparsers.add_parser("llm", help="LLM driver utilities")
@@ -129,7 +217,13 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.command == "convert":
         files = _expand_paths(args.paths)
-        documents = batch_convert(files, recipe=args.recipe, llm_ok=not args.no_llm)
+        kwargs = {
+            "recipe": args.recipe,
+            "llm_ok": not args.no_llm,
+        }
+        if "profile" in _BATCH_CONVERT_PARAMS:
+            kwargs["profile"] = args.profile
+        documents = batch_convert(files, **kwargs)
         write_jsonl(documents, args.out)
         return 0
     if args.command == "llm":
@@ -398,4 +492,3 @@ def _report_replay_summary(stats: ReplayStats, *, limit: int | None, error_limit
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
-

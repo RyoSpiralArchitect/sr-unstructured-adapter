@@ -6,7 +6,7 @@ from __future__ import annotations
 import copy
 import logging
 from dataclasses import asdict
-from typing import Iterable, List
+from typing import Iterable, List, Optional, Sequence
 
 from .drivers.manager import DriverManager
 from .normalizer import LLMNormalizer
@@ -26,7 +26,40 @@ def _get_driver_manager() -> DriverManager:
     return _driver_manager
 
 
-def escalate_low_conf(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
+def select_escalation_indices(
+    blocks: Sequence[Block],
+    *,
+    max_confidence: Optional[float] = None,
+    allow_types: Sequence[str] | None = None,
+    limit: Optional[int] = None,
+) -> List[int]:
+    """Return indices of blocks that satisfy the escalation policy."""
+
+    if isinstance(limit, int) and limit <= 0:
+        return []
+
+    allowed = {t for t in allow_types or ()}
+    use_filter = bool(allowed)
+    indices: List[int] = []
+    for idx, block in enumerate(blocks):
+        if max_confidence is not None and block.confidence > max_confidence:
+            continue
+        if use_filter and block.type not in allowed:
+            continue
+        indices.append(idx)
+        if isinstance(limit, int) and limit > 0 and len(indices) >= limit:
+            break
+    return indices
+
+
+def escalate_low_conf(
+    blocks: Iterable[Block],
+    recipe_name: str,
+    *,
+    max_confidence: Optional[float] = None,
+    allow_types: Sequence[str] | None = None,
+    limit: Optional[int] = None,
+) -> List[Block]:
     """Escalate low-confidence predictions via a configured LLM driver."""
 
     recipe = load_recipe(recipe_name)
@@ -34,6 +67,15 @@ def escalate_low_conf(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
         return list(blocks)
 
     original_blocks = list(blocks)
+    indices = select_escalation_indices(
+        original_blocks,
+        max_confidence=max_confidence,
+        allow_types=allow_types,
+        limit=limit,
+    )
+    if not indices:
+        return original_blocks
+
     manager = _get_driver_manager()
     tenant = str(recipe.llm.get("tenant") or manager.tenant_manager.get_default_tenant())
     try:
@@ -46,7 +88,8 @@ def escalate_low_conf(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
         )
         return original_blocks
     prompt_template = recipe.llm.get("prompt_template")
-    context = "\n\n".join(block.text for block in original_blocks)
+    target_blocks = [original_blocks[i] for i in indices]
+    context = "\n\n".join(block.text for block in target_blocks)
     if prompt_template:
         try:
             prompt = str(prompt_template).format(context=context, recipe=recipe.name)
@@ -56,7 +99,11 @@ def escalate_low_conf(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
     else:
         prompt = context
 
-    metadata = {"recipe": recipe.name, "block_count": len(original_blocks)}
+    metadata = {
+        "recipe": recipe.name,
+        "block_count": len(target_blocks),
+        "indices": indices,
+    }
     try:
         raw_response = driver.generate(prompt, metadata=metadata)
     except Exception as exc:  # pragma: no cover - network failure path
@@ -67,11 +114,14 @@ def escalate_low_conf(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
     payload = asdict(normalized)
     payload.update({"tenant": tenant, "driver": driver.name})
 
-    escalated: List[Block] = []
-    for block in original_blocks:
+    escalated = list(original_blocks)
+    for idx in indices:
+        block = original_blocks[idx]
         attrs = dict(block.attrs)
         escalations = list(attrs.get("llm_escalations", []))
-        escalations.append(copy.deepcopy(payload))
+        enriched = copy.deepcopy(payload)
+        enriched["target_index"] = idx
+        escalations.append(enriched)
         attrs["llm_escalations"] = escalations
-        escalated.append(clone_model(block, attrs=attrs))
+        escalated[idx] = clone_model(block, attrs=attrs)
     return escalated

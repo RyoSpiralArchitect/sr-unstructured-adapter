@@ -91,6 +91,11 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - Layout calibration persists between runs so repeated profiles skip warm-up and reuse tuned thresholds. 【F:src/sr_adapter/visual.py†L1-L220】
 - Set `SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1` to fall back to the pure Python path or adjust batching with `SR_ADAPTER_TEXT_KERNEL_BATCH_BYTES`. 【F:src/sr_adapter/runtime.py†L213-L244】【F:src/sr_adapter/normalize.py†L103-L140】
 
+### Processing profiles
+- Processing profiles bundle runtime layout preferences and LLM escalation policy so UX stays simple while the system adapts to each workload. The registry exposes built-ins (`balanced`, `realtime`, `archival`) and loads overrides from `configs/profiles/` or custom search paths. 【F:src/sr_adapter/profiles.py†L1-L215】【F:configs/profiles/balanced.yaml†L1-L18】
+- The `PipelineOrchestrator` resolves the active profile, warms the runtime when requested, and only escalates blocks that satisfy the profile's confidence, type, and limit criteria. 【F:src/sr_adapter/pipeline.py†L1-L360】
+- CLI commands accept `--profile` so you can swap latency vs. fidelity trade-offs without changing recipes or code. 【F:src/sr_adapter/cli.py†L19-L80】【F:src/sr_adapter/pipeline.py†L320-L420】
+
 ### LLM escalation
 - `delegate.escalate_low_conf` loads the configured recipe, resolves the tenant, and invokes the appropriate driver through the shared manager cache. 【F:src/sr_adapter/delegate.py†L1-L120】
 - Drivers live in `src/sr_adapter/drivers/` and can be extended; the defaults include Azure REST and generic Docker JSON chat endpoints. 【F:src/sr_adapter/drivers/manager.py†L1-L160】
@@ -124,9 +129,9 @@ All orchestration commands live under `python -m sr_adapter.cli`.
 
 ### Convert documents
 ```bash
-python -m sr_adapter.cli convert docs/*.pdf --recipe default --out output.jsonl
+python -m sr_adapter.cli convert docs/*.pdf --recipe default --out output.jsonl --profile balanced
 ```
-Stream parsed blocks into JSONL while optionally disabling escalation with `--no-llm`. 【F:src/sr_adapter/cli.py†L19-L85】
+Stream parsed blocks into JSONL while optionally disabling escalation with `--no-llm`. Select another processing profile (e.g. `realtime`) to trade accuracy for latency. 【F:src/sr_adapter/cli.py†L19-L85】【F:src/sr_adapter/profiles.py†L1-L215】
 
 ### Inspect LLM drivers
 ```bash

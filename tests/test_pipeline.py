@@ -7,12 +7,15 @@ import sys
 from pathlib import Path
 from typing import Dict
 
+import pytest
+
 from docx import Document as DocxDocument
 from openpyxl import Workbook
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
 from pypdf import PdfWriter
 
 from sr_adapter.pipeline import convert, stream_convert
+from sr_adapter.profiles import LLMPolicy, ProcessingProfile
 from sr_adapter.parsers import parse_image, parse_ini, parse_txt
 from sr_adapter.recipe import apply_recipe
 from sr_adapter.schema import Block
@@ -576,4 +579,28 @@ def test_parse_txt_refines_large_paragraphs(tmp_path: Path) -> None:
 
     assert len(blocks) > 1
     assert all(len(block.text) <= 600 for block in blocks)
+
+
+def test_convert_profile_forwards_llm_policy(monkeypatch, tmp_path: Path) -> None:
+    path = tmp_path / "profile.txt"
+    path.write_text("alpha\nbeta", encoding="utf-8")
+
+    captured: dict = {}
+
+    def _fake_escalate(blocks, recipe_name, **kwargs):
+        captured.update(kwargs)
+        return list(blocks)
+
+    monkeypatch.setattr("sr_adapter.pipeline.escalate_low_conf", _fake_escalate)
+
+    policy = LLMPolicy(max_confidence=1.0, limit_block_types=("paragraph",), max_blocks=2)
+    profile = ProcessingProfile(name="test", llm_policy=policy, warm_runtime=False)
+
+    document = convert(path, recipe="default", profile=profile)
+
+    assert captured["max_confidence"] == 1.0
+    assert captured["allow_types"] == ("paragraph",)
+    assert captured["limit"] == 2
+    assert document.meta["processing_profile"] == "test"
+    assert document.meta["llm_policy"]["max_confidence"] == pytest.approx(1.0)
 

@@ -7,7 +7,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence
+from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 from .normalize import NativeTextNormalizer, normalize_blocks as _fallback_normalize
 from .schema import Block
@@ -202,33 +202,39 @@ class NativeKernelRuntime:
         return self.snapshot()
 
 
-_RUNTIME_CACHE: Optional[NativeKernelRuntime | bool] = None
+_RUNTIME_CACHE: Dict[Tuple[str, int], NativeKernelRuntime | bool] = {}
 _RUNTIME_LOCK = Lock()
 
 
-def get_native_runtime() -> Optional[NativeKernelRuntime]:
+def get_native_runtime(
+    layout_profile: str = "default",
+    layout_batch_size: int = 32,
+) -> Optional[NativeKernelRuntime]:
     if os.getenv("SR_ADAPTER_DISABLE_NATIVE_RUNTIME"):
         return None
 
-    global _RUNTIME_CACHE
+    key = (layout_profile, max(1, layout_batch_size))
     with _RUNTIME_LOCK:
-        if isinstance(_RUNTIME_CACHE, NativeKernelRuntime):
-            return _RUNTIME_CACHE
-        if _RUNTIME_CACHE is False:
+        cached = _RUNTIME_CACHE.get(key)
+        if isinstance(cached, NativeKernelRuntime):
+            return cached
+        if cached is False:
             return None
         try:
-            runtime = NativeKernelRuntime()
+            runtime = NativeKernelRuntime(
+                layout_profile=layout_profile,
+                layout_batch_size=max(1, layout_batch_size),
+            )
         except Exception:
-            _RUNTIME_CACHE = False
+            _RUNTIME_CACHE[key] = False
             return None
-        _RUNTIME_CACHE = runtime
+        _RUNTIME_CACHE[key] = runtime
         return runtime
 
 
 def reset_native_runtime() -> None:
-    global _RUNTIME_CACHE
     with _RUNTIME_LOCK:
-        _RUNTIME_CACHE = None
+        _RUNTIME_CACHE.clear()
 
 
 def runtime_status_json() -> str:
