@@ -9,6 +9,9 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - **LLM escalation built-in** – Drivers share circuit breakers, exponential backoff with jitter, streaming + async APIs, and telemetry hooks while routing low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints before normalising responses. 【F:src/sr_adapter/delegate.py†L1-L120】【F:src/sr_adapter/drivers/manager.py†L1-L160】【F:src/sr_adapter/drivers/base.py†L17-L197】【F:src/sr_adapter/drivers/resilience.py†L1-L101】【F:src/sr_adapter/drivers/openai_driver.py†L29-L313】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L310】【F:src/sr_adapter/drivers/azure_driver.py†L1-L354】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L308】【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
 - **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 【F:configs/tenants/default.yaml†L1-L10】【F:configs/settings.yaml†L1-L13】【F:src/sr_adapter/settings.py†L1-L119】
 - **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI. 【F:src/sr_adapter/telemetry.py†L1-L236】【F:src/sr_adapter/llm_metrics.py†L1-L129】【F:src/sr_adapter/cli.py†L1-L360】
+- **Recipe autopilot** – Feed the CLI a few labelled examples and it proposes regex-based recipes, scores them against negative samples, and emits YAML ready for `configs/recipes/`. 【F:src/sr_adapter/cli.py†L60-L210】【F:src/sr_adapter/recipe_autogen.py†L1-L190】
+- **Hybrid embeddings** – A lightweight `BlockEmbedder` mixes text, layout, and metadata into deterministic vectors plus a pluggable search index for semantic clustering or FAISS-backed recall. 【F:src/sr_adapter/embedding.py†L1-L170】
+- **Adaptive kernels** – The autotuner benchmarks batch sizes for the native runtime and records the best settings for future runs straight from `kernels autotune`. 【F:src/sr_adapter/kernel_autotune.py†L1-L220】【F:src/sr_adapter/runtime.py†L1-L220】
 
 ## Architecture at a glance
 ```
@@ -138,6 +141,7 @@ Recipes live under `src/sr_adapter/recipes` and control parser options, confiden
 - Start by enumerating structural hints (`patterns`) that map regexes to block types and confidence scores; fall back to a safe default for everything else. 【F:src/sr_adapter/recipes/call_log.yaml†L1-L18】
 - Enable LLM escalation per recipe with `llm.enable` and provide prompt context/thresholds to nudge the driver toward the desired taxonomy. 【F:src/sr_adapter/recipes/call_log.yaml†L18-L21】
 - Document recipes alongside tenant configs so operators understand which driver features (streaming, retries, circuit breakers) the pipeline will exercise. 【F:configs/tenants/default.yaml†L1-L10】【F:src/sr_adapter/drivers/base.py†L17-L97】
+- Jump-start new regex recipes via `python -m sr_adapter.cli recipes suggest --positives examples.jsonl --name custom-title`; the helper learns a pattern from positive samples, evaluates it against negatives, and saves YAML. 【F:src/sr_adapter/cli.py†L60-L210】【F:src/sr_adapter/recipe_autogen.py†L1-L190】
 
 ## Troubleshooting
 - Native build failing? Set `SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1` to fall back to Python while you inspect compiler logs, then re-enable once dependencies are installed. 【F:src/sr_adapter/runtime.py†L205-L244】
@@ -181,8 +185,33 @@ python -m sr_adapter.cli kernels warm --json
 
 # Export Prometheus metrics (and optionally send to Sentry)
 python -m sr_adapter.cli kernels export --format prometheus --label env=prod --sentry
+
+# Autotune batch sizes for text/layout kernels and persist them
+python -m sr_adapter.cli kernels autotune --profile balanced
 ```
 Status, warm-up, and exports reuse the cached runtime so repeated invocations stay snappy while still emitting observability signals. 【F:src/sr_adapter/cli.py†L19-L360】【F:src/sr_adapter/telemetry.py†L1-L150】
+
+### Generate recipe candidates
+```bash
+python -m sr_adapter.cli recipes suggest \
+  --positives data/title_examples.jsonl \
+  --negatives data/title_noise.jsonl \
+  --name auto-title --print-yaml
+```
+The CLI will report precision metrics, print the YAML recipe, and optionally write it to disk so it can be dropped straight into `configs/recipes/`. 【F:src/sr_adapter/cli.py†L60-L210】
+
+### Embed and cluster blocks
+```python
+from sr_adapter.embedding import BlockEmbedder, EmbeddingIndex
+from sr_adapter.schema import Block
+
+embedder = BlockEmbedder(dimensions=64)
+vectors = embedder.embed(blocks)
+index = EmbeddingIndex(len(vectors[0]))
+for block, vector in zip(blocks, vectors):
+    index.add(vector, {"id": block.id, "type": block.type})
+```
+Use the returned embeddings with FAISS or the built-in cosine search to cluster similar content, deduplicate documents, or pre-select the richest context window for downstream LLM calls. 【F:src/sr_adapter/embedding.py†L1-L170】
 
 ## Library usage
 Use the high-level helpers when embedding the adapter in another service:
