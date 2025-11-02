@@ -9,7 +9,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Lock
-from typing import Deque, Dict, Iterable, Iterator, List, Optional, Sequence
+from typing import Any, Deque, Dict, Iterable, Iterator, List, Optional, Sequence
 
 from .native import LayoutBox, LayoutKernel, LayoutResult, ensure_layout_kernel
 from .schema import BBox, Block, clone_model
@@ -24,7 +24,7 @@ class LayoutCandidate:
     page: int
     score: float
     order_hint: int
-    metadata: Dict[str, object] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

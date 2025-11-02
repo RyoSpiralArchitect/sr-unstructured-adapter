@@ -8,10 +8,10 @@ import os
 import time
 from dataclasses import dataclass, field
 from threading import Lock
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
 from .normalize import NativeTextNormalizer, normalize_blocks as _fallback_normalize
-from .schema import Block
+from .schema import Block, Provenance
 from .visual import LayoutCandidate, LayoutSegment, VisualLayoutAnalyzer
 from .kernel_autotune import get_autotune_store
 
@@ -60,7 +60,7 @@ class RuntimeSnapshot:
     text_stats: KernelStats = field(default_factory=lambda: KernelStats("text"))
     layout_stats: KernelStats = field(default_factory=lambda: KernelStats("layout"))
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "text": {
                 "enabled": self.text_enabled,
@@ -181,14 +181,24 @@ class NativeKernelRuntime:
         """Compile kernels and emit a snapshot after a lightweight invocation."""
 
         if self._text_normalizer is not None:
-            dummy = Block(type="paragraph", text="warmup", source="runtime", confidence=0.5)
+            dummy = Block(
+                type="paragraph",
+                text="warmup",
+                prov=Provenance(uri="runtime"),
+                confidence=0.5,
+            )
             try:
                 _ = self.normalize([dummy])
             except Exception:
                 pass
 
         if self._layout_analyzer is not None:
-            dummy_block = Block(type="paragraph", text="warmup", source="runtime", confidence=0.5)
+            dummy_block = Block(
+                type="paragraph",
+                text="warmup",
+                prov=Provenance(uri="runtime"),
+                confidence=0.5,
+            )
             candidate = LayoutCandidate(
                 block=dummy_block,
                 bbox=(0.0, 0.0, 10.0, 10.0),

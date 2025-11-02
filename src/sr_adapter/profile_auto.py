@@ -6,8 +6,9 @@ import json
 import random
 import time
 from dataclasses import dataclass, asdict
-from typing import Dict, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Tuple
 
+from .llm_metrics import LLMMetricsSnapshot
 from .profiles import ProcessingProfile, get_profile_store, load_processing_profile
 from .settings import AutoProfileSettings, get_settings
 from .telemetry import TelemetryExporter
@@ -104,12 +105,17 @@ class AdaptiveProfileSelector:
             snapshot = self.telemetry.llm_snapshot()
         except Exception:
             return 0.0
-        drivers = snapshot.get("drivers", []) if isinstance(snapshot, dict) else []
+        drivers: Iterable[Mapping[str, Any]]
+        if isinstance(snapshot, LLMMetricsSnapshot):
+            drivers = (stat.to_dict() for stat in snapshot.stats)
+        elif isinstance(snapshot, Mapping):
+            raw = snapshot.get("drivers", [])
+            drivers = [record for record in raw if isinstance(record, Mapping)]
+        else:
+            return 0.0
         total_calls = 0
         total_failures = 0
         for record in drivers:
-            if not isinstance(record, Mapping):
-                continue
             total_calls += int(record.get("calls", 0))
             total_failures += int(record.get("failures", 0))
         if total_calls <= 0:
@@ -125,7 +131,7 @@ class AdaptiveProfileSelector:
 
     def _rule_based_choice(
         self,
-        context: Optional[Mapping[str, object]],
+        context: Optional[Mapping[str, Any]],
         available: Mapping[str, ProcessingProfile],
     ) -> Optional[str]:
         size_hint = int(context.get("size_bytes", 0)) if context else 0
@@ -154,7 +160,7 @@ class AdaptiveProfileSelector:
     def select(
         self,
         *,
-        context: Optional[Mapping[str, object]] = None,
+        context: Optional[Mapping[str, Any]] = None,
     ) -> ProcessingProfile:
         available = self._candidate_profiles()
         if not self.enabled:
@@ -180,7 +186,7 @@ class AdaptiveProfileSelector:
     def record_outcome(
         self,
         profile: ProcessingProfile,
-        meta: Mapping[str, object],
+        meta: Mapping[str, Any],
     ) -> None:
         if not self.enabled:
             return
@@ -218,12 +224,12 @@ def get_auto_selector() -> AdaptiveProfileSelector:
     return _SELECTOR
 
 
-def resolve_auto_profile(context: Optional[Mapping[str, object]] = None) -> ProcessingProfile:
+def resolve_auto_profile(context: Optional[Mapping[str, Any]] = None) -> ProcessingProfile:
     selector = get_auto_selector()
     return selector.select(context=context)
 
 
-def record_profile_outcome(profile: ProcessingProfile, meta: Mapping[str, object]) -> None:
+def record_profile_outcome(profile: ProcessingProfile, meta: Mapping[str, Any]) -> None:
     selector = get_auto_selector()
     selector.record_outcome(profile, meta)
 

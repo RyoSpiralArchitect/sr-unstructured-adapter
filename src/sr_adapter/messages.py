@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterator, List
+from typing import Any, Dict, Iterator, List, Mapping
 
 from .models import Payload
 
@@ -13,7 +13,11 @@ def _iter_chunks(text: str, chunk_size: int) -> Iterator[str]:
         yield text[start : start + chunk_size]
 
 
-def to_llm_messages(payload: Payload | Dict[str, object], *, chunk_size: int = 2000) -> List[Dict[str, str]]:
+def to_llm_messages(
+    payload: Payload | Mapping[str, Any],
+    *,
+    chunk_size: int = 2000,
+) -> List[Dict[str, str]]:
     """Convert a payload into chat messages that respect chunking."""
 
     if isinstance(payload, Payload):
