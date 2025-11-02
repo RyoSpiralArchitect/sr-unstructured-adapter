@@ -75,6 +75,7 @@ class Block(BaseModel):
     text: str = ""
     spans: List[Span] = Field(default_factory=list)
     attrs: Dict[str, Any] = Field(default_factory=dict)
+    source: Optional[str] = None
     prov: Provenance = Field(default_factory=Provenance)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     lang: Optional[str] = None          # e.g. "en", "ja", "zh"
@@ -85,6 +86,16 @@ class Block(BaseModel):
         for s in self.spans:
             if not (0 <= s.start <= s.end <= n):
                 raise ValueError(f"Span({s.start},{s.end}) out of bounds for text length {n}")
+        return self
+
+    @model_validator(mode="after")
+    def _sync_provenance(self):
+        if self.source and self.prov.uri and self.source != self.prov.uri:
+            raise ValueError("Block.source and Block.prov.uri must match when both are set")
+        if self.source and not self.prov.uri:
+            self.prov.uri = self.source
+        if self.prov.uri and not self.source:
+            self.source = self.prov.uri
         return self
 
 
