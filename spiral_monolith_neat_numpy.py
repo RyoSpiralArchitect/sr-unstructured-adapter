@@ -57,7 +57,7 @@ def shm_set_worker_meta(meta: dict | None):
 def get_shared_dataset(label: str) -> "np.ndarray":
     """Worker-side: return cached numpy view to shared dataset by label."""
     if label in _SHM_CACHE:
-        return _SHM_CACHE[label]
+        return _SHM_CACHE[label][0]  # Return array, not tuple
     meta = _SHM_META.get(label)
     if not meta:
         raise KeyError(f"Shared dataset '{label}' not found.")
@@ -70,7 +70,8 @@ def get_shared_dataset(label: str) -> "np.ndarray":
             arr.setflags(write=False)
         except Exception:
             pass
-    _SHM_CACHE[label] = arr
+    # Cache both the SharedMemory object and the array to prevent GC
+    _SHM_CACHE[label] = (arr, shm)
     return arr
 
 def shm_release_all():
@@ -87,6 +88,16 @@ def shm_release_all():
         except Exception:
             pass
     _SHM_LOCAL.clear()
+
+def shm_cleanup_worker_cache():
+    """Worker-side: close cached SharedMemory objects."""
+    global _SHM_CACHE
+    for _label, (arr, shm) in list(_SHM_CACHE.items()):
+        try:
+            shm.close()
+        except Exception:
+            pass
+    _SHM_CACHE.clear()
 
 def _proc_init_worker(meta: dict | None = None):
     """ProcessPool initializer: cap BLAS threads and install SHM metadata."""
