@@ -26,6 +26,10 @@ dev = [
     "pyperf>=2.6",
     "pytest-mock>=3.12",
 ]
+neat = [
+    "numpy>=1.20",
+    "matplotlib>=3.0",
+]
 
 [project.scripts]
 sr-adapt = "sr_adapter.cli:main"
