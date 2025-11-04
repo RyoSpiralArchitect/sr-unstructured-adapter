@@ -282,7 +282,7 @@ class ReproPlanaNEATPlus:
             self.population.append(genome)
     
     def _evaluate_population(self, fitness_fn: Callable[[Genome], float]) -> List[float]:
-        """並列評価（thread/process）。process は SHM メタを初期化し、必要なら持ち回りプールを再起動。"""
+        """Parallel evaluation (thread/process). Process mode initializes SHM metadata and restarts rolling pool if needed."""
         workers = int(getattr(self, "eval_workers", 1))
         if workers <= 1:
             return [fitness_fn(g) for g in self.population]
@@ -344,10 +344,10 @@ class ReproPlanaNEATPlus:
         return self.complexity_threshold * (num_hidden * 0.01 + num_edges * 0.001)
     
     def _adapt_compat_threshold(self, num_species: int):
-        # 攻撃的・目標駆動の適応
+        # Aggressive, goal-driven adaptation
         low = int(self.mode.species_low)
         high = int(self.mode.species_high)
-        # lazy init target（学習で更新される）
+        # Lazy init target (updated by learning)
         if getattr(self, "species_target", None) is None:
             self.species_target = float((low + high) * 0.5)
         target = float(self.species_target)
@@ -358,7 +358,7 @@ class ReproPlanaNEATPlus:
         self.compatibility_threshold = float(np.clip(self.compatibility_threshold, 0.3, 50.0))
     
     def _learn_species_target(self, num_species: int, best_fit: float, gen: int) -> None:
-        """species_target の"学習"：PID と Hill-Climb をバンディット切換（auto）。"""
+        """Learn species_target: PID and Hill-Climb with bandit switching (auto mode)."""
         low, high = int(self.mode.species_low), int(self.mode.species_high)
         if self.species_target is None:
             self.species_target = float((low + high) * 0.5)
@@ -366,7 +366,7 @@ class ReproPlanaNEATPlus:
             self._spec_learn["last_tgt"]  = float(self.species_target)
             self._spec_learn["last_reward"] = 0.0
             return
-        # 更新間隔
+        # Update interval
         if gen % int(self.species_target_update_every) != 0:
             return
         st = self._spec_learn
@@ -389,14 +389,14 @@ class ReproPlanaNEATPlus:
                 method = "pid" if (st.get("score_pid", 0.0) >= st.get("score_hill", 0.0)) else "hill"
         # run update
         if method == "pid":
-            # error = actual - target  （種数が多すぎれば target を上げにくく/下げやすく）
+            # error = actual - target (if too many species, harder to increase/easier to decrease target)
             err = float(num_species) - float(self.species_target)
             prev = st.get("pid_prev_err", 0.0) or 0.0
             itg  = float(st.get("pid_i", 0.0)) + err
             itg  = float(np.clip(itg, -float(self.pid_i_clip), float(self.pid_i_clip)))
             de   = err - prev
             delta = float(self.pid_kp)*err + float(self.pid_ki)*itg + float(self.pid_kd)*de
-            step_max = max(0.5, 0.75)  # 1ステップで動かし過ぎない
+            step_max = max(0.5, 0.75)  # Don't move too much in one step
             new_t = float(self.species_target) + float(np.clip(delta, -step_max, step_max))
             new_t = float(np.clip(new_t, float(self.species_target_min), float(self.species_target_max)))
             self.species_target = new_t
@@ -425,7 +425,7 @@ class ReproPlanaNEATPlus:
         st["last_reward"] = float(reward)
     
     def _adaptive_refine_fitness(self, fitnesses: List[float], fitness_fn: Callable[[Genome], float]) -> List[float]:
-        """上位個体にだけ backprop ステップを追加して再評価（軽量な二段評価）。"""
+        """Re-evaluate top individuals with extra backprop steps (lightweight two-stage evaluation)."""
         if not hasattr(fitness_fn, "refine_raw"):
             return fitnesses
         n = len(fitnesses)
@@ -528,11 +528,11 @@ class ReproPlanaNEATPlus:
             
             self.env_history.append({'gen': gen, **self.env, 'regen_enabled': self.mode.enable_regen_reproduction})
             
-            # 難易度に応じた pollen flow
+            # Pollen flow rate based on difficulty
             diff = float(self.env.get('difficulty', 0.0))
             self.pollen_flow_rate = float(min(0.5, max(0.1, 0.1 + 0.35 * diff)))
             
-            # fitness インスタンスに noise を伝播（プロセスでも都度 pickled）
+            # Propagate noise to fitness instance (pickled each time for processes)
             if hasattr(fitness_fn, "set_noise_std"):
                 try:
                     fitness_fn.set_noise_std(float(self.env.get("noise_std", 0.0)))
@@ -606,7 +606,7 @@ class ReproPlanaNEATPlus:
             
             species = self.speciate(fitnesses)
             
-            # 学習 target → 互換しきい値
+            # Learn target -> compatibility threshold
             try:
                 self._learn_species_target(len(species), best_fit, gen)
             except Exception as _spe:
@@ -619,7 +619,7 @@ class ReproPlanaNEATPlus:
         if best_ever is None and self.population:
             best_ever = self.population[0].copy()
         
-        # 持ち回りプールがあれば閉じる
+        # Close rolling pool if exists
         try:
             self._close_pool()
         except Exception:
