@@ -26,7 +26,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     convert_parser = subparsers.add_parser("convert", help="Convert files to JSONL")
-    convert_parser.add_argument("paths", nargs="+", help="Files or directories to convert")
+    convert_parser.add_argument("paths", nargs="*", help="Files or directories to convert")
+    convert_parser.add_argument(
+        "--paths-file",
+        type=Path,
+        help="Optional file containing newline-separated paths to convert",
+    )
     convert_parser.add_argument("--recipe", default="default", help="Recipe to apply")
     convert_parser.add_argument("--out", required=True, help="Destination JSONL file")
     convert_parser.add_argument(
@@ -236,10 +241,50 @@ def _expand_paths(paths: list[str]) -> list[Path]:
     return [path for path in expanded if path.is_file()]
 
 
+def _load_path_entries(paths: list[str], paths_file: Path | None) -> list[str]:
+    entries: list[str] = []
+    entries.extend(paths)
+    if paths_file:
+        target = paths_file.expanduser()
+        if not target.exists():
+            raise ValueError(f"Paths file '{target}' does not exist")
+        if not target.is_file():
+            raise ValueError(f"Paths file '{target}' is not a file")
+        for raw_line in target.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            entries.append(line)
+
+    seen: set[str] = set()
+    normalized: list[str] = []
+    for entry in entries:
+        candidate = entry.strip()
+        if not candidate or candidate in seen:
+            continue
+        seen.add(candidate)
+        normalized.append(candidate)
+    return normalized
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.command == "convert":
-        files = _expand_paths(args.paths)
+        try:
+            entries = _load_path_entries(args.paths, args.paths_file)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        if not entries:
+            print(
+                "No input paths provided; supply paths or use --paths-file",
+                file=sys.stderr,
+            )
+            return 1
+        files = _expand_paths(entries)
+        if not files:
+            print("No valid files found from provided inputs", file=sys.stderr)
+            return 1
         kwargs = {
             "recipe": args.recipe,
             "llm_ok": not args.no_llm,

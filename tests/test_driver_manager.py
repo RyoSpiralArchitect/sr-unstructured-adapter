@@ -17,7 +17,9 @@ from sr_adapter.drivers import (
 
 def test_available_drivers_expose_new_providers() -> None:
     names = available_drivers()
-    assert {"openai", "anthropic", "vllm"}.issubset(set(names))
+    assert {"openai", "anthropic", "vllm", "mistral", "googleai", "xai", "bedrock"}.issubset(
+        set(names)
+    )
 
 
 def test_driver_manager_returns_docker_driver(tmp_path: Path) -> None:

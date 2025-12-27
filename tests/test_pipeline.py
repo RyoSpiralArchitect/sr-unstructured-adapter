@@ -483,6 +483,46 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     assert any(block["type"] == "kv" for block in payload["blocks"])
 
 
+def test_cli_convert_accepts_paths_file(tmp_path: Path) -> None:
+    first = tmp_path / "a.log"
+    first.write_text("Sensor: A1\nTemp: 20.0\n", encoding="utf-8")
+    second = tmp_path / "b.log"
+    second.write_text("Sensor: B2\nTemp: 22.5\n", encoding="utf-8")
+
+    paths_file = tmp_path / "paths.txt"
+    paths_file.write_text(
+        "\n".join([str(first), str(first), "# ignore me", "", str(second)]),
+        encoding="utf-8",
+    )
+    out = tmp_path / "out.jsonl"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sr_adapter.cli",
+            "convert",
+            "--recipe",
+            "sensor_log",
+            "--paths-file",
+            str(paths_file),
+            "--out",
+            str(out),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    lines = out.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2
+    payloads = [json.loads(line) for line in lines]
+    assert {
+        block["source"] for payload in payloads for block in payload["blocks"]
+    } == {str(first), str(second)}
+
+
 def test_convert_eml_extracts_headers(tmp_path: Path) -> None:
     eml = tmp_path / "mail.eml"
     eml.write_text(
@@ -694,4 +734,3 @@ def test_convert_profile_forwards_llm_policy(monkeypatch, tmp_path: Path) -> Non
     assert captured["limit"] == 2
     assert document.meta["processing_profile"] == "test"
     assert document.meta["llm_policy"]["max_confidence"] == pytest.approx(1.0)
-

@@ -12,6 +12,7 @@ from .base import (
 from .anthropic_driver import AnthropicDriver
 from .azure_driver import AzureDriver
 from .docker_driver import DockerDriver
+from .multicloud_driver import BedrockDriver, GoogleAIDriver, MistralDriver, XaiDriver
 from .openai_driver import OpenAIDriver
 from .vllm_driver import VLLMDriver
 from .manager import DriverManager, TenantManager
@@ -21,8 +22,12 @@ __all__ = [
     "LLMDriver",
     "AnthropicDriver",
     "AzureDriver",
+    "BedrockDriver",
     "DockerDriver",
+    "GoogleAIDriver",
+    "MistralDriver",
     "OpenAIDriver",
+    "XaiDriver",
     "VLLMDriver",
     "DriverManager",
     "TenantManager",
