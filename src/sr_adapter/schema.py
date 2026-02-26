@@ -2,18 +2,25 @@
 """Core data structures used across the adapter pipeline (v0.2)."""
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Tuple, Literal
+
+import hashlib
+import uuid
 from datetime import UTC, datetime
-import hashlib, uuid
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # -------- Provenance & geometry --------
 
+
 class BBox(BaseModel):
     """Axis-aligned bounding box in source coordinate space."""
-    x0: float; y0: float; x1: float; y1: float
+
+    x0: float
+    y0: float
+    x1: float
+    y1: float
 
     @model_validator(mode="after")
     def _check_order(self):
@@ -24,6 +31,7 @@ class BBox(BaseModel):
 
 class Provenance(BaseModel):
     """Where this block came from."""
+
     uri: Optional[str] = None           # file path / URL / s3://...
     page: Optional[int] = None          # 0-based page index if paged doc
     bbox: Optional[BBox] = None         # region in page coords
@@ -34,6 +42,7 @@ class Provenance(BaseModel):
 
 class Span(BaseModel):
     """Annotated portion inside Block.text [codepoint offsets]."""
+
     start: int
     end: int
     label: Optional[str] = None
@@ -70,6 +79,7 @@ BlockType = Literal[
 
 class Block(BaseModel):
     """Normalized chunk from a parser."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: BlockType = "paragraph"
     text: str = ""
@@ -105,9 +115,10 @@ class Block(BaseModel):
 
 class DocumentMeta(BaseModel):
     """Top-level document metadata."""
+
     uri: Optional[str] = None
     source: Optional[str] = None
-    source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
+    source_kind: Literal["file", "url", "s3", "gcs", "bytes"] = "file"
     schema_version: str = "0.2"
     adapter_version: Optional[str] = None
     tenant: Optional[str] = None
@@ -159,6 +170,7 @@ class DocumentMeta(BaseModel):
 
 class Document(BaseModel):
     """Conversion pipeline output."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     blocks: List[Block]
     meta: DocumentMeta = Field(default_factory=DocumentMeta)
@@ -173,6 +185,7 @@ def compute_checksum(data: bytes, algo: str = "blake2b") -> str:
     if algo == "sha256":
         return hashlib.sha256(data).hexdigest()
     raise ValueError(f"Unsupported algo: {algo}")
+
 
 def clone_model(model: BaseModel, **updates: Any):
     """Return a copy of *model* with updates applied (Pydantic v2/v1 compatible)."""

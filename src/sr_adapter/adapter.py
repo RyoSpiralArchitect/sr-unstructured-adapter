@@ -7,10 +7,10 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
-from pathlib import Path
-from typing import Iterable, Iterator, List, Sequence, Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Iterable, Iterator, List, Sequence
 
 from .loaders import read_file_contents
 from .metadata import collect_metadata
@@ -31,29 +31,52 @@ def _guess_mime(path: Path) -> str:
     """Heuristic MIME guess with common overrides."""
     # explicit overrides by suffix
     suf = path.suffix.lower()
-    if suf in {".json"}:      return "application/json"
-    if suf in {".jsonl", ".ndjson"}: return "application/x-ndjson"
-    if suf in {".md", ".markdown"}:  return "text/markdown"
-    if suf in {".txt", ".log"}:      return "text/plain"
-    if suf in {".yaml", ".yml"}:     return "application/yaml"
-    if suf in {".xml"}:              return "application/xml"
-    if suf in {".rtf"}:              return "text/rtf"
-    if suf in {".eml"}:              return "message/rfc822"
-    if suf in {".toml"}:             return "application/toml"
-    if suf in {".csv"}:              return "text/csv"
-    if suf in {".tsv"}:              return "text/tab-separated-values"
-    if suf in {".docx"}:             return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    if suf in {".pptx"}:             return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    if suf in {".xlsx"}:             return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    if suf in {".ics"}:              return "text/calendar"
-    if suf in {".pdf"}:              return "application/pdf"
-    if suf in {".html", ".htm"}:     return "text/html"
-    if suf in {".png"}:              return "image/png"
-    if suf in {".jpg", ".jpeg"}:    return "image/jpeg"
-    if suf in {".tif", ".tiff"}:    return "image/tiff"
-    if suf in {".bmp"}:              return "image/bmp"
-    if suf in {".gif"}:              return "image/gif"
-    if suf in {".webp"}:             return "image/webp"
+    if suf in {".json"}:
+        return "application/json"
+    if suf in {".jsonl", ".ndjson"}:
+        return "application/x-ndjson"
+    if suf in {".md", ".markdown"}:
+        return "text/markdown"
+    if suf in {".txt", ".log"}:
+        return "text/plain"
+    if suf in {".yaml", ".yml"}:
+        return "application/yaml"
+    if suf in {".xml"}:
+        return "application/xml"
+    if suf in {".rtf"}:
+        return "text/rtf"
+    if suf in {".eml"}:
+        return "message/rfc822"
+    if suf in {".toml"}:
+        return "application/toml"
+    if suf in {".csv"}:
+        return "text/csv"
+    if suf in {".tsv"}:
+        return "text/tab-separated-values"
+    if suf in {".docx"}:
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if suf in {".pptx"}:
+        return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    if suf in {".xlsx"}:
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if suf in {".ics"}:
+        return "text/calendar"
+    if suf in {".pdf"}:
+        return "application/pdf"
+    if suf in {".html", ".htm"}:
+        return "text/html"
+    if suf in {".png"}:
+        return "image/png"
+    if suf in {".jpg", ".jpeg"}:
+        return "image/jpeg"
+    if suf in {".tif", ".tiff"}:
+        return "image/tiff"
+    if suf in {".bmp"}:
+        return "image/bmp"
+    if suf in {".gif"}:
+        return "image/gif"
+    if suf in {".webp"}:
+        return "image/webp"
     # fallback to stdlib
     mime, _ = mimetypes.guess_type(str(path))
     if mime:

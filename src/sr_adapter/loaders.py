@@ -11,11 +11,14 @@ import xml.etree.ElementTree as ET
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import yaml
 
 # ---- soft deps are optional; we import lazily inside funcs ----
+
+if TYPE_CHECKING:  # pragma: no cover
+    from PIL import Image
 
 _TEXT_EXTENSIONS = {
     ".csv",
@@ -157,7 +160,7 @@ def _pretty_xml_text(root: ET.Element) -> str:
         return _normalize_newlines(ET.tostring(root, encoding="unicode"))
 
 
-def _prepare_image_for_ocr(image: "Image.Image") -> Tuple["Image.Image", "Image.Image", bool]:  # type: ignore[name-defined]
+def _prepare_image_for_ocr(image: Image.Image) -> Tuple[Image.Image, Image.Image, bool]:
     """Return an orientation-corrected copy and a contrast-enhanced grayscale copy."""
 
     corrected = image

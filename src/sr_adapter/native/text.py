@@ -9,7 +9,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
-from typing import Iterable, List, Optional, Sequence
+from typing import List, Optional, Sequence
 
 __all__ = [
     "TextKernel",
@@ -197,4 +197,3 @@ def ensure_text_kernel() -> TextKernel:
             raise TextKernelError("text kernel disabled")
         _KERNEL = TextKernel()
         return _KERNEL
-

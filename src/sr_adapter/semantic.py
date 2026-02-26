@@ -14,7 +14,7 @@ import math
 import re
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Callable, Dict, Iterable, List, Mapping, MutableMapping, Sequence
+from typing import Callable, Dict, List, Mapping, MutableMapping, Sequence
 
 from .schema import Block, clone_model
 
