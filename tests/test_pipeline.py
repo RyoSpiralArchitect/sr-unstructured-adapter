@@ -734,3 +734,46 @@ def test_convert_profile_forwards_llm_policy(monkeypatch, tmp_path: Path) -> Non
     assert captured["limit"] == 2
     assert document.meta["processing_profile"] == "test"
     assert document.meta["llm_policy"]["max_confidence"] == pytest.approx(1.0)
+
+
+def test_convert_semantic_env_defaults_threshold(monkeypatch, tmp_path: Path) -> None:
+    path = tmp_path / "semantic.txt"
+    path.write_text("alpha\nbeta", encoding="utf-8")
+
+    captured: dict = {}
+
+    def _fake_escalate(blocks, recipe_name, **kwargs):
+        captured.update(kwargs)
+        return list(blocks)
+
+    monkeypatch.setattr("sr_adapter.pipeline.escalate_low_conf", _fake_escalate)
+    monkeypatch.setenv("SR_ADAPTER_SEMANTIC_CONFIDENCE", "1")
+    monkeypatch.delenv("SR_ADAPTER_SEMANTIC_MAX_CONFIDENCE", raising=False)
+
+    policy = LLMPolicy(max_confidence=1.0, limit_block_types=("paragraph",), max_blocks=2)
+    profile = ProcessingProfile(name="test-semantic-default", llm_policy=policy, warm_runtime=False)
+
+    convert(path, recipe="default", profile=profile)
+
+    assert captured["max_semantic_confidence"] == pytest.approx(0.2)
+
+
+def test_convert_semantic_env_respects_override(monkeypatch, tmp_path: Path) -> None:
+    path = tmp_path / "semantic_override.txt"
+    path.write_text("alpha\nbeta", encoding="utf-8")
+
+    captured: dict = {}
+
+    def _fake_escalate(blocks, recipe_name, **kwargs):
+        captured.update(kwargs)
+        return list(blocks)
+
+    monkeypatch.setattr("sr_adapter.pipeline.escalate_low_conf", _fake_escalate)
+    monkeypatch.setenv("SR_ADAPTER_SEMANTIC_MAX_CONFIDENCE", "0.33")
+
+    policy = LLMPolicy(max_confidence=1.0, limit_block_types=("paragraph",), max_blocks=2)
+    profile = ProcessingProfile(name="test-semantic-override", llm_policy=policy, warm_runtime=False)
+
+    convert(path, recipe="default", profile=profile)
+
+    assert captured["max_semantic_confidence"] == pytest.approx(0.33)

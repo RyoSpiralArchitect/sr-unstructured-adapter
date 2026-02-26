@@ -253,7 +253,26 @@ class PipelineOrchestrator:
         no_llm_env = os.getenv("SR_ADAPTER_NO_LLM", "").strip().lower() in {"1", "true", "yes"}
         policy = self.profile.llm_policy
         semantic_env = os.getenv("SR_ADAPTER_SEMANTIC_CONFIDENCE", "").strip().lower() in {"1", "true", "yes"}
-        if semantic_env or policy.max_semantic_confidence is not None:
+
+        semantic_override: float | None = None
+        raw_semantic_override = os.getenv("SR_ADAPTER_SEMANTIC_MAX_CONFIDENCE", "").strip()
+        if raw_semantic_override:
+            try:
+                semantic_override = float(raw_semantic_override)
+            except ValueError:
+                semantic_override = None
+            else:
+                semantic_override = max(0.0, min(1.0, semantic_override))
+
+        effective_max_semantic = policy.max_semantic_confidence
+        if semantic_override is not None:
+            effective_max_semantic = semantic_override
+        elif semantic_env and effective_max_semantic is None:
+            # Conservative default tuned for the deterministic hash-based annotator.
+            effective_max_semantic = 0.2
+
+        semantic_enabled = bool(semantic_env or effective_max_semantic is not None)
+        if semantic_enabled:
             semantic_module = os.getenv("SR_ADAPTER_SEMANTIC_MODULE", "").strip()
             if semantic_module:
                 try:
@@ -291,7 +310,7 @@ class PipelineOrchestrator:
             selection = policy_engine.evaluate(
                 blocks,
                 max_confidence=policy.max_confidence,
-                max_semantic_confidence=policy.max_semantic_confidence,
+                max_semantic_confidence=effective_max_semantic,
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
             )
@@ -308,7 +327,7 @@ class PipelineOrchestrator:
                 recipe,
                 tenant=tenant,
                 max_confidence=policy.max_confidence,
-                max_semantic_confidence=policy.max_semantic_confidence,
+                max_semantic_confidence=effective_max_semantic,
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
                 selection=selection,
@@ -345,7 +364,7 @@ class PipelineOrchestrator:
             "llm_policy": policy.to_meta(),
             "runtime_text_enabled": bool(self.runtime and self.runtime.text_enabled),
             "runtime_layout_enabled": bool(self.runtime and self.runtime.layout_enabled),
-            "semantic_confidence": bool(semantic_env or policy.max_semantic_confidence is not None),
+            "semantic_confidence": bool(semantic_enabled),
         }
         if isinstance(tenant, str) and tenant.strip():
             meta["tenant"] = tenant.strip()

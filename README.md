@@ -105,6 +105,24 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - Drivers live in `src/sr_adapter/drivers/` and register themselves with a lightweight factory registry, so dropping in Azure, OpenAI, Anthropic, Docker, or vLLM backends requires no manager changes. 【F:src/sr_adapter/drivers/base.py†L1-L170】【F:src/sr_adapter/drivers/azure_driver.py†L1-L200】【F:src/sr_adapter/drivers/openai_driver.py†L1-L80】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L80】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L80】
 - Responses are normalised into a stable schema before the pipeline writes them back into documents or CLI output. 【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
 
+### Escalation gate benchmarks
+Use the built-in ablation harness to quantify the confidence gate trade-offs:
+
+```bash
+python scripts/benchmark.py --dataset data/escalation_benchmark.jsonl --update-readme
+```
+
+<!-- BENCHMARK:START -->
+| use_encoder_context | use_aif | precision | recall | F1 | mean ms | p50 ms | p95 ms |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | 0 | 0.000 | 0.000 | 0.000 | 0.01 | 0.01 | 0.02 |
+| 0 | 1 | 1.000 | 0.500 | 0.667 | 0.10 | 0.10 | 0.18 |
+| 1 | 0 | 0.500 | 0.500 | 0.500 | 0.18 | 0.18 | 0.34 |
+| 1 | 1 | 1.000 | 1.000 | 1.000 | 0.14 | 0.14 | 0.14 |
+
+_Generated from `data/escalation_benchmark.jsonl` via `python scripts/benchmark.py --update-readme`._
+<!-- BENCHMARK:END -->
+
 ## Installation
 Install the adapter in editable mode while iterating:
 
@@ -136,6 +154,8 @@ Recipes live under `src/sr_adapter/recipes` and control parser options, confiden
 - `SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1` – force the legacy Python normalisers. 【F:src/sr_adapter/runtime.py†L213-L244】
 - `SR_ADAPTER_TEXT_KERNEL_BATCH_BYTES=<bytes>` – cap payload size per native call. 【F:src/sr_adapter/normalize.py†L103-L140】
 - `SR_ADAPTER_MAX_SIZE_MB=<float>` – guardrails for the classic adapter CLI. 【F:src/sr_adapter/adapter.py†L12-L70】
+- `SR_ADAPTER_SEMANTIC_CONFIDENCE=1` – annotate blocks with deterministic semantic confidence and include it in the escalation gate. 【F:src/sr_adapter/pipeline.py†L240-L360】【F:src/sr_adapter/semantic.py†L1-L180】
+- `SR_ADAPTER_SEMANTIC_MAX_CONFIDENCE=<float>` – override the semantic gate threshold (defaults to `0.2` when semantic confidence is enabled via env). 【F:src/sr_adapter/pipeline.py†L240-L360】
 
 ## Recipe authoring guide
 - Start by enumerating structural hints (`patterns`) that map regexes to block types and confidence scores; fall back to a safe default for everything else. 【F:src/sr_adapter/recipes/call_log.yaml†L1-L18】
