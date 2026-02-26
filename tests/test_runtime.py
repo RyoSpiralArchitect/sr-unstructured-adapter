@@ -2,7 +2,6 @@ import json
 
 from sr_adapter.runtime import (
     NativeKernelRuntime,
-    get_native_runtime,
     reset_native_runtime,
     runtime_status_json,
 )
@@ -55,7 +54,5 @@ def test_runtime_layout_analysis_records_stats() -> None:
 
 def test_runtime_status_json_round_trip() -> None:
     reset_native_runtime()
-    runtime = get_native_runtime()
-    assert runtime is not None
     data = json.loads(runtime_status_json())
     assert set(data.keys()) == {"text", "layout"}
