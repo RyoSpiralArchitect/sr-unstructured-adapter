@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,36 @@ def test_api_convert_upload(tmp_path: Path) -> None:
     assert data["meta"]["type"] == "text"
     assert data["meta"]["block_count"] >= 1
     assert any("Hello" in block["text"] for block in data["blocks"])
+
+
+def test_api_convert_stream_upload() -> None:
+    client = TestClient(create_app())
+    payload = b"Hello\nWorld\n"
+    resp = client.post(
+        "/convert-stream?recipe=default&profile=balanced&llm_ok=false",
+        files={"file": ("sample.txt", payload, "text/plain")},
+    )
+    assert resp.status_code == 200
+    assert resp.headers.get("content-type", "").startswith("application/x-ndjson")
+    assert resp.headers.get("x-request-id")
+
+    lines = [line for line in resp.text.splitlines() if line.strip()]
+    assert len(lines) >= 3
+    events = [json.loads(line) for line in lines]
+    assert events[0]["kind"] == "document"
+    assert events[-1]["kind"] == "summary"
+    block_events = [event for event in events if event.get("kind") == "block"]
+    assert block_events
+    assert events[-1]["block_count"] == len(block_events)
+
+
+def test_api_convert_stream_rejects_llm_ok() -> None:
+    client = TestClient(create_app())
+    resp = client.post(
+        "/convert-stream?recipe=default&profile=balanced&llm_ok=true",
+        files={"file": ("sample.txt", b"Hello\n", "text/plain")},
+    )
+    assert resp.status_code == 422
 
 
 def test_api_upload_size_limit(monkeypatch) -> None:

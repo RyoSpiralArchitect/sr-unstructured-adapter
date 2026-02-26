@@ -201,6 +201,12 @@ Convert a file upload:
 curl -sS -F "file=@examples/sample.txt" "http://127.0.0.1:8000/convert?recipe=default&profile=balanced" | jq .
 ```
 
+Stream parsed blocks as NDJSON (requires `llm_ok=false`):
+
+```bash
+curl -sS -F "file=@examples/sample.txt" "http://127.0.0.1:8000/convert-stream?recipe=default&profile=balanced&llm_ok=false" | jq -c .
+```
+
 Notes:
 - Path conversion is disabled by default. Enable it with `SR_ADAPTER_API_ALLOW_PATHS=1` and then use `POST /convert-path`.
 - Upload guardrail: set `SR_ADAPTER_API_MAX_UPLOAD_MB=<float>` to enforce an upper bound (defaults to `SR_ADAPTER_MAX_SIZE_MB` when set, otherwise 200MB; set to `0` to disable).

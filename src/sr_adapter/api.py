@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+import json
 import os
 import tempfile
 import time
@@ -17,10 +19,11 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, Optional
 
-from .pipeline import batch_convert, convert
+from .pipeline import batch_convert, convert, stream_convert
 from .jobs import JobManager, SQLiteJobStore
 from .semantic import list_semantic_annotators
 from .settings import get_settings
+from .sniff import detect_type
 from .version import get_adapter_version
 
 try:  # pragma: no cover - optional dependency
@@ -37,7 +40,7 @@ except Exception:  # pragma: no cover - when the api extra is not installed
 def create_app():  # type: ignore[no-untyped-def]
     try:
         from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query
-        from fastapi.responses import JSONResponse, PlainTextResponse
+        from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
     except ImportError as exc:  # pragma: no cover
         raise RuntimeError(
             "FastAPI dependencies are not installed. "
@@ -323,6 +326,99 @@ def create_app():  # type: ignore[no-untyped-def]
                 tmp_path.unlink(missing_ok=True)  # type: ignore[call-arg]
             except Exception:
                 pass
+
+    @app.post("/convert-stream")
+    async def convert_stream_upload(
+        request: Request,
+        *,
+        file: UploadFile = File(...),
+        recipe: str = Query("default"),
+        profile: str = Query("balanced"),
+        llm_ok: bool = Query(False),
+        max_blocks: Optional[int] = Query(None),
+        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        _: None = auth_required,
+    ):  # type: ignore[no-untyped-def]
+        if llm_ok:
+            raise HTTPException(
+                status_code=422,
+                detail="Streaming conversion requires llm_ok=false (LLM escalation is not streamable).",
+            )
+        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
+        tmp_path = await _upload_to_tempfile(file)
+        doc_id = uuid.uuid4().hex
+        created_at = datetime.now(timezone.utc).isoformat()
+        started = time.perf_counter()
+        mime_value = file.content_type or ""
+        source_type = detect_type(tmp_path)
+        request_id = getattr(getattr(request, "state", None), "request_id", None)
+
+        def _to_payload(value: object) -> Dict[str, Any]:
+            if hasattr(value, "model_dump"):
+                return value.model_dump()  # type: ignore[attr-defined]
+            if hasattr(value, "dict"):
+                return value.dict()  # type: ignore[call-arg]
+            candidate = getattr(value, "__dict__", {})
+            return candidate if isinstance(candidate, dict) else {}
+
+        async def _iter():  # type: ignore[no-untyped-def]
+            try:
+                meta: Dict[str, Any] = {
+                    "kind": "document",
+                    "id": doc_id,
+                    "source": getattr(file, "filename", "") or "",
+                    "type": source_type,
+                    "mime": mime_value,
+                    "recipe": str(recipe),
+                    "profile": str(profile),
+                    "adapter_version": get_adapter_version(),
+                    "created_at": created_at,
+                }
+                if request_id:
+                    meta["request_id"] = request_id
+                if tenant_value:
+                    meta["tenant"] = tenant_value
+                if isinstance(max_blocks, int):
+                    meta["max_blocks"] = max_blocks
+                yield (json.dumps(meta, ensure_ascii=False) + "\n").encode("utf-8")
+
+                count = 0
+                for block in stream_convert(
+                    tmp_path,
+                    recipe=recipe,
+                    profile=profile,
+                    max_blocks=max_blocks,
+                    mime=mime_value or None,
+                ):
+                    record = {
+                        "kind": "block",
+                        "id": doc_id,
+                        "source": getattr(file, "filename", "") or "",
+                        "index": count,
+                        "block": _to_payload(block),
+                    }
+                    yield (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
+                    count += 1
+
+                summary: Dict[str, Any] = {
+                    "kind": "summary",
+                    "id": doc_id,
+                    "source": getattr(file, "filename", "") or "",
+                    "block_count": count,
+                    "elapsed_ms": round((time.perf_counter() - started) * 1000.0, 2),
+                }
+                yield (json.dumps(summary, ensure_ascii=False) + "\n").encode("utf-8")
+            finally:
+                try:
+                    tmp_path.unlink(missing_ok=True)  # type: ignore[call-arg]
+                except Exception:
+                    pass
+
+        return StreamingResponse(
+            _iter(),
+            media_type="application/x-ndjson",
+            headers={"X-Accel-Buffering": "no"},
+        )
 
     @app.post("/convert-path")
     def convert_path(

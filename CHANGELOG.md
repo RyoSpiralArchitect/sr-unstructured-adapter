@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-26
+
+### Added
+- Streaming upload endpoint (`POST /convert-stream`) that emits NDJSON events (`document`, `block`, `summary`) without LLM escalation.
+
 ## [0.2.0] - 2026-02-26
 
 ### Added
@@ -16,4 +21,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - CI defaults to running without the native runtime (environment parity with Linux runners).
-
