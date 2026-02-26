@@ -254,3 +254,35 @@ def test_escalate_low_conf_includes_related_context_when_enabled(monkeypatch):
     assert "First" in choice_text
     assert "Second" in choice_text
     assert "[RELATED CONTEXT]" in choice_text
+
+
+def test_escalate_low_conf_context_overrides_disable_related_context(monkeypatch):
+    reset_escalation_policy()
+    dummy_driver = _DummyDriver()
+    dummy_manager = _DummyDriverManager(dummy_driver)
+    monkeypatch.setattr("sr_adapter.delegate._driver_manager", dummy_manager)
+    monkeypatch.setattr(
+        "sr_adapter.delegate.load_recipe",
+        lambda _: _recipe(True, {"context_top_k": 1}),
+    )
+
+    blocks = [
+        Block(text="First", confidence=0.1),
+        Block(text="Second", confidence=0.9),
+    ]
+
+    escalated = escalate_low_conf(
+        blocks,
+        "test",
+        max_confidence=0.2,
+        limit=1,
+        context_overrides={"top_k": 0},
+    )
+
+    assert dummy_driver.last_metadata["indices"] == [0]
+    assert dummy_driver.last_metadata["context_indices"] == []
+    payload = escalated[0].attrs["llm_escalations"][0]
+    choice_text = payload["choices"][0]["text"]
+    assert "First" in choice_text
+    assert "Second" not in choice_text
+    assert "[RELATED CONTEXT]" not in choice_text

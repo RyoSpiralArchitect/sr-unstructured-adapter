@@ -41,6 +41,8 @@ llm:
   limit_block_types:
     - paragraph
   max_blocks: 2
+  context:
+    top_k: 0
   metadata:
     cadence: test
 """,
@@ -54,6 +56,7 @@ llm:
     assert profile.name == "custom"
     assert profile.layout_profile == "custom-layout"
     assert profile.llm_policy.limit_block_types == ("paragraph",)
+    assert profile.llm_policy.context["top_k"] == 0
     assert profile.llm_policy.metadata["cadence"] == "test"
 
 

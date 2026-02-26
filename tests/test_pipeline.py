@@ -768,7 +768,12 @@ def test_convert_profile_forwards_llm_policy(monkeypatch, tmp_path: Path) -> Non
 
     monkeypatch.setattr("sr_adapter.pipeline.escalate_low_conf", _fake_escalate)
 
-    policy = LLMPolicy(max_confidence=1.0, limit_block_types=("paragraph",), max_blocks=2)
+    policy = LLMPolicy(
+        max_confidence=1.0,
+        limit_block_types=("paragraph",),
+        max_blocks=2,
+        context={"top_k": 0},
+    )
     profile = ProcessingProfile(name="test", llm_policy=policy, warm_runtime=False)
 
     document = convert(path, recipe="default", profile=profile)
@@ -776,6 +781,7 @@ def test_convert_profile_forwards_llm_policy(monkeypatch, tmp_path: Path) -> Non
     assert captured["max_confidence"] == 1.0
     assert captured["allow_types"] == ("paragraph",)
     assert captured["limit"] == 2
+    assert captured["context_overrides"] == {"top_k": 0}
     assert document.meta["processing_profile"] == "test"
     assert document.meta["llm_policy"]["max_confidence"] == pytest.approx(1.0)
 

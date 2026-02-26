@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: chat_log
+patterns:
+  - when: '^\[\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}'
+    as: meta
+    attrs:
+      kind: timestamp
+    confidence: 0.85
+  - when: '^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}'
+    as: meta
+    attrs:
+      kind: timestamp
+    confidence: 0.85
+  - when: '^(From|To|Subject|Date):'
+    as: kv
+    confidence: 0.8
+  - when: '^[-*] '
+    as: list
+    confidence: 0.75
+  - when: '^```'
+    as: code
+    confidence: 0.9
+fallback:
+  as: paragraph
+  confidence: 0.5
+llm:
+  enable: true
+  min_conf: 0.55
+  context:
+    top_k: 4
+    neighbor_window: 1
+    max_blocks: 10
+    max_chars: 8000
+    embed_dim: 64
+    use_semantic_field: false
+  prompt_template: |
+    You are a classifier for chat transcripts and threaded messages.
+
+    Label each non-empty line in [TARGET BLOCKS] as one of:
+    meta, header, paragraph, list, code, kv, log, other.
+
+    Use [RELATED CONTEXT] only for disambiguation (reference only; do NOT label its lines).
+
+    Output JSON Lines ONLY. Each line:
+    {"type": "<label>", "text": "<original line>"}
+    Preserve the original line text exactly.
+
+    [TARGET BLOCKS]
+    {context}
+
+    [RELATED CONTEXT] (reference only; may be empty)
+    {context_related}
