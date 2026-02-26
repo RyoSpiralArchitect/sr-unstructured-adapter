@@ -49,14 +49,17 @@ class _DummyDriverManager:
         return self._driver
 
 
-def _recipe(enable: bool = True) -> RecipeConfig:
+def _recipe(enable: bool = True, llm_overrides=None) -> RecipeConfig:
+    llm_payload = {"enable": enable, "driver": "dummy"}
+    if isinstance(llm_overrides, dict):
+        llm_payload.update(llm_overrides)
     return RecipeConfig(
         name="test",
         patterns=[],
         fallback_type=None,
         fallback_confidence=None,
         fallback_attrs={},
-        llm={"enable": enable, "driver": "dummy"},
+        llm=llm_payload,
     )
 
 
@@ -220,3 +223,34 @@ def test_select_escalation_indices_supports_semantic_or_gate():
     )
 
     assert indices == [0, 1]
+
+
+def test_escalate_low_conf_includes_related_context_when_enabled(monkeypatch):
+    reset_escalation_policy()
+    dummy_driver = _DummyDriver()
+    dummy_manager = _DummyDriverManager(dummy_driver)
+    monkeypatch.setattr("sr_adapter.delegate._driver_manager", dummy_manager)
+    monkeypatch.setattr(
+        "sr_adapter.delegate.load_recipe",
+        lambda _: _recipe(True, {"context_top_k": 1}),
+    )
+
+    blocks = [
+        Block(text="First", confidence=0.1),
+        Block(text="Second", confidence=0.9),
+    ]
+
+    escalated = escalate_low_conf(
+        blocks,
+        "test",
+        max_confidence=0.2,
+        limit=1,
+    )
+
+    assert dummy_driver.last_metadata["indices"] == [0]
+    assert dummy_driver.last_metadata["context_indices"] == [1]
+    payload = escalated[0].attrs["llm_escalations"][0]
+    choice_text = payload["choices"][0]["text"]
+    assert "First" in choice_text
+    assert "Second" in choice_text
+    assert "[RELATED CONTEXT]" in choice_text

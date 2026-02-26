@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-02-26
+
+### Added
+- Optional embedding-based related-context retrieval for LLM escalation prompts (configure via `llm.context.top_k`).
+
 ## [0.2.3] - 2026-02-26
 
 ### Added
