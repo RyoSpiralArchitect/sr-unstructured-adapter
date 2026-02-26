@@ -20,7 +20,7 @@ escalation:
   model_path: ""
   min_score: 0.5
   model_format: "json"
-  feature_version: "v1"
+  feature_version: "v2"
 profile_automation:
   enabled: true
   epsilon: 0.15

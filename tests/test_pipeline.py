@@ -821,3 +821,27 @@ def test_convert_semantic_env_respects_override(monkeypatch, tmp_path: Path) -> 
     convert(path, recipe="default", profile=profile)
 
     assert captured["max_semantic_confidence"] == pytest.approx(0.33)
+
+
+def test_convert_always_attaches_structural_confidence(tmp_path: Path) -> None:
+    path = tmp_path / "structural.txt"
+    path.write_text("alpha\nbeta\n", encoding="utf-8")
+
+    document = convert(path, recipe="default", llm_ok=False)
+
+    assert document.blocks
+    assert all("confidence_structural" in block.attrs for block in document.blocks)
+
+
+def test_convert_semantic_env_attaches_semantic_alias(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SR_ADAPTER_SEMANTIC_CONFIDENCE", "1")
+    monkeypatch.delenv("SR_ADAPTER_SEMANTIC_MAX_CONFIDENCE", raising=False)
+
+    path = tmp_path / "semantic_alias.txt"
+    path.write_text("alpha\nbeta\ngamma\n", encoding="utf-8")
+
+    document = convert(path, recipe="default", llm_ok=False)
+
+    assert document.meta["semantic_confidence"] is True
+    assert any("semantic_confidence" in block.attrs for block in document.blocks)
+    assert any("confidence_semantic" in block.attrs for block in document.blocks)

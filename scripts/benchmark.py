@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Generate an ablation report for the escalation confidence gate.
 
-This script compares two knobs that strongly influence the unstructured→structured
+This script compares three knobs that strongly influence the unstructured→structured
 pipeline quality/cost trade-off:
 
-- use_encoder_context: compute + apply deterministic semantic confidence gating
-- use_aif: use the learned escalation meta-model vs. a naive confidence-only gate
+- use_structural_gate: apply the structural confidence threshold (max_confidence)
+- use_semantic_gate: compute + apply deterministic semantic confidence gating
+- use_aif: use the learned escalation meta-model vs. a naive gate
 
 It produces JSON + Markdown reports and can optionally update README benchmarks
 between marker comments.
@@ -28,6 +29,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 from sr_adapter.escalation import get_escalation_policy, reset_escalation_policy
 from sr_adapter.schema import Block
+from sr_adapter.confidence import semantic_confidence, structural_confidence
 from sr_adapter.semantic import annotate_semantic_confidence
 
 
@@ -182,11 +184,12 @@ def _naive_select(
     for idx, block in enumerate(blocks):
         if enforce_types and block.type not in allow_set:
             continue
-        struct_low = max_confidence is not None and block.confidence <= max_confidence
+        struct_score = structural_confidence(block)
+        struct_low = max_confidence is not None and struct_score <= max_confidence
         semantic_score: float | None = None
         semantic_low = False
-        if max_semantic_confidence is not None and isinstance(block.attrs, dict):
-            semantic_score = _safe_float(block.attrs.get("semantic_confidence"))
+        if max_semantic_confidence is not None:
+            semantic_score = semantic_confidence(block)
             if semantic_score is not None and semantic_score <= max_semantic_confidence:
                 semantic_low = True
         if max_confidence is not None or max_semantic_confidence is not None:
@@ -194,7 +197,7 @@ def _naive_select(
                 continue
         effective = 1.0
         if struct_low:
-            effective = min(effective, float(block.confidence))
+            effective = min(effective, float(struct_score))
         if semantic_low and semantic_score is not None:
             effective = min(effective, float(semantic_score))
         candidates.append((idx, effective, semantic_low))
@@ -218,12 +221,17 @@ def _naive_select(
 
 @dataclass(frozen=True)
 class RunConfig:
-    use_encoder_context: bool
+    use_structural_gate: bool
+    use_semantic_gate: bool
     use_aif: bool
 
     @property
     def key(self) -> str:
-        return f"encoder_context={int(self.use_encoder_context)} aif={int(self.use_aif)}"
+        return (
+            f"structural_gate={int(self.use_structural_gate)} "
+            f"semantic_gate={int(self.use_semantic_gate)} "
+            f"aif={int(self.use_aif)}"
+        )
 
 
 @dataclass
@@ -271,13 +279,14 @@ def _score(results: Sequence[CaseResult]) -> dict[str, float]:
 
 def _format_md_table(rows: Sequence[Mapping[str, Any]]) -> str:
     lines = [
-        "| use_encoder_context | use_aif | precision | recall | F1 | mean ms | p50 ms | p95 ms |",
-        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| use_structural_gate | use_semantic_gate | use_aif | precision | recall | F1 | mean ms | p50 ms | p95 ms |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in rows:
         lines.append(
-            "| {enc} | {aif} | {p:.3f} | {r:.3f} | {f1:.3f} | {mean:.2f} | {p50:.2f} | {p95:.2f} |".format(
-                enc=int(bool(row["use_encoder_context"])),
+            "| {struct} | {sem} | {aif} | {p:.3f} | {r:.3f} | {f1:.3f} | {mean:.2f} | {p50:.2f} | {p95:.2f} |".format(
+                struct=int(bool(row["use_structural_gate"])),
+                sem=int(bool(row["use_semantic_gate"])),
                 aif=int(bool(row["use_aif"])),
                 p=float(row["precision"]),
                 r=float(row["recall"]),
@@ -313,14 +322,15 @@ def _run_one(
     case_results: list[CaseResult] = []
     for case in cases:
         blocks: list[Block] = [block for block in case.blocks]
-        max_sem = case.policy.max_semantic_confidence if config.use_encoder_context else None
+        max_conf = case.policy.max_confidence if config.use_structural_gate else None
+        max_sem = case.policy.max_semantic_confidence if config.use_semantic_gate else None
         start = time.perf_counter()
-        if config.use_encoder_context and max_sem is not None:
+        if config.use_semantic_gate and max_sem is not None:
             blocks = list(annotate_semantic_confidence(blocks))
         if config.use_aif:
             selection = engine.evaluate(
                 blocks,
-                max_confidence=case.policy.max_confidence,
+                max_confidence=max_conf,
                 max_semantic_confidence=max_sem,
                 allow_types=case.policy.allow_types,
                 limit=case.policy.limit,
@@ -330,7 +340,7 @@ def _run_one(
             predicted = tuple(
                 _naive_select(
                     blocks,
-                    max_confidence=case.policy.max_confidence,
+                    max_confidence=max_conf,
                     max_semantic_confidence=max_sem,
                     allow_types=case.policy.allow_types,
                     limit=case.policy.limit,
@@ -385,7 +395,19 @@ def main(argv: Iterable[str] | None = None) -> int:
         "--use-encoder-context",
         type=str,
         default=None,
-        help="When set, only run this value for use_encoder_context (true/false)",
+        help="Deprecated alias for --use-semantic-gate (true/false)",
+    )
+    parser.add_argument(
+        "--use-structural-gate",
+        type=str,
+        default=None,
+        help="When set, only run this value for use_structural_gate (true/false)",
+    )
+    parser.add_argument(
+        "--use-semantic-gate",
+        type=str,
+        default=None,
+        help="When set, only run this value for use_semantic_gate (true/false)",
     )
     parser.add_argument(
         "--use-aif",
@@ -402,17 +424,35 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     cases = _load_cases(dataset)
 
-    encoder_filter = None if args.use_encoder_context is None else _parse_bool(args.use_encoder_context)
+    if args.use_encoder_context is not None and args.use_semantic_gate is not None:
+        print("❌ Provide only one of --use-encoder-context and --use-semantic-gate", file=sys.stderr)
+        return 2
+
+    structural_filter = None if args.use_structural_gate is None else _parse_bool(args.use_structural_gate)
+    semantic_filter = None
+    if args.use_semantic_gate is not None:
+        semantic_filter = _parse_bool(args.use_semantic_gate)
+    elif args.use_encoder_context is not None:
+        semantic_filter = _parse_bool(args.use_encoder_context)
     aif_filter = None if args.use_aif is None else _parse_bool(args.use_aif)
 
     configs: list[RunConfig] = []
-    for encoder in (False, True):
-        if encoder_filter is not None and encoder != encoder_filter:
+    for structural in (False, True):
+        if structural_filter is not None and structural != structural_filter:
             continue
-        for aif in (False, True):
-            if aif_filter is not None and aif != aif_filter:
+        for semantic in (False, True):
+            if semantic_filter is not None and semantic != semantic_filter:
                 continue
-            configs.append(RunConfig(use_encoder_context=encoder, use_aif=aif))
+            for aif in (False, True):
+                if aif_filter is not None and aif != aif_filter:
+                    continue
+                configs.append(
+                    RunConfig(
+                        use_structural_gate=structural,
+                        use_semantic_gate=semantic,
+                        use_aif=aif,
+                    )
+                )
 
     rows: list[dict[str, Any]] = []
     combos: list[dict[str, Any]] = []
@@ -420,7 +460,8 @@ def main(argv: Iterable[str] | None = None) -> int:
     for config in configs:
         case_results, score = _run_one(cases, config=config)
         row = {
-            "use_encoder_context": config.use_encoder_context,
+            "use_structural_gate": config.use_structural_gate,
+            "use_semantic_gate": config.use_semantic_gate,
             "use_aif": config.use_aif,
             **score,
         }
@@ -476,4 +517,3 @@ def main(argv: Iterable[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

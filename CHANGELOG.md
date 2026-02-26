@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-02-26
+
+### Added
+- Explicit structural confidence (`attrs.confidence_structural`) and semantic alias (`attrs.confidence_semantic`) signals wired into the escalation gate and logs.
+
+### Changed
+- Escalation meta-model defaults now treat structural confidence as the primary feature (`confidence_structural`) and bump feature version to `v2`.
+- Benchmark harness expanded to ablate structural vs semantic gates.
+
 ## [0.2.1] - 2026-02-26
 
 ### Added

@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tupl
 from .delegate import escalate_low_conf
 from .distributed import run_asyncio, run_dask, run_ray, run_threadpool
 from .normalize import normalize_block, normalize_blocks
+from .confidence import annotate_semantic_alias, annotate_structural_confidence, structural_confidence
 from .profiles import ProcessingProfile, resolve_profile
 from .runtime import NativeKernelRuntime, get_native_runtime
 from .refiner import HybridRefiner
@@ -248,6 +249,8 @@ class PipelineOrchestrator:
         blocks = apply_recipe(blocks, recipe)
         metrics.recipe_ms = metrics.checkpoint()
 
+        blocks = annotate_structural_confidence(blocks)
+
         effective_max = max_blocks if max_blocks is not None else self.profile.max_blocks
         effective_deadline = self._effective_deadline(deadline_ms)
 
@@ -303,6 +306,7 @@ class PipelineOrchestrator:
                     blocks = annotator(blocks)
             except Exception:  # pragma: no cover - defensive guard
                 pass
+        blocks = annotate_semantic_alias(blocks)
         do_llm = bool(llm_ok and not no_llm_env and policy.enabled)
         selection = None
         targets: List[int] = []
@@ -565,11 +569,17 @@ def stream_convert(
         if len(batch) < batch_size:
             continue
         for refined in refiner.refine(batch):
-            yield apply_recipe_block(refined, recipe_config)
+            cooked = apply_recipe_block(refined, recipe_config)
+            attrs = dict(cooked.attrs)
+            attrs.setdefault("confidence_structural", round(structural_confidence(cooked), 4))
+            yield clone_model(cooked, attrs=attrs)
         batch.clear()
     if batch:
         for refined in refiner.refine(batch):
-            yield apply_recipe_block(refined, recipe_config)
+            cooked = apply_recipe_block(refined, recipe_config)
+            attrs = dict(cooked.attrs)
+            attrs.setdefault("confidence_structural", round(structural_confidence(cooked), 4))
+            yield clone_model(cooked, attrs=attrs)
 
 
 # ---- Public API --------------------------------------------------------------

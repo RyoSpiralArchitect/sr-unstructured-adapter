@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Callable, Dict, List, Mapping, MutableMapping, Sequence
 
+from .confidence import structural_confidence
 from .schema import Block, clone_model
 
 
@@ -182,7 +183,7 @@ def annotate_semantic_confidence(
         attrs[f"{prefix}_density"] = round(score.density, 4)
         attrs[f"{prefix}_anisotropy"] = round(score.anisotropy, 4)
         attrs[f"{prefix}_spread"] = round(score.spread, 4)
-        attrs.setdefault("confidence_structural", block.confidence)
+        attrs.setdefault("confidence_structural", round(structural_confidence(block), 4))
         enriched.append(clone_model(block, attrs=attrs))
     return enriched
 

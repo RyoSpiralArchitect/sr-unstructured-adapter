@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence
 
+from ..confidence import semantic_confidence, structural_confidence
 from ..schema import Block
 from ..settings import EscalationSettings, get_settings
 from .features import build_features
@@ -87,21 +88,13 @@ class EscalationPolicyEngine:
             if enforce_types and block.type not in allow_set:
                 continue
 
-            struct_low = max_confidence is not None and block.confidence <= max_confidence
+            struct_score = structural_confidence(block)
+            struct_low = max_confidence is not None and struct_score <= max_confidence
 
             semantic_low = False
-            if max_semantic_confidence is not None and isinstance(block.attrs, dict):
-                raw_value = block.attrs.get("semantic_confidence")
-                semantic_score: float | None
-                if isinstance(raw_value, (int, float)):
-                    semantic_score = float(raw_value)
-                elif isinstance(raw_value, str):
-                    try:
-                        semantic_score = float(raw_value.strip())
-                    except ValueError:
-                        semantic_score = None
-                else:
-                    semantic_score = None
+            semantic_score = None
+            if max_semantic_confidence is not None:
+                semantic_score = semantic_confidence(block)
                 if semantic_score is not None and semantic_score <= max_semantic_confidence:
                     semantic_low = True
 
@@ -109,6 +102,9 @@ class EscalationPolicyEngine:
                 if not (struct_low or semantic_low):
                     continue
             features = build_features(block)
+            features.setdefault("confidence_structural", float(struct_score))
+            if semantic_score is not None:
+                features.setdefault("semantic_confidence", float(semantic_score))
             score = self._model.score(features, block=block)
             candidates.append(SelectionCandidate(index=idx, score=score, features=features))
             if semantic_low:
