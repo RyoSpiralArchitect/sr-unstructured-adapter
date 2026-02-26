@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-02-26
+
+### Changed
+- `call_log` recipe now uses `prompt_template` with `{context_related}` and enables embedding-based related-context retrieval by default.
+
 ## [0.2.4] - 2026-02-26
 
 ### Added

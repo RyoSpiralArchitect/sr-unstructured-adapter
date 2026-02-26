@@ -18,7 +18,27 @@ fallback:
 llm:
   enable: true
   min_conf: 0.55
-  prompt: |
-    You are a classifier for call logs. Label each line as one of:
-    [meta, header, paragraph, list, code, kv, other].
-    Return JSON lines with {type, text}.
+  context:
+    top_k: 4
+    neighbor_window: 1
+    max_blocks: 8
+    max_chars: 8000
+    embed_dim: 64
+    use_semantic_field: false
+  prompt_template: |
+    You are a classifier for call logs.
+
+    Label each non-empty line in [TARGET BLOCKS] as one of:
+    meta, header, paragraph, list, code, kv, other.
+
+    You may use [RELATED CONTEXT] to disambiguate, but do NOT label any lines from it.
+
+    Output JSON Lines ONLY. Each line:
+    {"type": "<label>", "text": "<original line>"}
+    Preserve the original line text exactly.
+
+    [TARGET BLOCKS]
+    {context}
+
+    [RELATED CONTEXT] (reference only; may be empty)
+    {context_related}
