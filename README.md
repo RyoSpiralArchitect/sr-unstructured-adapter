@@ -104,6 +104,7 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - `delegate.escalate_low_conf` loads the configured recipe, resolves the tenant, and invokes the appropriate driver through the shared manager cache. 【F:src/sr_adapter/delegate.py†L1-L120】
 - Drivers live in `src/sr_adapter/drivers/` and register themselves with a lightweight factory registry, so dropping in Azure, OpenAI, Anthropic, Docker, or vLLM backends requires no manager changes. 【F:src/sr_adapter/drivers/base.py†L1-L170】【F:src/sr_adapter/drivers/azure_driver.py†L1-L200】【F:src/sr_adapter/drivers/openai_driver.py†L1-L80】【F:src/sr_adapter/drivers/anthropic_driver.py†L1-L80】【F:src/sr_adapter/drivers/vllm_driver.py†L1-L80】
 - Responses are normalised into a stable schema before the pipeline writes them back into documents or CLI output. 【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
+- Blocks always expose `attrs.confidence_structural` (structural confidence; layout bounded) and optionally `attrs.semantic_confidence`/`attrs.confidence_semantic` when deterministic semantic scoring is enabled. 【F:src/sr_adapter/confidence.py†L1-L120】【F:src/sr_adapter/semantic.py†L1-L120】
 
 ### Escalation gate benchmarks
 Use the built-in ablation harness to quantify the confidence gate trade-offs:
@@ -113,12 +114,16 @@ python scripts/benchmark.py --dataset data/escalation_benchmark.jsonl --update-r
 ```
 
 <!-- BENCHMARK:START -->
-| use_encoder_context | use_aif | precision | recall | F1 | mean ms | p50 ms | p95 ms |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0 | 0 | 0.000 | 0.000 | 0.000 | 0.01 | 0.01 | 0.02 |
-| 0 | 1 | 1.000 | 0.500 | 0.667 | 0.10 | 0.10 | 0.18 |
-| 1 | 0 | 0.500 | 0.500 | 0.500 | 0.18 | 0.18 | 0.34 |
-| 1 | 1 | 1.000 | 1.000 | 1.000 | 0.14 | 0.14 | 0.14 |
+| use_structural_gate | use_semantic_gate | use_aif | precision | recall | F1 | mean ms | p50 ms | p95 ms |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | 0 | 0 | 0.200 | 0.333 | 0.250 | 0.01 | 0.01 | 0.01 |
+| 0 | 0 | 1 | 0.667 | 0.667 | 0.667 | 0.09 | 0.09 | 0.14 |
+| 0 | 1 | 0 | 0.500 | 0.667 | 0.571 | 0.07 | 0.00 | 0.19 |
+| 0 | 1 | 1 | 0.750 | 1.000 | 0.857 | 0.10 | 0.08 | 0.13 |
+| 1 | 0 | 0 | 1.000 | 0.667 | 0.800 | 0.00 | 0.00 | 0.01 |
+| 1 | 0 | 1 | 1.000 | 0.667 | 0.800 | 0.02 | 0.01 | 0.05 |
+| 1 | 1 | 0 | 1.000 | 1.000 | 1.000 | 0.02 | 0.00 | 0.06 |
+| 1 | 1 | 1 | 1.000 | 1.000 | 1.000 | 0.04 | 0.05 | 0.07 |
 
 _Generated from `data/escalation_benchmark.jsonl` via `python scripts/benchmark.py --update-readme`._
 <!-- BENCHMARK:END -->

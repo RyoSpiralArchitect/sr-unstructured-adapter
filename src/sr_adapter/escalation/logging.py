@@ -7,6 +7,7 @@ import time
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional
 
+from ..confidence import semantic_confidence, structural_confidence
 from ..schema import Block
 from ..settings import EscalationSettings, get_settings
 
@@ -68,10 +69,14 @@ class EscalationLogger:
                 "score": candidate.score,
                 "selected": candidate.selected,
                 "confidence": float(block.confidence),
+                "confidence_structural": float(structural_confidence(block)),
                 "type": block.type,
                 "features": dict(candidate.features),
                 "metadata": context,
             }
+            sem = semantic_confidence(block)
+            if sem is not None:
+                entry["semantic_confidence"] = float(sem)
             layout_conf = None
             if isinstance(block.attrs, dict):
                 layout_conf = block.attrs.get("layout_confidence")
@@ -102,6 +107,7 @@ class EscalationLogger:
             "score": candidate_score,
             "rank": rank,
             "confidence": float(block.confidence),
+            "confidence_structural": float(structural_confidence(block)),
             "type": block.type,
             "llm": {
                 "provider": llm_result.provider,
@@ -110,6 +116,9 @@ class EscalationLogger:
             },
             "response_preview": choice_text[:5000],
         }
+        sem = semantic_confidence(block)
+        if sem is not None:
+            entry["semantic_confidence"] = float(sem)
         self._write(entry)
 
     def log_failure(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Dict
 
+from ..confidence import semantic_confidence, structural_confidence
 from ..schema import Block
 
 
@@ -27,11 +28,16 @@ def build_features(block: Block) -> Dict[str, float]:
 
     features: Dict[str, float] = {
         "confidence": _safe_float(block.confidence, 0.0),
+        "confidence_structural": float(structural_confidence(block)),
         "text_length": float(len(text)),
         "word_count": float(len(tokens)),
         "line_count": float(len(lines)),
         "has_spans": 1.0 if block.spans else 0.0,
     }
+
+    semantic = semantic_confidence(block)
+    if semantic is not None:
+        features["semantic_confidence"] = float(semantic)
 
     layout_conf = block.attrs.get("layout_confidence") if isinstance(block.attrs, dict) else None
     if layout_conf is not None:

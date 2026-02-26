@@ -11,6 +11,8 @@ build/
 dist/
 perf_report.txt
 native_status.json
+bench_report.json
+bench_report.md
 sr_adapter_jobs.sqlite3
 sr_adapter_jobs*.sqlite3
 src/sr_adapter/native/_*.so

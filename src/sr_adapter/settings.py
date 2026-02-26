@@ -136,13 +136,13 @@ class EscalationSettings(BaseModel):
     default_weights: Dict[str, float] = Field(
         default_factory=lambda: {
             "bias": 2.0,
-            "confidence": -4.0,
-            "layout_confidence": -1.5,
+            "confidence_structural": -4.0,
+            "layout_confidence": -1.0,
             "text_length": 0.0008,
             "has_spans": 0.25,
         }
     )
-    feature_version: str = "v1"
+    feature_version: str = "v2"
 
     @field_validator("log_path", "model_path", mode="before")
     @classmethod
@@ -344,4 +344,3 @@ __all__ = [
     "get_settings",
     "reset_settings_cache",
 ]
-
