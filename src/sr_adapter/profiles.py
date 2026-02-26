@@ -21,6 +21,7 @@ class LLMPolicy:
     limit_block_types: Tuple[str, ...] = ()
     max_blocks: Optional[int] = None
     deadline_ms: Optional[int] = None
+    context: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -46,6 +47,8 @@ class LLMPolicy:
             deadline = int(deadline)
             if deadline <= 0:
                 deadline = None
+        context = data.get("context") or {}
+        context_value = dict(context) if isinstance(context, Mapping) else {}
         metadata = {key: value for key, value in (data.get("metadata") or {}).items()}
         return cls(
             enabled=enabled,
@@ -54,6 +57,7 @@ class LLMPolicy:
             limit_block_types=tuple(limit_block_types),
             max_blocks=max_blocks,
             deadline_ms=deadline,
+            context=context_value,
             metadata=metadata,
         )
 
@@ -65,6 +69,7 @@ class LLMPolicy:
             "limit_block_types": list(self.limit_block_types),
             "max_blocks": self.max_blocks,
             "deadline_ms": self.deadline_ms,
+            "context": dict(self.context),
             "metadata": dict(self.metadata),
         }
 

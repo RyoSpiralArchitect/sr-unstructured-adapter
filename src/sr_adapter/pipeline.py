@@ -336,6 +336,7 @@ class PipelineOrchestrator:
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
                 selection=selection,
+                context_overrides=policy.context,
             )
             escalations = sum(
                 1

@@ -106,6 +106,7 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - Responses are normalised into a stable schema before the pipeline writes them back into documents or CLI output. 【F:src/sr_adapter/normalizer/llm_normalizer.py†L1-L120】
 - Blocks always expose `attrs.confidence_structural` (structural confidence; layout bounded) and optionally `attrs.semantic_confidence`/`attrs.confidence_semantic` when deterministic semantic scoring is enabled. 【F:src/sr_adapter/confidence.py†L1-L120】【F:src/sr_adapter/semantic.py†L1-L120】
 - To enrich escalations with retrieval context, set `llm.context.top_k` (or `llm.context_top_k`) in the recipe and the adapter will append a related-context section to the prompt. 【F:src/sr_adapter/delegate.py†L1-L220】
+- Profiles can override recipe-level retrieval context parameters by setting `llm.context` in the selected processing profile.
 
 ### Escalation gate benchmarks
 Use the built-in ablation harness to quantify the confidence gate trade-offs:

@@ -204,6 +204,7 @@ def escalate_low_conf(
     allow_types: Sequence[str] | None = None,
     limit: Optional[int] = None,
     selection: SelectionResult | None = None,
+    context_overrides: Mapping[str, Any] | None = None,
 ) -> List[Block]:
     """Escalate low-confidence predictions via a configured LLM driver."""
 
@@ -267,10 +268,12 @@ def escalate_low_conf(
     prompt_template = recipe.llm.get("prompt_template") or recipe.llm.get("prompt")
     target_blocks = [original_blocks[i] for i in indices]
 
-    context_cfg: Mapping[str, Any] = {}
+    context_cfg: dict[str, Any] = {}
     raw_context_cfg = recipe.llm.get("context")
     if isinstance(raw_context_cfg, Mapping):
-        context_cfg = raw_context_cfg
+        context_cfg.update(raw_context_cfg)
+    if isinstance(context_overrides, Mapping) and context_overrides:
+        context_cfg.update(context_overrides)
 
     context_top_k = _safe_int(context_cfg.get("top_k", recipe.llm.get("context_top_k")), default=0)
     context_neighbor_window = _safe_int(
