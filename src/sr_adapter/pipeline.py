@@ -7,6 +7,7 @@ import os
 import time
 from collections import Counter
 from dataclasses import dataclass, field
+from itertools import islice
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Tuple
 
@@ -517,20 +518,58 @@ def stream_convert(
     *,
     mime: Optional[str] = None,
     max_blocks: Optional[int] = None,
+    profile: str | ProcessingProfile | None = None,
+    runtime: Optional[NativeKernelRuntime] = None,
 ) -> Iterator[Block]:
     """Stream blocks through parse→normalise→recipe without LLM escalation."""
 
     source = Path(path)
     detected = detect_type(source)
     recipe_config = load_recipe(recipe)
-    count = 0
-    for block in _stream_raw(source, detected=detected, mime=mime):
-        normalised = normalize_block(block)
-        transformed = apply_recipe_block(normalised, recipe_config)
-        yield transformed
-        count += 1
-        if max_blocks and count >= max_blocks:
-            break
+    context = _profile_context(
+        source,
+        deadline_ms=None,
+        max_blocks=max_blocks,
+        mime=mime,
+    )
+    profile_obj = resolve_profile(profile, context=context)
+
+    if runtime is None:
+        runtime = get_native_runtime(
+            layout_profile=profile_obj.layout_profile,
+            layout_batch_size=profile_obj.layout_batch_size,
+        )
+    if runtime and profile_obj.warm_runtime:
+        try:
+            runtime.warm()
+        except Exception:  # pragma: no cover - best effort warm-up
+            pass
+
+    raw_blocks: Iterable[Block] = _stream_raw(source, detected=detected, mime=mime)
+    if isinstance(max_blocks, int) and max_blocks > 0:
+        raw_blocks = islice(raw_blocks, max_blocks)
+
+    if runtime is None:
+        normalized: Iterable[Block] = (normalize_block(block) for block in raw_blocks)
+    else:
+        normalized = runtime.normalize_stream(
+            raw_blocks,
+            batch_size=max(1, profile_obj.text_batch_size),
+        )
+
+    refiner = HybridRefiner()
+    batch_size = max(1, profile_obj.text_batch_size)
+    batch: List[Block] = []
+    for block in normalized:
+        batch.append(block)
+        if len(batch) < batch_size:
+            continue
+        for refined in refiner.refine(batch):
+            yield apply_recipe_block(refined, recipe_config)
+        batch.clear()
+    if batch:
+        for refined in refiner.refine(batch):
+            yield apply_recipe_block(refined, recipe_config)
 
 
 # ---- Public API --------------------------------------------------------------
