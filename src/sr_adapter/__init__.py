@@ -6,6 +6,10 @@ from __future__ import annotations
 from importlib import import_module
 from typing import TYPE_CHECKING, Any, Dict, Tuple
 
+from .version import get_adapter_version
+
+__version__ = get_adapter_version()
+
 __all__ = [
     "Payload",
     "build_payload",
@@ -29,6 +33,7 @@ __all__ = [
     "ProcessingProfile",
     "LLMPolicy",
     "load_processing_profile",
+    "__version__",
 ]
 
 _LAZY_ATTRS: Dict[str, Tuple[str, str]] = {

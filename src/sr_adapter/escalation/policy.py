@@ -69,6 +69,7 @@ class EscalationPolicyEngine:
         blocks: Sequence[Block],
         *,
         max_confidence: Optional[float] = None,
+        max_semantic_confidence: Optional[float] = None,
         allow_types: Sequence[str] | None = None,
         limit: Optional[int] = None,
     ) -> SelectionResult:
@@ -81,25 +82,65 @@ class EscalationPolicyEngine:
         enforce_types = bool(allow_set)
 
         candidates: List[SelectionCandidate] = []
+        semantic_forced: List[int] = []
         for idx, block in enumerate(blocks):
-            if max_confidence is not None and block.confidence > max_confidence:
-                continue
             if enforce_types and block.type not in allow_set:
                 continue
+
+            struct_low = max_confidence is not None and block.confidence <= max_confidence
+
+            semantic_low = False
+            if max_semantic_confidence is not None and isinstance(block.attrs, dict):
+                raw_value = block.attrs.get("semantic_confidence")
+                semantic_score: float | None
+                if isinstance(raw_value, (int, float)):
+                    semantic_score = float(raw_value)
+                elif isinstance(raw_value, str):
+                    try:
+                        semantic_score = float(raw_value.strip())
+                    except ValueError:
+                        semantic_score = None
+                else:
+                    semantic_score = None
+                if semantic_score is not None and semantic_score <= max_semantic_confidence:
+                    semantic_low = True
+
+            if max_confidence is not None or max_semantic_confidence is not None:
+                if not (struct_low or semantic_low):
+                    continue
             features = build_features(block)
             score = self._model.score(features, block=block)
             candidates.append(SelectionCandidate(index=idx, score=score, features=features))
+            if semantic_low:
+                semantic_forced.append(idx)
 
         ordered = sorted(candidates, key=lambda cand: cand.score, reverse=True)
         selected: List[int] = []
-        for rank, candidate in enumerate(ordered, start=1):
-            if candidate.score < self._threshold:
-                continue
-            candidate.selected = True
-            candidate.rank = rank
-            selected.append(candidate.index)
+        candidate_map = {candidate.index: candidate for candidate in candidates}
+        rank = 1
+
+        for index in semantic_forced:
+            selected.append(index)
+            candidate = candidate_map.get(index)
+            if candidate is not None:
+                candidate.selected = True
+                candidate.rank = rank
+            rank += 1
             if isinstance(limit, int) and limit > 0 and len(selected) >= limit:
                 break
+
+        if not (isinstance(limit, int) and limit > 0 and len(selected) >= limit):
+            for candidate in ordered:
+                if candidate.index in candidate_map and candidate.index in selected:
+                    continue
+                if candidate.score < self._threshold:
+                    continue
+                candidate.selected = True
+                candidate.rank = rank
+                selected.append(candidate.index)
+                rank += 1
+                if isinstance(limit, int) and limit > 0 and len(selected) >= limit:
+                    break
 
         result = SelectionResult(indices=selected, candidates=candidates, threshold=self._threshold, limit=limit)
         self._last = result
@@ -110,12 +151,14 @@ class EscalationPolicyEngine:
         blocks: Sequence[Block],
         *,
         max_confidence: Optional[float] = None,
+        max_semantic_confidence: Optional[float] = None,
         allow_types: Sequence[str] | None = None,
         limit: Optional[int] = None,
     ) -> List[int]:
         return self.evaluate(
             blocks,
             max_confidence=max_confidence,
+            max_semantic_confidence=max_semantic_confidence,
             allow_types=allow_types,
             limit=limit,
         ).indices

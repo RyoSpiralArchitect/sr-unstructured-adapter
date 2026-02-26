@@ -16,7 +16,7 @@ from email import policy
 from email.parser import BytesParser
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Sequence, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Tuple
 
 import yaml
 from bs4 import BeautifulSoup
@@ -1472,4 +1472,3 @@ def parse_ics(path: str | Path) -> List[Block]:
         blocks.append(_new_block("other", text, source, confidence=0.3))
 
     return blocks
-

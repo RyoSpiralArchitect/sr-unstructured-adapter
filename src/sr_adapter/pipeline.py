@@ -16,8 +16,10 @@ from .normalize import normalize_block, normalize_blocks
 from .profiles import ProcessingProfile, resolve_profile
 from .runtime import NativeKernelRuntime, get_native_runtime
 from .refiner import HybridRefiner
-from .settings import get_settings
 from .escalation import get_escalation_policy
+from .semantic import get_semantic_annotator, import_semantic_module
+from .settings import get_settings
+from .version import get_adapter_version
 from .parsers import (
     parse_csv,
     parse_docx,
@@ -228,6 +230,7 @@ class PipelineOrchestrator:
         llm_ok: bool = True,
         *,
         mime: Optional[str] = None,
+        tenant: Optional[str] = None,
         deadline_ms: Optional[int] = None,
         max_blocks: Optional[int] = None,
     ) -> Document:
@@ -249,6 +252,37 @@ class PipelineOrchestrator:
 
         no_llm_env = os.getenv("SR_ADAPTER_NO_LLM", "").strip().lower() in {"1", "true", "yes"}
         policy = self.profile.llm_policy
+        semantic_env = os.getenv("SR_ADAPTER_SEMANTIC_CONFIDENCE", "").strip().lower() in {"1", "true", "yes"}
+        if semantic_env or policy.max_semantic_confidence is not None:
+            semantic_module = os.getenv("SR_ADAPTER_SEMANTIC_MODULE", "").strip()
+            if semantic_module:
+                try:
+                    import_semantic_module(semantic_module)
+                except Exception:  # pragma: no cover - defensive guard
+                    pass
+            try:
+                annotator_name = os.getenv("SR_ADAPTER_SEMANTIC_ANNOTATOR", "hash-v1")
+                annotator = get_semantic_annotator(annotator_name)
+                kwargs: dict[str, object] = {}
+                for key, env_key, cast in (
+                    ("window", "SR_ADAPTER_SEMANTIC_WINDOW", int),
+                    ("top_k", "SR_ADAPTER_SEMANTIC_TOP_K", int),
+                    ("dim", "SR_ADAPTER_SEMANTIC_DIM", int),
+                    ("max_tokens", "SR_ADAPTER_SEMANTIC_MAX_TOKENS", int),
+                ):
+                    raw = os.getenv(env_key, "").strip()
+                    if not raw:
+                        continue
+                    try:
+                        kwargs[key] = cast(raw)
+                    except Exception:
+                        continue
+                try:
+                    blocks = annotator(blocks, **kwargs) if kwargs else annotator(blocks)
+                except TypeError:
+                    blocks = annotator(blocks)
+            except Exception:  # pragma: no cover - defensive guard
+                pass
         do_llm = bool(llm_ok and not no_llm_env and policy.enabled)
         selection = None
         targets: List[int] = []
@@ -257,6 +291,7 @@ class PipelineOrchestrator:
             selection = policy_engine.evaluate(
                 blocks,
                 max_confidence=policy.max_confidence,
+                max_semantic_confidence=policy.max_semantic_confidence,
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
             )
@@ -271,7 +306,9 @@ class PipelineOrchestrator:
             result = escalate_low_conf(
                 blocks,
                 recipe,
+                tenant=tenant,
                 max_confidence=policy.max_confidence,
+                max_semantic_confidence=policy.max_semantic_confidence,
                 allow_types=policy.limit_block_types,
                 limit=policy.max_blocks,
                 selection=selection,
@@ -295,6 +332,7 @@ class PipelineOrchestrator:
             "source": str(source),
             "type": detected,
             "mime": mime or "",
+            "adapter_version": get_adapter_version(),
             "metrics_parse_ms": round(metrics.parse_ms, 2),
             "metrics_normalize_ms": round(metrics.normalize_ms, 2),
             "metrics_recipe_ms": round(metrics.recipe_ms, 2),
@@ -307,7 +345,10 @@ class PipelineOrchestrator:
             "llm_policy": policy.to_meta(),
             "runtime_text_enabled": bool(self.runtime and self.runtime.text_enabled),
             "runtime_layout_enabled": bool(self.runtime and self.runtime.layout_enabled),
+            "semantic_confidence": bool(semantic_env or policy.max_semantic_confidence is not None),
         }
+        if isinstance(tenant, str) and tenant.strip():
+            meta["tenant"] = tenant.strip()
 
         meta["languages"] = detected_languages
         if detected_languages:
@@ -504,6 +545,7 @@ def convert(
     llm_ok: bool = True,
     *,
     mime: Optional[str] = None,
+    tenant: Optional[str] = None,
     deadline_ms: Optional[int] = None,
     max_blocks: Optional[int] = None,
     profile: str | ProcessingProfile | None = None,
@@ -524,6 +566,7 @@ def convert(
         recipe,
         llm_ok=llm_ok,
         mime=mime,
+        tenant=tenant,
         deadline_ms=deadline_ms,
         max_blocks=max_blocks,
     )
@@ -534,6 +577,7 @@ def _build_worker(
     recipe: str,
     *,
     llm_ok: bool,
+    tenant: Optional[str],
     mime_by_path: Optional[Dict[str, str]],
     deadline_ms: Optional[int],
     max_blocks: Optional[int],
@@ -556,6 +600,7 @@ def _build_worker(
             recipe=recipe,
             llm_ok=llm_ok,
             mime=(mime_by_path or {}).get(str(p)),
+            tenant=tenant,
             deadline_ms=deadline_ms,
             max_blocks=max_blocks,
         )
@@ -569,6 +614,7 @@ def batch_convert(
     llm_ok: bool = True,
     *,
     mime_by_path: Optional[Dict[str, str]] = None,
+    tenant: Optional[str] = None,
     deadline_ms: Optional[int] = None,
     max_blocks: Optional[int] = None,
     concurrency: int = 0,
@@ -590,6 +636,7 @@ def batch_convert(
         profile,
         recipe,
         llm_ok=llm_ok,
+        tenant=tenant,
         mime_by_path=mime_by_path,
         deadline_ms=deadline_ms,
         max_blocks=max_blocks,

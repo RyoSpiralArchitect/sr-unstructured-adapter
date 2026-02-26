@@ -2,9 +2,15 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/
+.pytest_cache/
+.coverage
+.DS_Store
 .benchmarks/
 perf_report.txt
 native_status.json
+sr_adapter_jobs.sqlite3
+sr_adapter_jobs*.sqlite3
 src/sr_adapter/native/_*.so
 src/sr_adapter/native/_*.dylib
 src/sr_adapter/native/_*.dll

@@ -203,3 +203,20 @@ def test_selection_result_find_uses_cached_lookup():
     result.candidates.append(extra)
 
     assert result.find(3) is extra
+
+
+def test_select_escalation_indices_supports_semantic_or_gate():
+    reset_escalation_policy()
+    blocks = [
+        Block(text="semantic-low", confidence=0.9, attrs={"semantic_confidence": 0.1}),
+        Block(text="struct-low", confidence=0.2, attrs={"semantic_confidence": 0.9}),
+        Block(text="both-high", confidence=0.9, attrs={"semantic_confidence": 0.9}),
+    ]
+
+    indices = select_escalation_indices(
+        blocks,
+        max_confidence=0.4,
+        max_semantic_confidence=0.2,
+    )
+
+    assert indices == [0, 1]

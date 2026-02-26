@@ -2,18 +2,25 @@
 """Core data structures used across the adapter pipeline (v0.2)."""
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Tuple, Literal
+
+import hashlib
+import uuid
 from datetime import UTC, datetime
-import hashlib, uuid
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # -------- Provenance & geometry --------
 
+
 class BBox(BaseModel):
     """Axis-aligned bounding box in source coordinate space."""
-    x0: float; y0: float; x1: float; y1: float
+
+    x0: float
+    y0: float
+    x1: float
+    y1: float
 
     @model_validator(mode="after")
     def _check_order(self):
@@ -24,6 +31,7 @@ class BBox(BaseModel):
 
 class Provenance(BaseModel):
     """Where this block came from."""
+
     uri: Optional[str] = None           # file path / URL / s3://...
     page: Optional[int] = None          # 0-based page index if paged doc
     bbox: Optional[BBox] = None         # region in page coords
@@ -34,6 +42,7 @@ class Provenance(BaseModel):
 
 class Span(BaseModel):
     """Annotated portion inside Block.text [codepoint offsets]."""
+
     start: int
     end: int
     label: Optional[str] = None
@@ -70,12 +79,13 @@ BlockType = Literal[
 
 class Block(BaseModel):
     """Normalized chunk from a parser."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: BlockType = "paragraph"
     text: str = ""
     spans: List[Span] = Field(default_factory=list)
     attrs: Dict[str, Any] = Field(default_factory=dict)
-    source: Optional[str] = None
+    source: Optional[str] = None        # backwards-compatible provenance uri
     prov: Provenance = Field(default_factory=Provenance)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     lang: Optional[str] = None          # e.g. "en", "ja", "zh"
@@ -86,6 +96,10 @@ class Block(BaseModel):
         for s in self.spans:
             if not (0 <= s.start <= s.end <= n):
                 raise ValueError(f"Span({s.start},{s.end}) out of bounds for text length {n}")
+        if self.source and not self.prov.uri:
+            self.prov.uri = self.source
+        elif self.prov.uri and not self.source:
+            self.source = self.prov.uri
         return self
 
     @model_validator(mode="after")
@@ -101,10 +115,16 @@ class Block(BaseModel):
 
 class DocumentMeta(BaseModel):
     """Top-level document metadata."""
+
     uri: Optional[str] = None
-    source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
+    source: Optional[str] = None
+    source_kind: Literal["file", "url", "s3", "gcs", "bytes"] = "file"
+    schema_version: str = "0.2"
+    adapter_version: Optional[str] = None
+    tenant: Optional[str] = None
     title: Optional[str] = None
     mime_type: Optional[str] = None
+    mime: Optional[str] = None
     type: Optional[str] = None
     checksum: Optional[str] = None
     size_bytes: Optional[int] = None
@@ -123,6 +143,19 @@ class DocumentMeta(BaseModel):
     llm_policy: Dict[str, Any] = Field(default_factory=dict)
     runtime_text_enabled: Optional[bool] = None
     runtime_layout_enabled: Optional[bool] = None
+    semantic_confidence: bool = False
+
+    @model_validator(mode="after")
+    def _sync_aliases(self):
+        if self.source and not self.uri:
+            self.uri = self.source
+        elif self.uri and not self.source:
+            self.source = self.uri
+        if self.mime and not self.mime_type:
+            self.mime_type = self.mime
+        elif self.mime_type and not self.mime:
+            self.mime = self.mime_type
+        return self
 
     def __getitem__(self, key: str) -> Any:
         data = self.model_dump()
@@ -137,6 +170,7 @@ class DocumentMeta(BaseModel):
 
 class Document(BaseModel):
     """Conversion pipeline output."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     blocks: List[Block]
     meta: DocumentMeta = Field(default_factory=DocumentMeta)
@@ -151,6 +185,7 @@ def compute_checksum(data: bytes, algo: str = "blake2b") -> str:
     if algo == "sha256":
         return hashlib.sha256(data).hexdigest()
     raise ValueError(f"Unsupported algo: {algo}")
+
 
 def clone_model(model: BaseModel, **updates: Any):
     """Return a copy of *model* with updates applied (Pydantic v2/v1 compatible)."""
