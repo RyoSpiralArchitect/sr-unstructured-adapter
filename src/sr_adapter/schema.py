@@ -75,7 +75,7 @@ class Block(BaseModel):
     text: str = ""
     spans: List[Span] = Field(default_factory=list)
     attrs: Dict[str, Any] = Field(default_factory=dict)
-    source: Optional[str] = None
+    source: Optional[str] = None        # backwards-compatible provenance uri
     prov: Provenance = Field(default_factory=Provenance)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     lang: Optional[str] = None          # e.g. "en", "ja", "zh"
@@ -86,6 +86,10 @@ class Block(BaseModel):
         for s in self.spans:
             if not (0 <= s.start <= s.end <= n):
                 raise ValueError(f"Span({s.start},{s.end}) out of bounds for text length {n}")
+        if self.source and not self.prov.uri:
+            self.prov.uri = self.source
+        elif self.prov.uri and not self.source:
+            self.source = self.prov.uri
         return self
 
     @model_validator(mode="after")
@@ -102,9 +106,14 @@ class Block(BaseModel):
 class DocumentMeta(BaseModel):
     """Top-level document metadata."""
     uri: Optional[str] = None
+    source: Optional[str] = None
     source_kind: Literal["file","url","s3","gcs","bytes"] = "file"
+    schema_version: str = "0.2"
+    adapter_version: Optional[str] = None
+    tenant: Optional[str] = None
     title: Optional[str] = None
     mime_type: Optional[str] = None
+    mime: Optional[str] = None
     type: Optional[str] = None
     checksum: Optional[str] = None
     size_bytes: Optional[int] = None
@@ -123,6 +132,19 @@ class DocumentMeta(BaseModel):
     llm_policy: Dict[str, Any] = Field(default_factory=dict)
     runtime_text_enabled: Optional[bool] = None
     runtime_layout_enabled: Optional[bool] = None
+    semantic_confidence: bool = False
+
+    @model_validator(mode="after")
+    def _sync_aliases(self):
+        if self.source and not self.uri:
+            self.uri = self.source
+        elif self.uri and not self.source:
+            self.source = self.uri
+        if self.mime and not self.mime_type:
+            self.mime_type = self.mime
+        elif self.mime_type and not self.mime:
+            self.mime = self.mime_type
+        return self
 
     def __getitem__(self, key: str) -> Any:
         data = self.model_dump()

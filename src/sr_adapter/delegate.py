@@ -35,6 +35,7 @@ def select_escalation_indices(
     blocks: Sequence[Block],
     *,
     max_confidence: Optional[float] = None,
+    max_semantic_confidence: Optional[float] = None,
     allow_types: Sequence[str] | None = None,
     limit: Optional[int] = None,
 ) -> List[int]:
@@ -47,6 +48,7 @@ def select_escalation_indices(
     result = policy.evaluate(
         blocks,
         max_confidence=max_confidence,
+        max_semantic_confidence=max_semantic_confidence,
         allow_types=allow_types,
         limit=limit,
     )
@@ -57,7 +59,9 @@ def escalate_low_conf(
     blocks: Iterable[Block],
     recipe_name: str,
     *,
+    tenant: str | None = None,
     max_confidence: Optional[float] = None,
+    max_semantic_confidence: Optional[float] = None,
     allow_types: Sequence[str] | None = None,
     limit: Optional[int] = None,
     selection: SelectionResult | None = None,
@@ -68,17 +72,27 @@ def escalate_low_conf(
     if not recipe.llm or not recipe.llm.get("enable"):
         return list(blocks)
 
+    if max_confidence is None:
+        recipe_threshold = recipe.llm.get("min_conf", recipe.llm.get("max_confidence"))
+        if recipe_threshold is not None:
+            try:
+                max_confidence = float(recipe_threshold)
+            except Exception:
+                max_confidence = None
+
     original_blocks = list(blocks)
     if selection is not None:
         indices = list(selection.indices)
     else:
-        indices = select_escalation_indices(
+        policy_engine = get_escalation_policy()
+        selection = policy_engine.evaluate(
             original_blocks,
             max_confidence=max_confidence,
+            max_semantic_confidence=max_semantic_confidence,
             allow_types=allow_types,
             limit=limit,
         )
-        selection = get_escalation_policy().last()
+        indices = list(selection.indices)
     logger_instance = get_escalation_logger()
     if selection is not None:
         logger_instance.log_selection(
@@ -87,6 +101,7 @@ def escalate_low_conf(
             original_blocks,
             metadata={
                 "max_confidence": max_confidence,
+                "max_semantic_confidence": max_semantic_confidence,
                 "allow_types": list(allow_types or ()),
                 "limit": limit,
             },
@@ -95,37 +110,52 @@ def escalate_low_conf(
         return original_blocks
 
     manager = _get_driver_manager()
-    tenant = str(recipe.llm.get("tenant") or manager.tenant_manager.get_default_tenant())
+    tenant_override = str(tenant).strip() if isinstance(tenant, str) and tenant.strip() else None
+    tenant_name = str(
+        tenant_override
+        or recipe.llm.get("tenant")
+        or manager.tenant_manager.get_default_tenant()
+    )
     try:
-        driver = manager.get_driver(tenant, recipe.llm)
+        driver = manager.get_driver(tenant_name, recipe.llm)
     except Exception as exc:  # pragma: no cover - configuration failure path
         logger.warning(
             "LLM escalation skipped because driver could not be resolved for tenant '%s': %s",
-            tenant,
+            tenant_name,
             exc,
         )
         return original_blocks
-    prompt_template = recipe.llm.get("prompt_template")
+    prompt_template = recipe.llm.get("prompt_template") or recipe.llm.get("prompt")
     target_blocks = [original_blocks[i] for i in indices]
     context = "\n\n".join(block.text for block in target_blocks)
     if prompt_template:
-        try:
-            prompt = str(prompt_template).format(context=context, recipe=recipe.name)
-        except Exception:  # pragma: no cover - defensive guard
-            logger.warning("Failed to render prompt template for recipe '%s'", recipe.name)
-            prompt = context
+        rendered = str(prompt_template).strip()
+        if "{context}" in rendered or "{recipe}" in rendered:
+            try:
+                prompt = rendered.format(context=context, recipe=recipe.name)
+            except Exception:  # pragma: no cover - defensive guard
+                logger.warning("Failed to render prompt template for recipe '%s'", recipe.name)
+                prompt = context
+        else:
+            prompt = f"{rendered}\n\n{context}" if context else rendered
     else:
         prompt = context
 
     metadata = {
         "recipe": recipe.name,
+        "tenant": tenant_name,
         "block_count": len(target_blocks),
         "indices": indices,
     }
     try:
         raw_response = driver.generate(prompt, metadata=metadata)
     except Exception as exc:  # pragma: no cover - network failure path
-        logger.warning("LLM escalation failed for tenant '%s' with driver '%s': %s", tenant, driver.name, exc)
+        logger.warning(
+            "LLM escalation failed for tenant '%s' with driver '%s': %s",
+            tenant_name,
+            driver.name,
+            exc,
+        )
         if selection is not None:
             logger_instance.log_failure(
                 recipe.name,
@@ -136,7 +166,7 @@ def escalate_low_conf(
 
     normalized = _normalizer.normalize(driver.name, raw_response, prompt=prompt)
     payload = asdict(normalized)
-    payload.update({"tenant": tenant, "driver": driver.name})
+    payload.update({"tenant": tenant_name, "driver": driver.name})
 
     escalated = list(original_blocks)
     for idx in indices:

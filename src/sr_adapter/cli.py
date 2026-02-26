@@ -16,7 +16,10 @@ from .drivers import DriverManager
 from .normalizer import LLMNormalizer
 from .recipe import load_recipe
 from .runtime import RuntimeSnapshot, get_native_runtime, runtime_status_json
+from .schema import Block, Document
 from .telemetry import TelemetryExporter
+from .profiles import get_profile_store
+from .semantic import list_semantic_annotators
 
 _BATCH_CONVERT_PARAMS = set(inspect.signature(batch_convert).parameters)
 
@@ -227,6 +230,36 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Emit the tuning report as JSON",
     )
 
+    inspect_parser = subparsers.add_parser("inspect", help="Inspect built-in registries")
+    inspect_parser.add_argument(
+        "kind",
+        choices=("drivers", "profiles", "parsers", "semantic-annotators"),
+        help="Which registry to inspect",
+    )
+    inspect_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit machine-readable JSON instead of line output",
+    )
+
+    schema_parser = subparsers.add_parser("schema", help="Export JSON schema for models")
+    schema_parser.add_argument(
+        "model",
+        choices=("document", "block"),
+        help="Which model schema to export",
+    )
+    schema_parser.add_argument(
+        "--out",
+        type=Path,
+        help="Optional destination file (defaults to stdout)",
+    )
+    schema_parser.add_argument(
+        "--indent",
+        type=int,
+        default=2,
+        help="Indentation level for JSON output",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -308,6 +341,10 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_llm(args)
     if args.command == "kernels":
         return _handle_kernels(args)
+    if args.command == "inspect":
+        return _handle_inspect(args)
+    if args.command == "schema":
+        return _handle_schema(args)
     raise ValueError(f"Unhandled command: {args.command}")
 
 
@@ -547,6 +584,55 @@ def _handle_kernels(args: argparse.Namespace) -> int:
             print("\n".join(summary))
         return 0
     raise ValueError(f"Unhandled kernel sub-command: {args.kernel_command}")
+
+def _handle_inspect(args: argparse.Namespace) -> int:
+    kind = str(args.kind)
+    items: list[str]
+    if kind == "drivers":
+        items = list(DriverManager.registered_driver_names())
+    elif kind == "profiles":
+        items = list(get_profile_store().list_available())
+    elif kind == "parsers":
+        from .pipeline import REGISTRY  # local import to avoid import-time side effects
+
+        items = sorted(set(REGISTRY.alias_to_key.values()))
+    elif kind == "semantic-annotators":
+        items = list(list_semantic_annotators())
+    else:
+        raise ValueError(f"Unhandled inspect kind: {kind}")
+
+    if args.json:
+        json.dump({"kind": kind, "items": items}, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    for item in items:
+        print(item)
+    return 0
+
+
+def _handle_schema(args: argparse.Namespace) -> int:
+    model = str(args.model)
+    if model == "document":
+        target = Document
+    elif model == "block":
+        target = Block
+    else:
+        raise ValueError(f"Unhandled schema model: {model}")
+
+    try:
+        payload = target.model_json_schema()  # type: ignore[attr-defined]
+    except AttributeError:  # pragma: no cover - pydantic v1 fallback
+        payload = target.schema()  # type: ignore[attr-defined]
+
+    output = json.dumps(payload, ensure_ascii=False, indent=max(0, int(args.indent)))
+    if args.out:
+        path = args.out.expanduser()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(output + "\n", encoding="utf-8")
+    else:
+        print(output)
+    return 0
 
 
 def _emit_kernel_status(runtime: object | None, *, as_json: bool) -> int:

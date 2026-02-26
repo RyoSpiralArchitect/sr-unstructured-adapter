@@ -162,6 +162,55 @@ python -m sr_adapter.cli convert docs/*.pdf --recipe default --out output.jsonl 
 ```
 Stream parsed blocks into JSONL while optionally disabling escalation with `--no-llm`. Select another processing profile (e.g. `realtime`) to trade accuracy for latency, and choose a distributed backend (`threadpool`, `asyncio`, `dask`, `ray`) when scaling batch jobs. 【F:src/sr_adapter/cli.py†L19-L110】【F:src/sr_adapter/pipeline.py†L320-L420】
 
+## HTTP API quickstart (optional)
+Install the optional API dependencies:
+
+```bash
+pip install "sr-unstructured-adapter[api]"
+```
+
+Run a local server:
+
+```bash
+sr-adapt-api --host 127.0.0.1 --port 8000
+```
+
+Convert a file upload:
+
+```bash
+curl -sS -F "file=@examples/sample.txt" "http://127.0.0.1:8000/convert?recipe=default&profile=balanced" | jq .
+```
+
+Notes:
+- Path conversion is disabled by default. Enable it with `SR_ADAPTER_API_ALLOW_PATHS=1` and then use `POST /convert-path`.
+- Upload guardrail: set `SR_ADAPTER_API_MAX_UPLOAD_MB=<float>` to enforce an upper bound (defaults to `SR_ADAPTER_MAX_SIZE_MB` when set, otherwise 200MB; set to `0` to disable).
+- Request IDs: responses include `X-Request-ID` (you can supply your own via the `X-Request-ID` request header).
+- Optional rate limiting: set `SR_ADAPTER_API_RATE_LIMIT_RPM=<int>` (requests/minute; default disabled). When running behind a reverse proxy, set `SR_ADAPTER_API_TRUST_PROXY_HEADERS=1` to key limits by `X-Forwarded-For`.
+- Telemetry endpoints: `GET /telemetry` (JSON) and `GET /metrics` (Prometheus; requires `telemetry.enable_prometheus=true`).
+- Optional API key auth: set `SR_ADAPTER_API_KEYS=key1,key2` (or `SR_ADAPTER_API_KEY=key1`) and send `X-API-Key: key1` (or `Authorization: Bearer key1`). `GET /healthz` stays public for liveness checks.
+- Tenant override for LLM escalation: send `X-SR-Tenant: <tenant-name>` to force a specific tenant config.
+
+### Async jobs
+For long-running conversions, submit a job and poll later:
+
+```bash
+# enqueue
+curl -sS -F "file=@examples/sample.txt" "http://127.0.0.1:8000/jobs/convert?recipe=default&profile=balanced&llm_ok=false" | jq .
+
+# check status
+curl -sS "http://127.0.0.1:8000/jobs/<job_id>" | jq .
+
+# fetch result (409 until ready)
+curl -sS "http://127.0.0.1:8000/jobs/<job_id>/result" | jq .
+```
+
+To persist job status/results across restarts, configure the SQLite backend:
+
+```bash
+export SR_ADAPTER_API_JOBS_BACKEND=sqlite
+export SR_ADAPTER_API_JOBS_DB_PATH=./sr_adapter_jobs.sqlite3
+```
+
 ### Inspect LLM drivers
 ```bash
 # List configured tenants

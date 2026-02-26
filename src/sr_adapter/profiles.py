@@ -17,6 +17,7 @@ class LLMPolicy:
 
     enabled: bool = True
     max_confidence: Optional[float] = None
+    max_semantic_confidence: Optional[float] = None
     limit_block_types: Tuple[str, ...] = ()
     max_blocks: Optional[int] = None
     deadline_ms: Optional[int] = None
@@ -30,6 +31,9 @@ class LLMPolicy:
         max_confidence = data.get("max_confidence")
         if max_confidence is not None:
             max_confidence = float(max_confidence)
+        max_semantic_confidence = data.get("max_semantic_confidence")
+        if max_semantic_confidence is not None:
+            max_semantic_confidence = float(max_semantic_confidence)
         limit_block_types: Sequence[str] = tuple(data.get("limit_block_types", ()))  # type: ignore[assignment]
         limit_block_types = tuple(str(t) for t in limit_block_types)
         max_blocks = data.get("max_blocks")
@@ -46,6 +50,7 @@ class LLMPolicy:
         return cls(
             enabled=enabled,
             max_confidence=max_confidence,
+            max_semantic_confidence=max_semantic_confidence,
             limit_block_types=tuple(limit_block_types),
             max_blocks=max_blocks,
             deadline_ms=deadline,
@@ -56,6 +61,7 @@ class LLMPolicy:
         return {
             "enabled": self.enabled,
             "max_confidence": self.max_confidence,
+            "max_semantic_confidence": self.max_semantic_confidence,
             "limit_block_types": list(self.limit_block_types),
             "max_blocks": self.max_blocks,
             "deadline_ms": self.deadline_ms,
@@ -227,10 +233,6 @@ class ProfileStore:
         target = name or _DEFAULT_PROFILE_NAME
         if target in self._cache:
             return self._cache[target]
-        if target in self._builtins:
-            profile = ProcessingProfile.from_dict(self._builtins[target], name=target)
-            self._cache[target] = profile
-            return profile
         for directory in self._search_paths:
             candidate_yaml = directory / f"{target}.yaml"
             candidate_yml = directory / f"{target}.yml"
@@ -241,6 +243,10 @@ class ProfileStore:
                     profile = ProcessingProfile.from_dict(data, name=target)
                     self._cache[target] = profile
                     return profile
+        if target in self._builtins:
+            profile = ProcessingProfile.from_dict(self._builtins[target], name=target)
+            self._cache[target] = profile
+            return profile
         raise KeyError(f"Processing profile '{target}' could not be resolved")
 
 
