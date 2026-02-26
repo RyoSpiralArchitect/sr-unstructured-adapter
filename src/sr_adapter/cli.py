@@ -6,11 +6,14 @@ from __future__ import annotations
 import argparse
 import inspect
 import json
+import time
 from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 import sys
+import uuid
 
-from .pipeline import batch_convert
+from .pipeline import batch_convert, stream_convert
 from .writer import write_jsonl
 from .drivers import DriverManager
 from .normalizer import LLMNormalizer
@@ -20,6 +23,8 @@ from .schema import Block, Document
 from .telemetry import TelemetryExporter
 from .profiles import get_profile_store
 from .semantic import list_semantic_annotators
+from .sniff import detect_type
+from .version import get_adapter_version
 
 _BATCH_CONVERT_PARAMS = set(inspect.signature(batch_convert).parameters)
 
@@ -43,9 +48,20 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Disable low confidence LLM escalation",
     )
     convert_parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream blocks as JSONL events (requires --no-llm)",
+    )
+    convert_parser.add_argument(
         "--profile",
         default="balanced",
         help="Processing profile to orchestrate runtime + LLM policies",
+    )
+    convert_parser.add_argument(
+        "--max-blocks",
+        type=int,
+        default=None,
+        help="Limit the number of blocks per document (0 = unlimited)",
     )
     convert_parser.add_argument(
         "--concurrency",
@@ -318,12 +334,72 @@ def main(argv: list[str] | None = None) -> int:
         if not files:
             print("No valid files found from provided inputs", file=sys.stderr)
             return 1
+        if args.stream:
+            if not args.no_llm:
+                print("--stream currently requires --no-llm (LLM escalation is not streamable)", file=sys.stderr)
+                return 2
+            out_path = Path(args.out).expanduser()
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            with out_path.open("w", encoding="utf-8") as handle:
+                for path in files:
+                    doc_id = str(uuid.uuid4())
+                    started = time.perf_counter()
+                    meta = {
+                        "kind": "document",
+                        "id": doc_id,
+                        "source": str(path),
+                        "type": detect_type(path),
+                        "mime": "",
+                        "recipe": str(args.recipe),
+                        "profile": str(args.profile),
+                        "adapter_version": get_adapter_version(),
+                        "created_at": datetime.now(UTC).isoformat(),
+                    }
+                    handle.write(json.dumps(meta, ensure_ascii=False))
+                    handle.write("\n")
+
+                    count = 0
+                    for block in stream_convert(
+                        path,
+                        recipe=args.recipe,
+                        profile=args.profile,
+                        max_blocks=args.max_blocks,
+                    ):
+                        if hasattr(block, "model_dump"):
+                            block_payload = block.model_dump()  # type: ignore[attr-defined]
+                        elif hasattr(block, "dict"):
+                            block_payload = block.dict()  # type: ignore[call-arg]
+                        else:
+                            block_payload = getattr(block, "__dict__", {})
+                        record = {
+                            "kind": "block",
+                            "id": doc_id,
+                            "source": str(path),
+                            "index": count,
+                            "block": block_payload,
+                        }
+                        handle.write(json.dumps(record, ensure_ascii=False))
+                        handle.write("\n")
+                        count += 1
+
+                    summary = {
+                        "kind": "summary",
+                        "id": doc_id,
+                        "source": str(path),
+                        "block_count": count,
+                        "elapsed_ms": round((time.perf_counter() - started) * 1000.0, 2),
+                    }
+                    handle.write(json.dumps(summary, ensure_ascii=False))
+                    handle.write("\n")
+            return 0
         kwargs = {
             "recipe": args.recipe,
             "llm_ok": not args.no_llm,
         }
         if "profile" in _BATCH_CONVERT_PARAMS:
             kwargs["profile"] = args.profile
+        if "max_blocks" in _BATCH_CONVERT_PARAMS:
+            kwargs["max_blocks"] = args.max_blocks
         if "concurrency" in _BATCH_CONVERT_PARAMS:
             kwargs["concurrency"] = args.concurrency
         if "backend" in _BATCH_CONVERT_PARAMS:

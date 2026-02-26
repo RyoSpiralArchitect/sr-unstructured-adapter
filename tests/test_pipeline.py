@@ -483,6 +483,50 @@ def test_cli_convert_produces_jsonl(tmp_path: Path) -> None:
     assert any(block["type"] == "kv" for block in payload["blocks"])
 
 
+def test_cli_convert_streams_blocks(tmp_path: Path) -> None:
+    source = tmp_path / "note.txt"
+    source.write_text("Alpha\nBeta\n", encoding="utf-8")
+    out = tmp_path / "out_stream.jsonl"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sr_adapter.cli",
+            "convert",
+            str(source),
+            "--recipe",
+            "default",
+            "--out",
+            str(out),
+            "--no-llm",
+            "--stream",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+
+    lines = out.read_text(encoding="utf-8").splitlines()
+    assert len(lines) >= 3
+    records = [json.loads(line) for line in lines]
+
+    assert records[0]["kind"] == "document"
+    doc_id = records[0]["id"]
+    assert records[0]["source"] == str(source)
+
+    blocks = [record for record in records if record.get("kind") == "block"]
+    assert blocks
+    assert all(record.get("id") == doc_id for record in blocks)
+    assert any(record["block"]["text"] == "Alpha" for record in blocks)
+    assert any(record["block"]["text"] == "Beta" for record in blocks)
+
+    assert records[-1]["kind"] == "summary"
+    assert records[-1]["id"] == doc_id
+    assert records[-1]["block_count"] == len(blocks)
+
+
 def test_cli_convert_accepts_paths_file(tmp_path: Path) -> None:
     first = tmp_path / "a.log"
     first.write_text("Sensor: A1\nTemp: 20.0\n", encoding="utf-8")
