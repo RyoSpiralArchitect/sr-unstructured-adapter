@@ -7,6 +7,8 @@ __pycache__/
 .coverage
 .DS_Store
 .benchmarks/
+build/
+dist/
 perf_report.txt
 native_status.json
 sr_adapter_jobs.sqlite3
