@@ -10,7 +10,7 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - **Config-first ergonomics** – Recipes describe parsing behaviour, while tenant and adapter YAML plus `.env` overrides keep credentials and runtime toggles out of code. 
 - **Observability ready** – Kernel and LLM latency, payload sizes, and failures flow to Prometheus or Sentry with per-service labels straight from the CLI.
 - **Recipe autopilot** – Feed the CLI a few labelled examples and it proposes regex-based recipes, scores them against negative samples, and emits YAML ready for `configs/recipes/`. 
-- **Hybrid embeddings** – A lightweight `BlockEmbedder` mixes text, layout, and metadata into deterministic vectors plus a pluggable search index for semantic clustering or FAISS-backed recall. 【F:src/sr_adapter/embedding.py†L1-L170】
+- **Hybrid embeddings** – A lightweight `BlockEmbedder` mixes hashed text embeddings, layout, metadata, and optional semantic-field stats into deterministic vectors plus a pluggable search index for clustering or FAISS-backed recall. 【F:src/sr_adapter/embedding.py†L1-L230】
 - **Adaptive kernels** – The autotuner benchmarks batch sizes for the native runtime and records the best settings for future runs straight from `kernels autotune`.
   
 ## Architecture at a glance
@@ -286,7 +286,8 @@ from sr_adapter.embedding import BlockEmbedder, EmbeddingIndex
 from sr_adapter.schema import Block
 
 embedder = BlockEmbedder(dimensions=64)
-vectors = embedder.embed(blocks)
+# Use embed_with_context(...) to inject deterministic semantic-field stats when desired.
+vectors = embedder.embed_with_context(blocks)
 index = EmbeddingIndex(len(vectors[0]))
 for block, vector in zip(blocks, vectors):
     index.add(vector, {"id": block.id, "type": block.type})

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-02-26
+
+### Added
+- Context-aware embeddings (`BlockEmbedder.embed_with_context`) that inject deterministic semantic-field statistics.
+
+### Changed
+- The fallback text embedding path now uses token-hash vectors (no heavy ML deps) instead of random projections.
+
 ## [0.2.2] - 2026-02-26
 
 ### Added

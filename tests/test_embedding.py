@@ -29,3 +29,19 @@ def test_embedding_index_similarity():
     hits = index.search(vectors[0], top_k=2)
     assert hits
     assert hits[0].metadata["id"] == 0
+
+
+def test_embed_with_context_changes_semantic_tail():
+    embedder = BlockEmbedder(dimensions=64, seed=5)
+    blocks = [
+        _make_block("same", page=0),
+        _make_block("same", page=0),
+        _make_block("different", page=0),
+        _make_block("same", page=0),
+    ]
+
+    plain = embedder.embed(blocks)
+    contextual = embedder.embed_with_context(blocks, window=1, top_k=1)
+
+    assert plain[0] == plain[3]
+    assert contextual[0] != contextual[3]
