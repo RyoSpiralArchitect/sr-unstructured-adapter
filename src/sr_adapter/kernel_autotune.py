@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Lock
@@ -45,17 +46,21 @@ class KernelAutoTuneStore:
         except Exception:
             return
         if isinstance(payload, dict):
-            for profile, config in payload.get("layout", {}).items():
+            layout = payload.get("layout", {})
+            if not isinstance(layout, dict):
+                layout = {}
+            for profile, config in layout.items():
                 try:
                     value = int(config)
-                except (TypeError, ValueError):
+                except (TypeError, ValueError, OverflowError):
                     continue
-                self._layout_map()[str(profile)] = value
+                if value > 0 and not isinstance(config, bool):
+                    self._layout_map()[str(profile)] = value
             text_bytes = payload.get("text_batch_bytes")
             try:
-                if text_bytes is not None:
+                if text_bytes is not None and not isinstance(text_bytes, bool) and int(text_bytes) > 0:
                     self._data.setdefault("text", {})["batch_bytes"] = int(text_bytes)
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, OverflowError):
                 pass
 
     def _layout_map(self) -> Dict[str, int]:
@@ -125,7 +130,7 @@ def get_autotune_store() -> KernelAutoTuneStore:
     if kernel_settings is not None:
         enabled = bool(kernel_settings.enabled)
         resolved = getattr(kernel_settings, "resolved_state_path", None)
-        if resolved is not None:
+        if path is None and resolved is not None:
             path = resolved
     if path is None:
         base = Path(os.getenv("HOME") or str(Path.home()))
@@ -194,7 +199,7 @@ class KernelAutoTuner:
             normalizer = NativeTextNormalizer(max_batch_bytes=batch_bytes)
         except Exception:
             return None
-        samples = self._sample_blocks(12, text="Text normalisation sample")
+        samples = self._sample_blocks(64, text="Text normalisation sample. " * 1024)
         start = time.perf_counter()
         try:
             _ = normalizer.normalize_blocks(samples)
@@ -252,7 +257,10 @@ class KernelAutoTuner:
 
         best_layout: Optional[int] = None
         if layout_trials:
-            top_layout = max(layout_trials, key=lambda entry: entry.get("throughput", 0.0))
+            top_layout = max(layout_trials, key=lambda entry: statistics.median(
+                trial["throughput"] for trial in layout_trials
+                if trial["batch_size"] == entry["batch_size"]
+            ))
             value = top_layout.get("batch_size")
             if value is not None:
                 best_layout = int(value)
@@ -263,7 +271,10 @@ class KernelAutoTuner:
 
         best_text: Optional[int] = None
         if text_trials:
-            top_text = max(text_trials, key=lambda entry: entry.get("throughput", 0.0))
+            top_text = max(text_trials, key=lambda entry: statistics.median(
+                trial["throughput"] for trial in text_trials
+                if trial["batch_bytes"] == entry["batch_bytes"]
+            ))
             value = top_text.get("batch_bytes")
             if value is not None:
                 best_text = int(value)

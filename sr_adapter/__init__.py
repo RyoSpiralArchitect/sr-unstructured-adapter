@@ -1,9 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Shim package to expose ``src.sr_adapter`` without installation.
-
-This keeps ``python -m sr_adapter.cli`` working in editable checkouts by
-forwarding imports to the actual implementation living under ``src/``.
-"""
+"""Expose the source package in an uninstalled checkout."""
 
 from __future__ import annotations
 
@@ -11,24 +7,12 @@ import importlib.util
 import sys
 from pathlib import Path
 
-
-_PKG_ROOT = Path(__file__).resolve().parent
-_SRC_IMPL = _PKG_ROOT.parent / "src" / "sr_adapter"
-
-__path__ = [str(_SRC_IMPL)] if _SRC_IMPL.exists() else list(__path__)  # type: ignore[name-defined]
-
-if _SRC_IMPL.exists():
-    spec = importlib.util.spec_from_file_location("_sr_adapter_impl", _SRC_IMPL / "__init__.py")
-    if spec and spec.loader:
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        spec.loader.exec_module(module)
-        for name, value in vars(module).items():
-            if name.startswith("__") and name not in {"__all__", "__doc__"}:
-                continue
-            globals()[name] = value
-        __all__ = getattr(module, "__all__", [name for name in globals() if not name.startswith("_")])
-    else:  # pragma: no cover - defensive fallback
-        __all__: list[str] = []
-else:  # pragma: no cover - when installed via pip the shim is redundant
-    __all__: list[str] = []
+_SRC_IMPL = Path(__file__).resolve().parent.parent / "src" / "sr_adapter"
+_spec = importlib.util.spec_from_file_location(
+    __name__, _SRC_IMPL / "__init__.py", submodule_search_locations=[str(_SRC_IMPL)]
+)
+if _spec is None or _spec.loader is None:  # pragma: no cover
+    raise ImportError("sr_adapter source package is unavailable; install the distribution")
+_module = importlib.util.module_from_spec(_spec)
+sys.modules[__name__] = _module
+_spec.loader.exec_module(_module)

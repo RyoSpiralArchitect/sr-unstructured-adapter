@@ -39,10 +39,12 @@ struct CodePointBuffer {
 };
 
 bool is_space(char32_t ch) {
-    if (ch <= 0x20) {
-        return true;
-    }
-    return ch == 0x3000 || ch == 0x00A0;
+    // Match Python str.isspace()/re \s, including Unicode separators but
+    // excluding NUL and other non-whitespace control characters.
+    return (ch >= 0x09 && ch <= 0x0D) || (ch >= 0x1C && ch <= 0x20) ||
+           ch == 0x85 || ch == 0xA0 || ch == 0x1680 ||
+           (ch >= 0x2000 && ch <= 0x200A) || ch == 0x2028 || ch == 0x2029 ||
+           ch == 0x202F || ch == 0x205F || ch == 0x3000;
 }
 
 bool is_digit(char32_t ch) { return ch >= U'0' && ch <= U'9'; }
@@ -400,4 +402,3 @@ std::size_t normalize_text_blocks(const TextBlockInput *inputs, std::size_t coun
 }
 
 } // extern "C"
-

@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import ctypes
-import os
-import subprocess
-import sys
 from dataclasses import dataclass
+from .build import ensure_library
 from pathlib import Path
 from threading import Lock
 from typing import List, Optional, Sequence
@@ -30,67 +28,8 @@ class TextKernelResult:
     confidence: float
 
 
-_SUFFIX = {
-    "linux": ".so",
-    "darwin": ".dylib",
-    "win32": ".dll",
-}
-
-
-def _library_suffix() -> str:
-    for key, suffix in _SUFFIX.items():
-        if sys.platform.startswith(key):
-            return suffix
-    return ".so"
-
-
-def _library_path() -> Path:
-    return Path(__file__).with_name("_text_kernel" + _library_suffix())
-
-
-def _source_path() -> Path:
-    return Path(__file__).with_name("_text_kernel.cpp")
-
-
-def _compile_library(target: Path) -> None:
-    source = _source_path()
-    if not source.exists():
-        raise TextKernelError(f"missing text kernel source: {source}")
-
-    compiler = os.environ.get("CXX", "c++")
-    cmd = [
-        compiler,
-        "-std=c++17",
-        "-O3",
-        "-fPIC",
-        "-shared",
-        str(source),
-        "-o",
-        str(target),
-    ]
-    try:
-        subprocess.run(cmd, check=True, capture_output=True)
-    except subprocess.CalledProcessError as exc:  # pragma: no cover
-        raise TextKernelError(exc.stderr.decode("utf-8", "ignore") or str(exc)) from exc
-
-
 def _ensure_library() -> Path:
-    target = _library_path()
-    source = _source_path()
-    needs_build = not target.exists()
-    if not needs_build and source.exists():
-        needs_build = target.stat().st_mtime < source.stat().st_mtime
-    if needs_build:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        _compile_library(target)
-    legacy = Path(__file__).with_suffix(_library_suffix())
-    if legacy.exists() and legacy != target:
-        try:
-            legacy.unlink()
-        except OSError:
-            pass
-    return target
-
+    return ensure_library(Path(__file__).with_name("_text_kernel.cpp"), TextKernelError)
 
 class TextKernel:
     """ctypes wrapper around the native text normalization kernel."""
@@ -140,6 +79,8 @@ class TextKernel:
         for idx, (data, type_code, infer, confidence) in enumerate(payloads):
             if not isinstance(data, (bytes, bytearray)):
                 raise TypeError("kernel input must be utf-8 bytes")
+            data = bytes(data)
+            data.decode("utf-8")  # Reject malformed UTF-8 before entering C++.
             buf = ctypes.create_string_buffer(data)
             holders.append(buf)
             inputs[idx] = self._Input(
@@ -168,11 +109,15 @@ class TextKernel:
                 outputs,
             )
 
+        if written > len(buffer):
+            raise TextKernelError("kernel returned an invalid output size")
         data = buffer.raw[:written]
         results: List[TextKernelResult] = []
         for entry in outputs:
             start = int(entry.offset)
             end = start + int(entry.length)
+            if end > len(data):
+                raise TextKernelError("kernel returned an invalid output range")
             chunk = data[start:end]
             results.append(
                 TextKernelResult(

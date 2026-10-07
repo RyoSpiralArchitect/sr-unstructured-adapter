@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import Any, Dict, Mapping, Optional
 
@@ -69,9 +70,13 @@ class TelemetryExporter:
         def _format_labels(additional: Mapping[str, str]) -> str:
             if not additional:
                 return ""
-            payload = ",".join(
-                f"{key}={json.dumps(value)}" for key, value in sorted(additional.items())
-            )
+            labels = []
+            for key, value in sorted(additional.items()):
+                if not re.fullmatch(r"[a-zA-Z_][a-zA-Z0-9_]*", key):
+                    raise ValueError(f"Invalid Prometheus label name: {key!r}")
+                escaped = str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+                labels.append(f'{key}="{escaped}"')
+            payload = ",".join(labels)
             return f"{{{payload}}}"
 
         base_labels = dict(self.settings.labels)
@@ -234,4 +239,3 @@ __all__ = [
     "TelemetryExporter",
     "export_prometheus",
 ]
-

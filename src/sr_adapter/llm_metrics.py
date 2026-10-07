@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from threading import Lock
 from typing import Any, Dict, List, MutableMapping
 
@@ -105,7 +105,7 @@ class LLMMetricsRegistry:
 
     def snapshot(self) -> LLMMetricsSnapshot:
         with self._lock:
-            stats = [stat for stat in self._stats.values()]
+            stats = [replace(stat) for stat in self._stats.values()]
         return LLMMetricsSnapshot(collected_at=time.time(), stats=list(stats))
 
     def reset(self) -> None:
@@ -126,4 +126,3 @@ __all__ = [
     "LLMMetricsSnapshot",
     "get_llm_registry",
 ]
-

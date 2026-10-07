@@ -6,9 +6,9 @@ import json
 import math
 import os
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from threading import Lock
+from threading import Lock, RLock
 from typing import Any, Deque, Dict, Iterable, Iterator, List, Optional, Sequence
 
 from .native import LayoutBox, LayoutKernel, LayoutResult, ensure_layout_kernel
@@ -81,7 +81,9 @@ class LayoutCalibrationStore:
             if isinstance(raw, dict):
                 for key, value in raw.items():
                     try:
-                        data[str(key)] = float(value)
+                        threshold = float(value)
+                        if math.isfinite(threshold) and 0 < threshold <= 1:
+                            data[str(key)] = threshold
                     except (TypeError, ValueError):
                         continue
         self._data = data
@@ -147,20 +149,35 @@ class VisualLayoutAnalyzer:
         self.low_conf_cutoff = float(low_conf_cutoff)
         self.batch_size = max(1, int(batch_size))
         self._history: Deque[float] = deque(maxlen=128)
+        self._lock = RLock()
 
     def process(self, candidates: Iterable[LayoutCandidate]) -> Iterator[LayoutSegment]:
+        page_orders: Dict[int, int] = {}
+
+        def flush(buffer):
+            with self._lock:
+                segments = list(self._flush(buffer))
+            for segment in segments:
+                order = page_orders.get(segment.page, 0)
+                page_orders[segment.page] = order + 1
+                attrs = dict(segment.block.attrs, layout_order=order)
+                prov = clone_model(segment.block.prov, order=order)
+                block = clone_model(segment.block, attrs=attrs, prov=prov)
+                yield replace(segment, block=block, order=order)
+
         buffer: List[LayoutCandidate] = []
         for candidate in candidates:
             buffer.append(candidate)
             if len(buffer) >= self.batch_size:
-                yield from self._flush(buffer)
+                yield from flush(buffer)
                 buffer.clear()
         if buffer:
-            yield from self._flush(buffer)
+            yield from flush(buffer)
 
     def record_feedback(self, confidences: Iterable[float]) -> None:
-        updated = self.kernel.calibrate(confidences, self.threshold)
-        self._update_threshold(updated)
+        with self._lock:
+            updated = self.kernel.calibrate(confidences, self.threshold)
+            self._update_threshold(updated)
 
     def _flush(self, buffer: List[LayoutCandidate]) -> Iterator[LayoutSegment]:
         if not buffer:
@@ -184,7 +201,7 @@ class VisualLayoutAnalyzer:
         low_conf = [res for res in ordered if res.confidence < self.low_conf_cutoff]
         if low_conf:
             updated = self.kernel.calibrate([cand.score for cand in buffer], self.threshold)
-            if updated > self.threshold + 1e-3:
+            if math.isfinite(updated) and self.threshold + 1e-3 < updated <= 1:
                 self._update_threshold(updated)
                 return self._flush(buffer)
         segments: List[LayoutSegment] = []
@@ -238,7 +255,7 @@ class VisualLayoutAnalyzer:
         return tuple(self._history)
 
     def _update_threshold(self, value: float) -> None:
-        if value > 0 and abs(value - self.threshold) > 1e-3:
+        if math.isfinite(value) and 0 < value <= 1 and abs(value - self.threshold) > 1e-3:
             self.threshold = float(value)
             if self.store:
                 self.store.update(self.profile, self.threshold)
