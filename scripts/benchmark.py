@@ -23,7 +23,7 @@ import statistics
 import sys
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -479,7 +479,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         [
             "# Escalation policy ablation report",
             "",
-            f"- Generated: {datetime.now(UTC).isoformat()}",
+            f"- Generated: {datetime.now(timezone.utc).isoformat()}",
             f"- Dataset: `{dataset}` ({len(cases)} case(s))",
             f"- Python: {platform.python_version()}",
             f"- Platform: {platform.platform()}",
@@ -490,7 +490,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
 
     json_report = {
-        "generated_at": datetime.now(UTC).isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "dataset": str(dataset),
         "case_count": len(cases),
         "python": platform.python_version(),

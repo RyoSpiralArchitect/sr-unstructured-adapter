@@ -1,31 +1,45 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-name: CI (lite)
+name: CI
 
 on:
   push:
-    branches:
-      - "**"
+    branches: ["**"]
   pull_request:
-    branches:
-      - "**"
+    branches: ["**"]
 
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.10"
+            disable_native: "1"
+          - python: "3.11"
+            disable_native: "0"
+          - python: "3.13"
+            disable_native: "0"
     env:
-      SR_ADAPTER_DISABLE_NATIVE_RUNTIME: "1"
+      SR_ADAPTER_DISABLE_NATIVE_RUNTIME: ${{ matrix.disable_native }}
+      SR_ADAPTER_DISABLE_LAYOUT_CACHE: "1"
+      SR_ADAPTER_PROFILE_AUTOMATION__ENABLED: "false"
+      SR_ADAPTER_KERNEL_AUTOTUNE__ENABLED: "false"
       PYTHONWARNINGS: "default"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python }}
       - name: Install dependencies
-        run: |
-          python -m pip install -U pip
-          pip install -e .[dev]
-          pip install ruff
-      - name: Ruff (lint)
+        run: python -m pip install -e '.[dev,api]' ruff build
+      - name: Lint
         run: ruff check .
-      - name: Run tests
-        run: pytest -q
+      - name: Test core, API, and provider protocols without network
+        run: pytest -q --benchmark-disable
+      - name: Build and verify installed wheel away from checkout
+        run: |
+          python -m build
+          python -m pip install --force-reinstall --no-deps dist/*.whl
+          cd "$RUNNER_TEMP"
+          SR_ADAPTER_NATIVE_CACHE="$RUNNER_TEMP/wheel-native" python -c "from sr_adapter import Block; from sr_adapter.recipe import load_recipe; from sr_adapter.drivers.manager import TenantManager; from sr_adapter.native import ensure_text_kernel, ensure_layout_kernel; assert load_recipe('default'); assert 'default' in TenantManager().list_tenants(); ensure_text_kernel(); ensure_layout_kernel(); print(Block(text='wheel ready'))"
