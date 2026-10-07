@@ -7,6 +7,7 @@ import copy
 import logging
 from dataclasses import asdict
 import math
+import re
 from typing import Any, Iterable, List, Mapping, Optional, Sequence
 
 from .drivers.manager import DriverManager
@@ -28,7 +29,7 @@ _normalizer = LLMNormalizer()
 def _safe_int(value: object, *, default: int = 0) -> int:
     try:
         number = int(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return int(default)
     return int(number)
 
@@ -56,7 +57,7 @@ def _render_block_texts(
     max_chars: int,
 ) -> str:
     if max_chars <= 0:
-        max_chars = 8_000
+        return ""
     budget = int(max_chars)
     parts: list[str] = []
     used = 0
@@ -66,7 +67,8 @@ def _render_block_texts(
         text = (blocks[idx].text or "").strip()
         if not text:
             continue
-        remaining = budget - used
+        separator_size = 2 if parts else 0
+        remaining = budget - used - separator_size
         if remaining <= 0:
             break
         if len(text) > remaining:
@@ -74,7 +76,7 @@ def _render_block_texts(
             used = budget
             break
         parts.append(text)
-        used += len(text) + 2
+        used += len(text) + separator_size
     return "\n\n".join(parts)
 
 
@@ -98,6 +100,8 @@ def _select_related_context(
     neighbor_window = _clamp_int(int(neighbor_window), min_value=0, max_value=64)
     max_blocks = _clamp_int(int(max_blocks), min_value=0, max_value=256)
     embed_dim = _clamp_int(int(embed_dim), min_value=32, max_value=4096)
+    if max_blocks == 0:
+        return []
 
     target_set = set(targets)
     forced: list[int] = []
@@ -233,8 +237,15 @@ def escalate_low_conf(
             limit=limit,
         )
         indices = list(selection.indices)
+    if any(type(index) is not int or index < 0 or index >= len(original_blocks) for index in indices):
+        logger.warning("LLM escalation skipped because selection indices are invalid")
+        return original_blocks
+    indices = list(dict.fromkeys(indices))
     logger_instance = get_escalation_logger()
-    if selection is not None:
+    if selection is not None and all(
+        type(candidate.index) is int and 0 <= candidate.index < len(original_blocks)
+        for candidate in selection.candidates
+    ):
         logger_instance.log_selection(
             recipe.name,
             selection,
@@ -307,15 +318,12 @@ def escalate_low_conf(
     if prompt_template:
         rendered = str(prompt_template).strip()
         if "{context}" in rendered or "{recipe}" in rendered or "{context_related}" in rendered:
-            try:
-                prompt = rendered.format(
-                    context=context,
-                    context_related=context_related,
-                    recipe=recipe.name,
-                )
-            except Exception:  # pragma: no cover - defensive guard
-                logger.warning("Failed to render prompt template for recipe '%s'", recipe.name)
-                prompt = context
+            fields = {"context": context, "context_related": context_related, "recipe": recipe.name}
+            prompt = re.sub(
+                r"\{(context|context_related|recipe)\}",
+                lambda match: fields[match.group(1)],
+                rendered,
+            )
         else:
             prompt = f"{rendered}\n\n{context}" if context else rendered
     else:
@@ -333,6 +341,9 @@ def escalate_low_conf(
     }
     try:
         raw_response = driver.generate(prompt, metadata=metadata)
+        normalized = _normalizer.normalize(driver.name, raw_response, prompt=prompt)
+        if not normalized.choices:
+            raise ValueError("LLM provider returned no choices")
     except Exception as exc:  # pragma: no cover - network failure path
         logger.warning(
             "LLM escalation failed for tenant '%s' with driver '%s': %s",
@@ -348,7 +359,6 @@ def escalate_low_conf(
             )
         return original_blocks
 
-    normalized = _normalizer.normalize(driver.name, raw_response, prompt=prompt)
     payload = asdict(normalized)
     payload.update(
         {
@@ -356,6 +366,7 @@ def escalate_low_conf(
             "driver": driver.name,
             "indices": indices,
             "context_indices": context_related_indices,
+            "request_metadata": copy.deepcopy(metadata),
         }
     )
 

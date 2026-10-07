@@ -34,3 +34,10 @@ def test_circuit_breaker_is_open_does_not_reset(monkeypatch) -> None:
     assert breaker._opened_at is not None  # type: ignore[attr-defined]
 
     assert breaker.allow_request() is True
+
+
+def test_backoff_jitter_respects_maximum(monkeypatch) -> None:
+    monkeypatch.setattr(resilience.random, "uniform", lambda low, high: high)
+    policy = resilience.BackoffPolicy(base_delay=2, max_delay=3, jitter=1)
+    assert policy.compute(1) == 3
+    assert policy.compute(2) == 3

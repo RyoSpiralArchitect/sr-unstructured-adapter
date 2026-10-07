@@ -2,21 +2,14 @@
 
 from __future__ import annotations
 
-import json
-import time
-from typing import Any, Mapping
+from typing import Any, AsyncIterator, Iterator, Mapping
 
-from .base import DriverError, LLMDriver, register_driver
-from .resilience import BackoffPolicy
-from ..llm_metrics import get_llm_registry
-
-try:  # pragma: no cover - optional dependency guard
-    import httpx
-except ImportError:  # pragma: no cover
-    httpx = None  # type: ignore[assignment]
+from .base import DriverError, register_driver
+from .openai_driver import OpenAIDriver
+from .protocol import openai_metadata
 
 
-class JSONChatProxyDriver(LLMDriver):
+class JSONChatProxyDriver(OpenAIDriver):
     """Generic OpenAI-style JSON chat driver with configurable headers and endpoints."""
 
     def __init__(
@@ -30,9 +23,6 @@ class JSONChatProxyDriver(LLMDriver):
         api_key_prefix: str = "Bearer ",
     ):
         super().__init__(name, config)
-        for key in ("api_key", "model"):
-            if key not in self.config:
-                raise DriverError(f"{provider} driver requires '{key}' in configuration")
         self.default_endpoint = default_endpoint
         self.provider = provider
         self.api_key_header = self.config.get("api_key_header", api_key_header)
@@ -72,83 +62,16 @@ class JSONChatProxyDriver(LLMDriver):
         temperature = self.config.get("temperature")
         if temperature is not None:
             payload["temperature"] = temperature
-        max_tokens = self.config.get("max_tokens")
+        token_field = "max_completion_tokens" if "max_completion_tokens" in self.config else "max_tokens"
+        max_tokens = self.config.get(token_field, 512)
         if max_tokens is not None:
-            payload["max_tokens"] = max_tokens
+            payload[token_field] = max_tokens
+        for key in ("top_p", "reasoning_effort", "response_format", "random_seed"):
+            if self.config.get(key) is not None:
+                payload[key] = self.config[key]
         if metadata:
-            payload["metadata"] = dict(metadata)
+            payload["metadata"] = openai_metadata(metadata)
         return payload
-
-    # ---------------------------------------------------------------- metrics
-    def _record_success(
-        self,
-        *,
-        start: float,
-        request_bytes: int,
-        response_bytes: int,
-    ) -> None:
-        duration_ms = (time.perf_counter() - start) * 1000.0
-        get_llm_registry().record_success(
-            self.name,
-            latency_ms=duration_ms,
-            request_bytes=request_bytes,
-            response_bytes=response_bytes,
-        )
-        self.circuit_breaker.record_success()
-
-    def _record_failure(self, *, start: float, exc: Exception) -> None:
-        duration_ms = (time.perf_counter() - start) * 1000.0
-        get_llm_registry().record_failure(
-            self.name,
-            latency_ms=duration_ms,
-            error=exc.__class__.__name__,
-        )
-        self.circuit_breaker.record_failure()
-
-    # ---------------------------------------------------------------- execution
-    def generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
-        if httpx is None:  # pragma: no cover - dependency guard
-            raise DriverError("httpx is required to use this driver")
-        self._ensure_circuit_closed()
-        url = self._endpoint()
-        headers = self._headers()
-        payload = self._build_payload(prompt, metadata)
-        timeout = self.config.get("timeout", 30.0)
-        retries = int(self.config.get("max_retries", 2))
-        backoff = BackoffPolicy(
-            base_delay=float(self.config.get("retry_backoff_base", 0.5)),
-            max_delay=float(self.config.get("retry_backoff_max", 8.0)),
-            jitter=float(self.config.get("retry_jitter", 0.5)),
-        )
-        last_error: Exception | None = None
-        try:
-            request_bytes = len(json.dumps(payload).encode("utf-8"))
-        except Exception:
-            request_bytes = 0
-
-        for attempt in range(retries + 1):
-            start = time.perf_counter()
-            try:
-                response = httpx.post(url, headers=headers, json=payload, timeout=timeout)
-                response.raise_for_status()
-                data = response.json()
-                response_bytes = len(response.content or b"")
-                self._record_success(
-                    start=start,
-                    request_bytes=request_bytes,
-                    response_bytes=response_bytes,
-                )
-                return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
-                last_error = exc
-                self._record_failure(start=start, exc=exc)
-                if attempt >= retries:
-                    break
-                delay = backoff.compute(attempt + 1)
-                time.sleep(delay)
-        if last_error:
-            raise DriverError(f"{self.provider} request failed: {last_error}") from last_error
-        raise DriverError(f"{self.provider} driver failed without exception context")
 
 
 class MistralDriver(JSONChatProxyDriver):
@@ -164,9 +87,11 @@ class MistralDriver(JSONChatProxyDriver):
 
 
 class GoogleAIDriver(JSONChatProxyDriver):
-    """Google Gemini/Vertex chat driver with JSON payload."""
+    """Google Gemini generateContent driver; Vertex requires an explicit endpoint."""
 
     def __init__(self, name: str, config: Mapping[str, Any]):
+        if name.lower() == "vertex" and not config.get("endpoint"):
+            raise DriverError("Vertex requires an explicit project/location endpoint and authentication headers")
         endpoint = config.get(
             "endpoint",
             "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
@@ -182,12 +107,29 @@ class GoogleAIDriver(JSONChatProxyDriver):
 
     def _build_payload(self, prompt: str, metadata: Mapping[str, Any] | None) -> dict[str, Any]:
         payload: dict[str, Any] = {
-            "model": self.config["model"],
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         }
-        if metadata:
-            payload["safetySettings"] = metadata  # pass-through for caller-provided settings
+        if self.config.get("system_prompt"):
+            payload["systemInstruction"] = {"parts": [{"text": self.config["system_prompt"]}]}
+        generation = dict(self.config.get("generation_config") or {})
+        generation.setdefault("maxOutputTokens", self.config.get("max_tokens", 512))
+        if self.config.get("temperature") is not None:
+            generation["temperature"] = self.config["temperature"]
+        if self.config.get("top_p") is not None:
+            generation["topP"] = self.config["top_p"]
+        payload["generationConfig"] = generation
+        if self.config.get("safety_settings") is not None:
+            payload["safetySettings"] = self.config["safety_settings"]
         return payload
+
+    def supports_streaming(self) -> bool:
+        return False
+
+    def stream_generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> Iterator[Mapping[str, Any]]:
+        yield self.generate(prompt, metadata=metadata)
+
+    async def async_stream_generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> AsyncIterator[Mapping[str, Any]]:
+        yield await self.async_generate(prompt, metadata=metadata)
 
 
 class XaiDriver(JSONChatProxyDriver):
@@ -206,13 +148,15 @@ class BedrockDriver(JSONChatProxyDriver):
     """AWS Bedrock proxy driver for OpenAI-compatible gateways."""
 
     def __init__(self, name: str, config: Mapping[str, Any]):
+        if not config.get("endpoint"):
+            raise DriverError("Bedrock requires an explicit OpenAI-compatible chat completions endpoint")
         super().__init__(
             name,
             config,
-            default_endpoint="https://bedrock-runtime.amazonaws.com/model/{model}/invoke",
+            default_endpoint=str(config["endpoint"]),
             provider="aws-bedrock",
-            api_key_header=str(config.get("api_key_header", "x-api-key")),
-            api_key_prefix=str(config.get("api_key_prefix", "")),
+            api_key_header=str(config.get("api_key_header", "Authorization")),
+            api_key_prefix=str(config.get("api_key_prefix", "Bearer ")),
         )
 
 

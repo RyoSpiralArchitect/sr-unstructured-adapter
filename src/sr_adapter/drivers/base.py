@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
+from threading import Lock
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any, Dict, Mapping, MutableMapping, Protocol, TypeVar
@@ -86,37 +86,32 @@ class LLMDriver(ABC):
     ) -> AsyncIterator[Mapping[str, Any]]:
         """Async wrapper over :meth:`stream_generate` preserving incremental updates."""
 
-        loop = asyncio.get_running_loop()
-        queue: asyncio.Queue[object] = asyncio.Queue()
+        # Pull one item at a time: a background producer with an unbounded
+        # queue can exhaust memory and continue generation after cancellation.
+        stream = self.stream_generate(prompt, metadata=metadata)
         sentinel = object()
+        lock = Lock()
 
-        def _run_stream() -> None:
-            try:
-                for chunk in self.stream_generate(prompt, metadata=metadata):
-                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
-            except BaseException as exc:  # pragma: no cover - defensive propagation
-                loop.call_soon_threadsafe(queue.put_nowait, exc)
-            finally:
-                loop.call_soon_threadsafe(queue.put_nowait, sentinel)
+        def _next() -> object:
+            with lock:
+                return next(stream, sentinel)
 
-        producer_task = asyncio.create_task(asyncio.to_thread(_run_stream))
+        def _close() -> None:
+            with lock:
+                close = getattr(stream, "close", None)
+                if close is not None:
+                    close()
 
-        async def _aiter() -> AsyncIterator[Mapping[str, Any]]:
-            try:
-                while True:
-                    item = await queue.get()
-                    if item is sentinel:
-                        break
-                    if isinstance(item, BaseException):
-                        raise item
-                    yield item  # type: ignore[misc]
-            finally:
-                if not producer_task.done():
-                    producer_task.cancel()
-                with contextlib.suppress(asyncio.CancelledError, Exception):
-                    await producer_task
-
-        return _aiter()
+        try:
+            while True:
+                item = await asyncio.to_thread(_next)
+                if item is sentinel:
+                    break
+                yield item  # type: ignore[misc]
+        finally:
+            # If cancellation races a blocking next(), close once that operation
+            # releases its iterator. Never resume the producer for another item.
+            await asyncio.to_thread(_close)
 
 
 class DriverFactory(Protocol):

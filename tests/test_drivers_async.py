@@ -38,7 +38,7 @@ def test_async_stream_generate_wraps_sync_stream() -> None:
 
     async def _collect() -> list[dict[str, object]]:
         chunks: list[dict[str, object]] = []
-        async for chunk in await driver.async_stream_generate("hello"):
+        async for chunk in driver.async_stream_generate("hello"):
             chunks.append(chunk)
         return chunks
 
@@ -52,7 +52,7 @@ def test_async_stream_generate_propagates_chunks_and_errors() -> None:
     driver = _StreamingDriver("stream", {})
 
     async def _collect() -> list[dict[str, object]]:
-        stream = await driver.async_stream_generate("hello")
+        stream = driver.async_stream_generate("hello")
         seen: list[dict[str, object]] = []
         with pytest.raises(RuntimeError):
             async for chunk in stream:
@@ -62,3 +62,27 @@ def test_async_stream_generate_propagates_chunks_and_errors() -> None:
     chunks = asyncio.run(_collect())
 
     assert chunks == [{"step": 1, "prompt": "hello"}]
+
+
+def test_async_stream_fallback_applies_backpressure_and_closes() -> None:
+    seen = []
+    closed = []
+
+    class InfiniteDriver(_StubDriver):
+        def stream_generate(self, prompt, *, metadata=None):
+            try:
+                while True:
+                    seen.append(len(seen))
+                    yield {"step": seen[-1]}
+            finally:
+                closed.append(True)
+
+    async def consume_one():
+        stream = InfiniteDriver("infinite", {}).async_stream_generate("hello")
+        assert await anext(stream) == {"step": 0}
+        await asyncio.sleep(0.02)
+        assert seen == [0]
+        await stream.aclose()
+
+    asyncio.run(consume_one())
+    assert closed == [True]
