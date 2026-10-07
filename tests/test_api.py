@@ -251,3 +251,280 @@ def test_api_jobs_backend_sqlite_persists(monkeypatch, tmp_path: Path) -> None:
         assert result.status_code == 200
         payload = result.json()
         assert payload["meta"]["type"] == "text"
+
+
+@pytest.mark.parametrize("route,field", [
+    ("/convert-path", "path"),
+    ("/jobs/convert-path", "path"),
+    ("/batch-convert-paths", "paths"),
+    ("/jobs/batch-convert-paths", "paths"),
+])
+@pytest.mark.parametrize("options", [
+    {"llm_ok": "false"},
+    {"llm_ok": 0},
+    {"deadline_ms": True},
+    {"deadline_ms": -1},
+    {"max_blocks": -1},
+    {"max_blocks": "2"},
+    {"unknown_option": False},
+])
+def test_api_path_options_are_validated(monkeypatch, tmp_path, route, field, options):
+    monkeypatch.setenv("SR_ADAPTER_API_ALLOW_PATHS", "1")
+    target = tmp_path / "input.txt"
+    target.write_text("input")
+    payload = {field: str(target) if field == "path" else [str(target)], **options}
+    with TestClient(create_app()) as client:
+        assert client.post(route, json=payload).status_code == 422
+
+
+@pytest.mark.parametrize("route", ["/convert", "/convert-stream", "/jobs/convert"])
+@pytest.mark.parametrize("option", ["max_blocks=-1", "recipe=missing-recipe", "profile=missing-profile", "recipe=../settings", "profile=../settings"])
+def test_api_upload_invalid_options_fail_before_conversion(monkeypatch, route, option):
+    def unexpected(*args, **kwargs):
+        raise AssertionError("Conversion must not start")
+
+    monkeypatch.setattr("sr_adapter.api.convert", unexpected)
+    monkeypatch.setattr("sr_adapter.api.stream_convert", unexpected)
+    with TestClient(create_app()) as client:
+        response = client.post(
+            f"{route}?llm_ok=false&{option}",
+            files={"file": ("sample.txt", b"Hello", "text/plain")},
+        )
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("max_size", ["0", "1"])
+def test_api_path_must_be_regular_file(monkeypatch, tmp_path, max_size):
+    monkeypatch.setenv("SR_ADAPTER_API_ALLOW_PATHS", "1")
+    monkeypatch.setenv("SR_ADAPTER_API_MAX_UPLOAD_MB", max_size)
+    with TestClient(create_app()) as client:
+        response = client.post("/convert-path", json={"path": str(tmp_path), "llm_ok": False})
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize("value", ["nan", "inf", "-inf"])
+def test_api_nonfinite_upload_limit_does_not_crash(monkeypatch, value):
+    monkeypatch.setenv("SR_ADAPTER_API_MAX_UPLOAD_MB", value)
+    with TestClient(create_app()) as client:
+        assert client.get("/healthz").status_code == 200
+
+
+def test_api_fake_keys_do_not_bypass_rate_limit(monkeypatch):
+    monkeypatch.setenv("SR_ADAPTER_API_RATE_LIMIT_RPM", "1")
+    with TestClient(create_app()) as client:
+        assert client.get("/", headers={"X-API-Key": "invented-1"}).status_code == 200
+        assert client.get("/", headers={"X-API-Key": "invented-2"}).status_code == 429
+
+
+def test_api_batch_paths_passes_backend_options(monkeypatch, tmp_path):
+    monkeypatch.setenv("SR_ADAPTER_API_ALLOW_PATHS", "1")
+    target = tmp_path / "input.txt"
+    target.write_text("input")
+    seen = {}
+
+    def fake_batch(paths, **kwargs):
+        seen.update(kwargs)
+        return []
+
+    monkeypatch.setattr("sr_adapter.api.batch_convert", fake_batch)
+    with TestClient(create_app()) as client:
+        response = client.post("/batch-convert-paths", json={
+            "paths": [str(target)], "llm_ok": False,
+            "backend": "threadpool", "concurrency": 2,
+        })
+    assert response.status_code == 200
+    assert seen["llm_ok"] is False
+    assert seen["backend"] == "threadpool"
+    assert seen["concurrency"] == 2
+
+
+def test_api_upload_conversion_does_not_block_health(monkeypatch):
+    import asyncio
+    from threading import Event
+    import httpx
+
+    started, release = Event(), Event()
+
+    class Result:
+        def model_dump(self):
+            return {"ok": True}
+
+    def fake_convert(*args, **kwargs):
+        started.set()
+        release.wait(3)
+        return Result()
+
+    monkeypatch.setattr("sr_adapter.api.convert", fake_convert)
+
+    async def scenario():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=create_app()), base_url="http://test") as client:
+            task = asyncio.create_task(client.post("/convert?llm_ok=false", files={
+                "file": ("sample.txt", b"Hello", "text/plain"),
+            }))
+            try:
+                assert await asyncio.to_thread(started.wait, 1)
+                assert (await asyncio.wait_for(client.get("/healthz"), 1)).status_code == 200
+                assert not task.done(), "Conversion ran on the event loop"
+            finally:
+                release.set()
+                response = await task
+            assert response.status_code == 200
+
+    asyncio.run(scenario())
+
+
+def test_api_stream_conversion_runs_outside_event_loop(monkeypatch):
+    import asyncio
+    from sr_adapter.schema import Block
+
+    def fake_stream(*args, **kwargs):
+        with pytest.raises(RuntimeError, match="no running event loop"):
+            asyncio.get_running_loop()
+        yield Block(id="block", type="paragraph", text="Hello")
+
+    monkeypatch.setattr("sr_adapter.api.stream_convert", fake_stream)
+    with TestClient(create_app()) as client:
+        response = client.post("/convert-stream", files={"file": ("sample.txt", b"Hello", "text/plain")})
+    assert response.status_code == 200
+    assert json.loads(response.text.splitlines()[-1])["block_count"] == 1
+
+
+def test_api_upload_auth_precedes_multipart_parsing(monkeypatch):
+    monkeypatch.setenv("SR_ADAPTER_API_KEY", "test-only")
+    with TestClient(create_app()) as client:
+        response = client.post("/convert", content=b"not multipart")
+    assert response.status_code == 401
+
+
+def test_api_rejects_oversized_request_before_parsing(monkeypatch):
+    monkeypatch.setenv("SR_ADAPTER_API_MAX_UPLOAD_MB", "0.0001")
+    with TestClient(create_app()) as client:
+        response = client.post("/convert", content=b"x" * (1024 * 1024 + 512))
+    assert response.status_code == 413
+
+
+def test_api_chunked_upload_request_is_bounded(monkeypatch):
+    import asyncio
+    import httpx
+
+    monkeypatch.setenv("SR_ADAPTER_API_MAX_UPLOAD_MB", "0.0001")
+
+    async def body():
+        yield b'--test\r\nContent-Disposition: form-data; name="file"; filename="x.txt"\r\n\r\n'
+        for _ in range(18):
+            yield b"x" * 65536
+        yield b"\r\n--test--\r\n"
+
+    async def scenario():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=create_app()), base_url="http://test") as client:
+            response = await client.post("/convert", content=body(), headers={"Content-Type": "multipart/form-data; boundary=test"})
+        assert response.status_code == 413
+
+    asyncio.run(scenario())
+
+
+def test_api_stream_disconnect_before_first_chunk_cleans_upload(monkeypatch, tmp_path):
+    import asyncio
+    import io
+    import tempfile
+    from starlette.datastructures import UploadFile
+    from starlette.requests import Request
+
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    app = create_app()
+    endpoint = next(route.endpoint for route in app.routes if getattr(route, "path", None) == "/convert-stream")
+
+    async def scenario():
+        scope = {"type": "http", "method": "POST", "path": "/convert-stream", "headers": [], "asgi": {"spec_version": "2.4"}}
+        upload = UploadFile(io.BytesIO(b"Hello"), filename="sample.txt")
+        response = await endpoint(Request(scope), file=upload, recipe="default", profile="balanced", llm_ok=False, max_blocks=None, tenant=None, _=None)
+        assert list(tmp_path.iterdir())
+
+        async def receive():
+            return {"type": "http.disconnect"}
+
+        async def send(message):
+            raise RuntimeError("connection closed")
+
+        with pytest.raises(RuntimeError, match="connection closed"):
+            await response(scope, receive, send)
+        assert not list(tmp_path.iterdir())
+
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("mounted", [False, True])
+@pytest.mark.parametrize("route", ["/convert", "/convert-path", "/jobs/convert", "/jobs/batch-convert-paths"])
+def test_api_protected_routes_authenticate_before_reading_body(monkeypatch, mounted, route):
+    import asyncio
+    import httpx
+
+    monkeypatch.setenv("SR_ADAPTER_API_KEY", "test-only")
+    app = create_app()
+    prefix = ""
+    if mounted:
+        parent = fastapi.FastAPI()
+        parent.mount("/adapter", app)
+        app = parent
+        prefix = "/adapter"
+    reads = []
+
+    async def body():
+        reads.append(True)
+        yield b'{"path":"never read"}'
+
+    async def scenario():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(prefix + route, content=body(), headers={"Content-Type": "application/json"})
+        assert response.status_code == 401
+        assert response.headers.get("x-request-id")
+
+    asyncio.run(scenario())
+    assert reads == []
+
+
+def test_api_mounted_public_endpoints_and_authenticated_routes(monkeypatch):
+    monkeypatch.setenv("SR_ADAPTER_API_KEY", "test-only")
+    parent = fastapi.FastAPI()
+    parent.mount("/adapter", create_app())
+    with TestClient(parent) as client:
+        for route in ("/", "/healthz", "/docs", "/openapi.json"):
+            assert client.get("/adapter" + route).status_code == 200
+        for route in ("/telemetry", "/metrics", "/inspect/drivers", "/jobs"):
+            assert client.get("/adapter" + route).status_code == 401
+            assert client.get("/adapter" + route, headers={"X-API-Key": "test-only"}).status_code == 200
+
+
+@pytest.mark.parametrize("mounted", [False, True])
+@pytest.mark.parametrize("json_body", [False, True])
+def test_api_body_limits_cover_mounted_multipart_and_json(monkeypatch, mounted, json_body):
+    import asyncio
+    import httpx
+
+    monkeypatch.setenv("SR_ADAPTER_API_KEY", "test-only")
+    monkeypatch.setenv("SR_ADAPTER_API_MAX_UPLOAD_MB", "0.0001")
+    app = create_app()
+    prefix = ""
+    if mounted:
+        parent = fastapi.FastAPI()
+        parent.mount("/adapter", app)
+        app = parent
+        prefix = "/adapter"
+    route = "/convert-path" if json_body else "/convert"
+    content_type = "application/json" if json_body else "multipart/form-data; boundary=test"
+
+    async def body():
+        if json_body:
+            yield b'{"path":"'
+        else:
+            yield b'--test\r\nContent-Disposition: form-data; name="file"; filename="x.txt"\r\n\r\n'
+        for _ in range(18):
+            yield b"x" * 65536
+        yield b'"}' if json_body else b'\r\n--test--\r\n'
+
+    async def scenario():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(prefix + route, content=body(), headers={"Content-Type": content_type, "X-API-Key": "test-only"})
+        assert response.status_code == 413
+
+    asyncio.run(scenario())

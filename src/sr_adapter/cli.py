@@ -8,9 +8,10 @@ import inspect
 import json
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
+import tempfile
 import uuid
 
 from .pipeline import batch_convert, stream_convert
@@ -27,6 +28,22 @@ from .sniff import detect_type
 from .version import get_adapter_version
 
 _BATCH_CONVERT_PARAMS = set(inspect.signature(batch_convert).parameters)
+
+
+def _nonnegative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be non-negative")
+    return parsed
+
+
+def _same_file(first: Path, second: Path) -> bool:
+    if first.resolve() == second.resolve():
+        return True
+    try:
+        return first.samefile(second)
+    except OSError:
+        return False
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -59,13 +76,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     convert_parser.add_argument(
         "--max-blocks",
-        type=int,
+        type=_nonnegative_int,
         default=None,
         help="Limit the number of blocks per document (0 = unlimited)",
     )
     convert_parser.add_argument(
         "--concurrency",
-        type=int,
+        type=_nonnegative_int,
         default=0,
         help="Number of worker slots when using a distributed backend",
     )
@@ -139,7 +156,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     replay_parser.add_argument(
         "--limit",
-        type=int,
+        type=_nonnegative_int,
         help="Process at most this many successful prompts from the dataset",
     )
     replay_parser.add_argument(
@@ -334,6 +351,10 @@ def main(argv: list[str] | None = None) -> int:
         if not files:
             print("No valid files found from provided inputs", file=sys.stderr)
             return 1
+        out_path = Path(args.out).expanduser()
+        if any(_same_file(out_path, path) for path in files):
+            print("Output path must differ from every input file", file=sys.stderr)
+            return 2
         if args.stream:
             if not args.no_llm:
                 print("--stream currently requires --no-llm (LLM escalation is not streamable)", file=sys.stderr)
@@ -353,7 +374,7 @@ def main(argv: list[str] | None = None) -> int:
                         "recipe": str(args.recipe),
                         "profile": str(args.profile),
                         "adapter_version": get_adapter_version(),
-                        "created_at": datetime.now(UTC).isoformat(),
+                        "created_at": datetime.now(timezone.utc).isoformat(),
                     }
                     handle.write(json.dumps(meta, ensure_ascii=False))
                     handle.write("\n")
@@ -500,16 +521,16 @@ def _handle_llm(args: argparse.Namespace) -> int:
             print(str(exc), file=sys.stderr)
             return 4
         driver = manager.get_driver(str(tenant), llm_config)
+        normalizer = LLMNormalizer()
         try:
             raw = driver.generate(prompt, metadata=metadata)
+            normalized = normalizer.normalize(driver.name, raw, prompt=prompt)
         except Exception as exc:  # pragma: no cover - runtime failure path
             print(
                 f"LLM driver '{driver.name}' failed for tenant '{tenant}': {exc}",
                 file=sys.stderr,
             )
             return 10
-        normalizer = LLMNormalizer()
-        normalized = normalizer.normalize(driver.name, raw, prompt=prompt)
         json.dump(asdict(normalized), sys.stdout, ensure_ascii=False, indent=2)
         sys.stdout.write("\n")
         return 0
@@ -527,13 +548,22 @@ def _handle_llm(args: argparse.Namespace) -> int:
             print(f"Recipe '{recipe.name}' does not enable LLM escalation", file=sys.stderr)
             return 3
         tenant = args.tenant or llm_config.get("tenant") or manager.tenant_manager.get_default_tenant()
+        if args.output and _same_file(args.output.expanduser(), dataset):
+            print("Replay output must differ from the input dataset", file=sys.stderr)
+            return 2
         driver = manager.get_driver(str(tenant), llm_config)
         normalizer = LLMNormalizer()
         output_handle = None
+        output_temporary = None
+        replay_completed = False
         if args.output:
             output_path = args.output.expanduser()
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_handle = output_path.open("w", encoding="utf-8")
+            output_handle = tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=output_path.parent,
+                prefix=f".{output_path.name}.", suffix=".tmp", delete=False,
+            )
+            output_temporary = Path(output_handle.name)
         stats = ReplayStats()
         try:
             with dataset.open("r", encoding="utf-8") as input_handle:
@@ -565,8 +595,16 @@ def _handle_llm(args: argparse.Namespace) -> int:
                         print(message, file=sys.stderr)
                         return 8
                     metadata = record.get("metadata")
+                    if metadata is not None and not isinstance(metadata, dict):
+                        message = f"Metadata on line {line_number} must be a JSON object or null"
+                        if args.skip_errors:
+                            stats.errors.append(message)
+                            continue
+                        print(message, file=sys.stderr)
+                        return 8
                     try:
                         raw = driver.generate(prompt, metadata=metadata)
+                        normalized = normalizer.normalize(driver.name, raw, prompt=prompt)
                     except Exception as exc:  # pragma: no cover - runtime failure path
                         message = f"LLM driver '{driver.name}' failed on line {line_number}: {exc}"
                         if args.skip_errors:
@@ -574,7 +612,6 @@ def _handle_llm(args: argparse.Namespace) -> int:
                             continue
                         print(message, file=sys.stderr)
                         return 10
-                    normalized = normalizer.normalize(driver.name, raw, prompt=prompt)
                     payload = {
                         "record": record,
                         "response": asdict(normalized),
@@ -585,9 +622,15 @@ def _handle_llm(args: argparse.Namespace) -> int:
                     json.dump(payload, target, ensure_ascii=False)
                     target.write("\n")
                     stats.processed += 1
+            replay_completed = stats.processed > 0
         finally:
             if output_handle:
-                output_handle.close()
+                try:
+                    output_handle.close()
+                    if replay_completed:
+                        output_temporary.replace(output_path)
+                finally:
+                    output_temporary.unlink(missing_ok=True)
         if stats.processed == 0:
             print("No prompts were processed from the dataset", file=sys.stderr)
             return 9
@@ -623,7 +666,7 @@ def _handle_kernels(args: argparse.Namespace) -> int:
                 output = exporter.render_prometheus(extra_labels=labels)
             else:
                 output = exporter.snapshot_json()
-        except RuntimeError as exc:
+        except (RuntimeError, ValueError) as exc:
             print(f"Failed to export telemetry: {exc}", file=sys.stderr)
             return 12
         if output := output.strip():
@@ -765,39 +808,42 @@ def _parse_labels(entries: list[str]) -> dict[str, str]:
 
 
 def _resolve_prompt(prompt: str | None, prompt_file: Path | None) -> str:
-    if prompt and prompt_file:
+    if prompt is not None and prompt_file is not None:
         raise ValueError("Provide either --prompt or --prompt-file, not both")
-    if prompt:
+    if prompt is not None:
         text = prompt
     elif prompt_file:
-        text = prompt_file.expanduser().read_text(encoding="utf-8")
+        try:
+            text = prompt_file.expanduser().read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise ValueError(f"Failed to read prompt file '{prompt_file}': {exc}") from exc
     else:
         text = sys.stdin.read()
     text = text.strip("\n")
-    if not text:
+    if not text.strip():
         raise ValueError("Prompt text is empty")
     return text
 
 
 def _resolve_metadata(metadata: str | None, metadata_file: Path | None) -> dict | None:
-    if metadata and metadata_file:
+    if metadata is not None and metadata_file is not None:
         raise ValueError("Provide either --metadata or --metadata-file, not both")
+    contents = metadata
     if metadata_file:
         path = metadata_file.expanduser()
         try:
             contents = path.read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             raise ValueError(f"Failed to read metadata file '{path}': {exc}") from exc
-        try:
-            return json.loads(contents) if contents.strip() else None
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Invalid metadata JSON in file '{path}': {exc}") from exc
-    if metadata:
-        try:
-            return json.loads(metadata)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Invalid metadata JSON: {exc}") from exc
-    return None
+    if contents is None or not contents.strip():
+        return None
+    try:
+        value = json.loads(contents)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid metadata JSON: {exc}") from exc
+    if value is not None and not isinstance(value, dict):
+        raise ValueError("Metadata must be a JSON object or null")
+    return value
 
 
 def _extract_prompt(record: dict | None) -> str | None:

@@ -19,9 +19,9 @@ import sqlite3
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from threading import Lock
+from threading import Event, Lock, local
 from typing import Any, Callable, Dict, Literal, Mapping, Optional, Protocol
 
 
@@ -29,7 +29,7 @@ JobStatus = Literal["queued", "running", "succeeded", "failed", "canceled"]
 
 
 def _now() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 def _json_default(obj: object) -> object:
@@ -65,7 +65,7 @@ def _parse_dt(value: str | None) -> datetime | None:
     except Exception:
         return None
     if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=UTC)
+        return parsed.replace(tzinfo=timezone.utc)
     return parsed
 
 
@@ -273,7 +273,7 @@ class SQLiteJobStore:
     def cleanup(self, *, ttl_seconds: int) -> list[str]:
         if ttl_seconds <= 0:
             return []
-        cutoff_dt = datetime.fromtimestamp(_now().timestamp() - float(ttl_seconds), UTC)
+        cutoff_dt = datetime.fromtimestamp(_now().timestamp() - float(ttl_seconds), timezone.utc)
         cutoff = cutoff_dt.isoformat()
         with self._lock:
             rows = self._conn.execute(
@@ -333,14 +333,19 @@ class JobManager:
         thread_name_prefix: str = "sr-adapter-job",
         store: JobStore | None = None,
     ) -> None:
+        self._worker_context = local()
         self._executor = ThreadPoolExecutor(
             max_workers=max(1, int(max_workers)),
             thread_name_prefix=thread_name_prefix,
+            initializer=lambda: setattr(self._worker_context, "active", True),
         )
         self._ttl_seconds = max(0, int(ttl_seconds))
         self._store: JobStore = store or MemoryJobStore()
         self._futures: Dict[str, Future] = {}
         self._lock = Lock()
+        self._shutdown_lock = Lock()
+        self._closed = False
+        self._shutdown_done = Event()
 
     def submit(
         self,
@@ -348,6 +353,7 @@ class JobManager:
         func: Callable[[], Any],
         *,
         request: Optional[Mapping[str, Any]] = None,
+        on_done: Optional[Callable[[], None]] = None,
     ) -> JobRecord:
         job_id = uuid.uuid4().hex
         record = JobRecord(
@@ -355,7 +361,6 @@ class JobManager:
             kind=str(kind),
             request=dict(request or {}),
         )
-        self._store.create(record)
 
         def _run() -> None:
             self._mark_running(job_id)
@@ -366,10 +371,37 @@ class JobManager:
                 return
             self._mark_succeeded(job_id, result)
 
-        future = self._executor.submit(_run)
-        record._future = future
-        with self._lock:
-            self._futures[job_id] = future
+        def _done(future: Future) -> None:
+            try:
+                if on_done is not None:
+                    on_done()
+            finally:
+                with self._lock:
+                    self._futures.pop(job_id, None)
+                # Do not retain completed callable closures (e.g. large uploads).
+                record._future = None
+
+        try:
+            with self._shutdown_lock:
+                if self._closed:
+                    raise RuntimeError("Job manager is shut down")
+                self.cleanup()
+                self._store.create(record)
+                try:
+                    future = self._executor.submit(_run)
+                except Exception as exc:
+                    self._mark_failed(job_id, exc)
+                    raise
+                record._future = future
+                with self._lock:
+                    self._futures[job_id] = future
+            # An already-finished future invokes callbacks immediately. Avoid
+            # holding the lifecycle lock while calling client cleanup code.
+            future.add_done_callback(_done)
+        except BaseException:
+            if on_done is not None:
+                on_done()
+            raise
         return record
 
     def reset_incomplete(self, *, error: str = "abandoned") -> int:
@@ -419,13 +451,26 @@ class JobManager:
         return len(removed)
 
     def shutdown(self) -> None:
-        self._executor.shutdown(wait=False, cancel_futures=False)
-        store = getattr(self._store, "close", None)
-        if callable(store):
-            try:
-                store()
-            except Exception:
-                pass
+        """Drain accepted jobs before closing their persistence connection."""
+        if getattr(self._worker_context, "active", False):
+            # A worker cannot join itself or wait for an external shutdown
+            # which is already joining it. Reject before changing any state.
+            raise RuntimeError("JobManager.shutdown() cannot be called from its worker thread")
+        with self._shutdown_lock:
+            already_closed = self._closed
+            self._closed = True
+        if already_closed:
+            self._shutdown_done.wait()
+            return
+        try:
+            # Workers may try to submit more work; they must be able to observe
+            # _closed and fail immediately while the executor is draining.
+            self._executor.shutdown(wait=True, cancel_futures=False)
+            close = getattr(self._store, "close", None)
+            if callable(close):
+                close()
+        finally:
+            self._shutdown_done.set()
 
     # ----------------------------------------------------------------- helpers
     def _mark_running(self, job_id: str) -> None:
@@ -464,4 +509,3 @@ __all__ = [
     "MemoryJobStore",
     "SQLiteJobStore",
 ]
-

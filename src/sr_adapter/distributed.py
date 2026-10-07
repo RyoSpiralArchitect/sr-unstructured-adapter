@@ -38,7 +38,14 @@ async def _async_gather(
 def run_asyncio(func: Callable[[S], R], items: Sequence[S], *, workers: int | None) -> List[R]:
     if not items:
         return []
-    return asyncio.run(_async_gather(func, items, workers=workers))
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(_async_gather(func, items, workers=workers))
+    raise RuntimeError(
+        "run_asyncio is synchronous and cannot run inside an active event loop; "
+        "use asyncio.to_thread or the threadpool backend"
+    )
 
 
 def run_dask(
@@ -79,7 +86,8 @@ def run_ray(
         init_kwargs = {"ignore_reinit_error": True}
         if address:
             init_kwargs["address"] = address
-        if workers:
+        # Ray forbids overriding CPU resources when connecting to a cluster.
+        if workers and not address:
             init_kwargs["num_cpus"] = workers
         ray.init(**init_kwargs)
 

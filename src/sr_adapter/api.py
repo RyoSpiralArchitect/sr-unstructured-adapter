@@ -11,13 +11,18 @@ import argparse
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import json
+import math
 import os
+import re
+import stat
 import tempfile
 import time
 import uuid
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator
 
 from .pipeline import batch_convert, convert, stream_convert
 from .jobs import JobManager, SQLiteJobStore
@@ -37,10 +42,54 @@ except Exception:  # pragma: no cover - when the api extra is not installed
     Request = object  # type: ignore[assignment]
 
 
+class ConversionOptions(BaseModel):
+    """JSON options are strict so a misspelled flag cannot enable paid LLM calls."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    recipe: str = "default"
+    profile: str = "balanced"
+    llm_ok: StrictBool = True
+    deadline_ms: Optional[StrictInt] = Field(default=None, ge=0)
+    max_blocks: Optional[StrictInt] = Field(default=None, ge=0)
+
+
+class PathConversionRequest(ConversionOptions):
+    path: str
+    mime: Optional[str] = None
+
+    @field_validator("path")
+    @classmethod
+    def _nonempty_path(cls, value: str) -> str:
+        if not value.strip() or "\0" in value:
+            raise ValueError("path must be a non-empty file path")
+        return value
+
+
+class BatchConversionRequest(ConversionOptions):
+    paths: list[str] = Field(min_length=1)
+    backend: Optional[Literal[
+        "auto", "sync", "sequential", "none", "thread", "threads",
+        "threadpool", "async", "asyncio", "dask", "ray",
+    ]] = None
+    concurrency: StrictInt = Field(default=0, ge=0)
+    dask_scheduler: Optional[str] = None
+    ray_address: Optional[str] = None
+
+    @field_validator("paths")
+    @classmethod
+    def _nonempty_paths(cls, values: list[str]) -> list[str]:
+        if any(not value.strip() or "\0" in value for value in values):
+            raise ValueError("paths must contain non-empty file paths")
+        return values
+
+
 def create_app():  # type: ignore[no-untyped-def]
     try:
         from fastapi import Body, Depends, FastAPI, File, Header, HTTPException, Query
         from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+        from starlette.concurrency import run_in_threadpool
+        from starlette.formparsers import MultiPartException
     except ImportError as exc:  # pragma: no cover
         raise RuntimeError(
             "FastAPI dependencies are not installed. "
@@ -69,6 +118,8 @@ def create_app():  # type: ignore[no-untyped-def]
             max_upload_mb = max_upload_mb_default
     else:
         max_upload_mb = max_upload_mb_default
+    if not math.isfinite(max_upload_mb * 1024 * 1024):
+        max_upload_mb = max_upload_mb_default
     max_upload_bytes = int(max_upload_mb * 1024 * 1024) if max_upload_mb > 0 else None
 
     def _configured_api_keys() -> set[str]:
@@ -89,7 +140,7 @@ def create_app():  # type: ignore[no-untyped-def]
         candidate = request.headers.get("x-request-id")
         if candidate:
             candidate = candidate.strip()
-            if 0 < len(candidate) <= 128:
+            if 0 < len(candidate) <= 128 and all(32 <= ord(char) < 127 for char in candidate):
                 return candidate
         return uuid.uuid4().hex
 
@@ -128,7 +179,7 @@ def create_app():  # type: ignore[no-untyped-def]
 
     def _rate_limit_key(request: Request) -> str:
         api_key = _extract_key(request)
-        if api_key:
+        if api_key and api_key in api_keys:
             return f"key:{api_key}"
         if trust_proxy_headers:
             forwarded = request.headers.get("x-forwarded-for")
@@ -161,7 +212,7 @@ def create_app():  # type: ignore[no-untyped-def]
             handle.flush()
             handle.close()
             return tmp_path
-        except Exception:
+        except BaseException:
             try:
                 handle.close()
             except Exception:
@@ -171,6 +222,32 @@ def create_app():  # type: ignore[no-untyped-def]
             except Exception:
                 pass
             raise
+
+    def _validate_selection(recipe: str, profile: str) -> None:
+        from .recipe import load_recipe
+
+        # These are registry names, never arbitrary filesystem paths.
+        for name, value in (("recipe", recipe), ("profile", profile)):
+            if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]*", value):
+                raise HTTPException(status_code=422, detail=f"Invalid {name} name")
+        try:
+            load_recipe(recipe)
+            if profile.lower() != "auto":
+                profile_store.load(profile)
+        except (KeyError, FileNotFoundError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail="Unknown or invalid recipe/profile") from exc
+
+    def _path_to_file(raw_path: str) -> Path:
+        path = Path(raw_path).expanduser()
+        try:
+            info = path.stat()
+        except (OSError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail="Cannot access input file") from exc
+        if not stat.S_ISREG(info.st_mode):
+            raise HTTPException(status_code=422, detail="Path must refer to a regular file")
+        if max_upload_bytes is not None and info.st_size > max_upload_bytes:
+            raise HTTPException(status_code=413, detail="File too large")
+        return path
 
     job_workers = settings.distributed.max_workers or 4
     env_workers = os.getenv("SR_ADAPTER_API_JOBS_MAX_WORKERS", "").strip()
@@ -208,7 +285,7 @@ def create_app():  # type: ignore[no-untyped-def]
         try:
             yield
         finally:
-            job_manager.shutdown()
+            await run_in_threadpool(job_manager.shutdown)
 
     app = FastAPI(
         title="SR Unstructured Adapter",
@@ -216,28 +293,124 @@ def create_app():  # type: ignore[no-untyped-def]
         lifespan=lifespan,
     )
 
+    upload_routes = {"/convert", "/convert-stream", "/jobs/convert"}
+    json_body_routes = {
+        "/convert-path", "/batch-convert-paths",
+        "/jobs/convert-path", "/jobs/batch-convert-paths",
+    }
+
+    def _route_path(scope: dict) -> str:
+        """Use the app-local route when mounted beneath an ASGI root path."""
+        path = scope.get("path", "")
+        root = scope.get("root_path", "").rstrip("/")
+        if root and (path == root or path.startswith(root + "/")):
+            path = path[len(root):] or "/"
+        return path
+
+    def _protected_route(path: str) -> bool:
+        path = path.rstrip("/") or "/"
+        return (
+            path in upload_routes | json_body_routes | {"/telemetry", "/metrics", "/jobs"}
+            or path.startswith("/jobs/")
+            or path.startswith("/inspect/")
+        )
+
+    class _UploadBodyLimit:
+        """Bound conversion bodies before their parsers allocate unlimited data."""
+
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+            path = _route_path(scope)
+            if path not in upload_routes | json_body_routes or max_upload_bytes is None:
+                await self.app(scope, receive, send)
+                return
+            # File size is checked separately; leave room for multipart headers.
+            request_limit = max_upload_bytes + 1024 * 1024
+            length = dict(scope.get("headers", [])).get(b"content-length")
+            if length is not None:
+                try:
+                    declared = int(length)
+                    if declared < 0:
+                        raise ValueError
+                except ValueError:
+                    response = JSONResponse(status_code=400, content={"detail": "Invalid Content-Length"})
+                    await response(scope, receive, send)
+                    return
+                if declared > request_limit:
+                    response = JSONResponse(status_code=413, content={"detail": "Upload request too large"})
+                    await response(scope, receive, send)
+                    return
+            received = 0
+            exceeded = False
+            content_type = dict(scope.get("headers", [])).get(b"content-type", b"").lower()
+
+            async def bounded_receive():
+                nonlocal received, exceeded
+                message = await receive()
+                if message["type"] == "http.request":
+                    received += len(message.get("body", b""))
+                    if received > request_limit:
+                        exceeded = True
+                        if content_type.startswith(b"multipart/form-data"):
+                            # Use the parser's exception type so older supported
+                            # Starlette releases also close spooled files. Its
+                            # resulting 400 is mapped back to 413 below.
+                            raise MultiPartException("Upload request too large")
+                        raise HTTPException(status_code=413, detail="Upload request too large")
+                return message
+
+            async def bounded_send(message):
+                if exceeded and message["type"] == "http.response.start":
+                    message = {**message, "status": 413}
+                await send(message)
+
+            await self.app(scope, bounded_receive, bounded_send)
+
+    app.add_middleware(_UploadBodyLimit)
+
     @app.middleware("http")
     async def _request_context_middleware(request: Request, call_next):  # type: ignore[no-untyped-def]
         request_id = _request_id_from(request)
         request.state.request_id = request_id
+        path = _route_path(request.scope)
 
-        if rate_limit_rpm > 0 and request.url.path not in {"/healthz", "/metrics"}:
-            now = time.time()
+        if rate_limit_rpm > 0 and path not in {"/healthz", "/metrics"}:
+            now = time.monotonic()
             key = _rate_limit_key(request)
             with rate_limit_lock:
+                # Expired clients must not accumulate for the server lifetime.
+                for old_key, (started, _) in list(rate_limit_state.items()):
+                    if now - started >= rate_limit_window_s:
+                        rate_limit_state.pop(old_key, None)
                 window_start, count = rate_limit_state.get(key, (now, 0))
                 if now - window_start >= float(rate_limit_window_s):
                     window_start, count = now, 0
                 count += 1
                 rate_limit_state[key] = (window_start, count)
                 if count > rate_limit_rpm:
-                    retry_after = max(0, int(rate_limit_window_s - (now - window_start)))
+                    retry_after = max(1, math.ceil(rate_limit_window_s - (now - window_start)))
                     return JSONResponse(
                         status_code=429,
                         content={"detail": "Rate limit exceeded"},
                         headers={"Retry-After": str(retry_after), "X-Request-ID": request_id},
                     )
 
+        # Dependencies run after body parsing. Authenticate every protected
+        # route before accepting multipart or JSON data, including mounted apps.
+        if _protected_route(path):
+            try:
+                _require_api_key(request)
+            except HTTPException as exc:
+                return JSONResponse(
+                    status_code=exc.status_code,
+                    content={"detail": exc.detail},
+                    headers={**(exc.headers or {}), "X-Request-ID": request_id},
+                )
         response = await call_next(request)
         response.headers.setdefault("X-Request-ID", request_id)
         return response
@@ -260,8 +433,8 @@ def create_app():  # type: ignore[no-untyped-def]
     def telemetry(_: None = auth_required) -> Dict[str, object]:
         return exporter.snapshot_dict()
 
-    @app.get("/metrics")
-    def metrics(_: None = auth_required) -> PlainTextResponse:
+    @app.get("/metrics", response_class=PlainTextResponse)
+    def metrics(_: None = auth_required) -> Any:
         try:
             payload = exporter.render_prometheus()
         except RuntimeError as exc:
@@ -302,15 +475,17 @@ def create_app():  # type: ignore[no-untyped-def]
         recipe: str = Query("default"),
         profile: str = Query("balanced"),
         llm_ok: bool = Query(True),
-        deadline_ms: Optional[int] = Query(None),
-        max_blocks: Optional[int] = Query(None),
+        deadline_ms: Optional[int] = Query(None, ge=0),
+        max_blocks: Optional[int] = Query(None, ge=0),
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
     ) -> Dict[str, Any]:
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
+        _validate_selection(recipe, profile)
         tmp_path = await _upload_to_tempfile(file)
         try:
-            document = convert(
+            document = await run_in_threadpool(
+                convert,
                 tmp_path,
                 recipe=recipe,
                 llm_ok=llm_ok,
@@ -335,7 +510,7 @@ def create_app():  # type: ignore[no-untyped-def]
         recipe: str = Query("default"),
         profile: str = Query("balanced"),
         llm_ok: bool = Query(False),
-        max_blocks: Optional[int] = Query(None),
+        max_blocks: Optional[int] = Query(None, ge=0),
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
     ):  # type: ignore[no-untyped-def]
@@ -345,12 +520,12 @@ def create_app():  # type: ignore[no-untyped-def]
                 detail="Streaming conversion requires llm_ok=false (LLM escalation is not streamable).",
             )
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
+        _validate_selection(recipe, profile)
         tmp_path = await _upload_to_tempfile(file)
         doc_id = uuid.uuid4().hex
         created_at = datetime.now(timezone.utc).isoformat()
         started = time.perf_counter()
         mime_value = file.content_type or ""
-        source_type = detect_type(tmp_path)
         request_id = getattr(getattr(request, "state", None), "request_id", None)
 
         def _to_payload(value: object) -> Dict[str, Any]:
@@ -361,13 +536,13 @@ def create_app():  # type: ignore[no-untyped-def]
             candidate = getattr(value, "__dict__", {})
             return candidate if isinstance(candidate, dict) else {}
 
-        async def _iter():  # type: ignore[no-untyped-def]
+        def _iter():  # type: ignore[no-untyped-def]
             try:
                 meta: Dict[str, Any] = {
                     "kind": "document",
                     "id": doc_id,
                     "source": getattr(file, "filename", "") or "",
-                    "type": source_type,
+                    "type": detect_type(tmp_path),
                     "mime": mime_value,
                     "recipe": str(recipe),
                     "profile": str(profile),
@@ -414,7 +589,15 @@ def create_app():  # type: ignore[no-untyped-def]
                 except Exception:
                     pass
 
-        return StreamingResponse(
+        class _UploadStreamResponse(StreamingResponse):
+            async def __call__(self, scope, receive, send):
+                try:
+                    await super().__call__(scope, receive, send)
+                finally:
+                    # Covers disconnects before the generator's first iteration.
+                    tmp_path.unlink(missing_ok=True)
+
+        return _UploadStreamResponse(
             _iter(),
             media_type="application/x-ndjson",
             headers={"X-Accel-Buffering": "no"},
@@ -422,7 +605,7 @@ def create_app():  # type: ignore[no-untyped-def]
 
     @app.post("/convert-path")
     def convert_path(
-        payload: Dict[str, Any] = Body(...),
+        payload: PathConversionRequest = Body(...),
         *,
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
@@ -433,25 +616,12 @@ def create_app():  # type: ignore[no-untyped-def]
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
-        raw_path = payload.get("path")
-        if not isinstance(raw_path, str) or not raw_path.strip():
-            raise HTTPException(status_code=422, detail="Field 'path' is required")
-        recipe = str(payload.get("recipe") or "default")
-        profile = str(payload.get("profile") or "balanced")
-        llm_ok = bool(payload.get("llm_ok", True))
-        mime = payload.get("mime")
-        mime_value = str(mime) if isinstance(mime, str) and mime else None
-        deadline_ms = payload.get("deadline_ms")
-        deadline_value = int(deadline_ms) if isinstance(deadline_ms, int) else None
-        max_blocks = payload.get("max_blocks")
-        max_blocks_value = int(max_blocks) if isinstance(max_blocks, int) else None
-        path = Path(raw_path).expanduser()
-        if max_upload_bytes is not None:
-            try:
-                if path.stat().st_size > max_upload_bytes:
-                    raise HTTPException(status_code=413, detail="File too large")
-            except OSError as exc:
-                raise HTTPException(status_code=422, detail=f"Cannot stat path: {exc}") from exc
+        _validate_selection(payload.recipe, payload.profile)
+        recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
+        mime_value = payload.mime
+        deadline_value, max_blocks_value = payload.deadline_ms, payload.max_blocks
+        path = _path_to_file(payload.path)
+
         document = convert(
             path,
             recipe=recipe,
@@ -466,7 +636,7 @@ def create_app():  # type: ignore[no-untyped-def]
 
     @app.post("/batch-convert-paths")
     def batch_convert_paths(
-        payload: Dict[str, Any] = Body(...),
+        payload: BatchConversionRequest = Body(...),
         *,
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
@@ -477,24 +647,13 @@ def create_app():  # type: ignore[no-untyped-def]
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
-        paths = payload.get("paths")
-        if not isinstance(paths, list) or not all(isinstance(p, str) and p.strip() for p in paths):
-            raise HTTPException(status_code=422, detail="Field 'paths' must be a list of strings")
-        recipe = str(payload.get("recipe") or "default")
-        profile = str(payload.get("profile") or "balanced")
-        llm_ok = bool(payload.get("llm_ok", True))
-        deadline_ms = payload.get("deadline_ms")
-        deadline_value = int(deadline_ms) if isinstance(deadline_ms, int) else None
-        max_blocks = payload.get("max_blocks")
-        max_blocks_value = int(max_blocks) if isinstance(max_blocks, int) else None
-        path_list = [Path(p).expanduser() for p in paths]
-        if max_upload_bytes is not None:
-            for path in path_list:
-                try:
-                    if path.stat().st_size > max_upload_bytes:
-                        raise HTTPException(status_code=413, detail="File too large")
-                except OSError as exc:
-                    raise HTTPException(status_code=422, detail=f"Cannot stat path: {exc}") from exc
+        _validate_selection(payload.recipe, payload.profile)
+        recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
+        deadline_value, max_blocks_value = payload.deadline_ms, payload.max_blocks
+        backend_value, concurrency_value = payload.backend, payload.concurrency
+        dask_value, ray_value = payload.dask_scheduler, payload.ray_address
+        path_list = [_path_to_file(path) for path in payload.paths]
+
         documents = batch_convert(
             path_list,
             recipe=recipe,
@@ -503,6 +662,10 @@ def create_app():  # type: ignore[no-untyped-def]
             max_blocks=max_blocks_value,
             profile=profile,
             tenant=tenant_value,
+            backend=backend_value,
+            concurrency=concurrency_value,
+            dask_scheduler=dask_value,
+            ray_address=ray_value,
         )
         return [doc.model_dump() for doc in documents]
 
@@ -557,38 +720,37 @@ def create_app():  # type: ignore[no-untyped-def]
         recipe: str = Query("default"),
         profile: str = Query("balanced"),
         llm_ok: bool = Query(True),
-        deadline_ms: Optional[int] = Query(None),
-        max_blocks: Optional[int] = Query(None),
+        deadline_ms: Optional[int] = Query(None, ge=0),
+        max_blocks: Optional[int] = Query(None, ge=0),
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
     ) -> Dict[str, Any]:
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         filename = file.filename
         content_type = file.content_type
+        _validate_selection(recipe, profile)
         tmp_path = await _upload_to_tempfile(file)
 
         def _task() -> Dict[str, Any]:
-            try:
-                document = convert(
-                    tmp_path,
-                    recipe=recipe,
-                    llm_ok=llm_ok,
-                    mime=content_type,
-                    deadline_ms=deadline_ms,
-                    max_blocks=max_blocks,
-                    profile=profile,
-                    tenant=tenant_value,
-                )
-                return document.model_dump()
-            finally:
-                try:
-                    tmp_path.unlink(missing_ok=True)  # type: ignore[call-arg]
-                except Exception:
-                    pass
+            document = convert(
+                tmp_path,
+                recipe=recipe,
+                llm_ok=llm_ok,
+                mime=content_type,
+                deadline_ms=deadline_ms,
+                max_blocks=max_blocks,
+                profile=profile,
+                tenant=tenant_value,
+            )
+            return document.model_dump()
+
+        def _cleanup() -> None:
+            tmp_path.unlink(missing_ok=True)
 
         record = job_manager.submit(
             "convert",
             _task,
+            on_done=_cleanup,
             request={
                 "filename": filename,
                 "content_type": content_type,
@@ -604,7 +766,7 @@ def create_app():  # type: ignore[no-untyped-def]
 
     @app.post("/jobs/convert-path")
     def job_convert_path(
-        payload: Dict[str, Any] = Body(...),
+        payload: PathConversionRequest = Body(...),
         *,
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
@@ -615,25 +777,11 @@ def create_app():  # type: ignore[no-untyped-def]
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
-        raw_path = payload.get("path")
-        if not isinstance(raw_path, str) or not raw_path.strip():
-            raise HTTPException(status_code=422, detail="Field 'path' is required")
-        recipe = str(payload.get("recipe") or "default")
-        profile = str(payload.get("profile") or "balanced")
-        llm_ok = bool(payload.get("llm_ok", True))
-        mime = payload.get("mime")
-        mime_value = str(mime) if isinstance(mime, str) and mime else None
-        deadline_ms = payload.get("deadline_ms")
-        deadline_value = int(deadline_ms) if isinstance(deadline_ms, int) else None
-        max_blocks = payload.get("max_blocks")
-        max_blocks_value = int(max_blocks) if isinstance(max_blocks, int) else None
-        path = Path(raw_path).expanduser()
-        if max_upload_bytes is not None:
-            try:
-                if path.stat().st_size > max_upload_bytes:
-                    raise HTTPException(status_code=413, detail="File too large")
-            except OSError as exc:
-                raise HTTPException(status_code=422, detail=f"Cannot stat path: {exc}") from exc
+        _validate_selection(payload.recipe, payload.profile)
+        recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
+        mime_value = payload.mime
+        deadline_value, max_blocks_value = payload.deadline_ms, payload.max_blocks
+        path = _path_to_file(payload.path)
 
         def _task() -> Dict[str, Any]:
             document = convert(
@@ -666,7 +814,7 @@ def create_app():  # type: ignore[no-untyped-def]
 
     @app.post("/jobs/batch-convert-paths")
     def job_batch_convert_paths(
-        payload: Dict[str, Any] = Body(...),
+        payload: BatchConversionRequest = Body(...),
         *,
         tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
         _: None = auth_required,
@@ -677,32 +825,12 @@ def create_app():  # type: ignore[no-untyped-def]
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
         tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
-        paths = payload.get("paths")
-        if not isinstance(paths, list) or not all(isinstance(p, str) and p.strip() for p in paths):
-            raise HTTPException(status_code=422, detail="Field 'paths' must be a list of strings")
-        recipe = str(payload.get("recipe") or "default")
-        profile = str(payload.get("profile") or "balanced")
-        llm_ok = bool(payload.get("llm_ok", True))
-        deadline_ms = payload.get("deadline_ms")
-        deadline_value = int(deadline_ms) if isinstance(deadline_ms, int) else None
-        max_blocks = payload.get("max_blocks")
-        max_blocks_value = int(max_blocks) if isinstance(max_blocks, int) else None
-        backend = payload.get("backend")
-        backend_value = str(backend) if isinstance(backend, str) and backend.strip() else None
-        concurrency = payload.get("concurrency")
-        concurrency_value = int(concurrency) if isinstance(concurrency, int) else 0
-        dask_scheduler = payload.get("dask_scheduler")
-        dask_value = str(dask_scheduler) if isinstance(dask_scheduler, str) and dask_scheduler.strip() else None
-        ray_address = payload.get("ray_address")
-        ray_value = str(ray_address) if isinstance(ray_address, str) and ray_address.strip() else None
-        path_list = [Path(p).expanduser() for p in paths]
-        if max_upload_bytes is not None:
-            for path in path_list:
-                try:
-                    if path.stat().st_size > max_upload_bytes:
-                        raise HTTPException(status_code=413, detail="File too large")
-                except OSError as exc:
-                    raise HTTPException(status_code=422, detail=f"Cannot stat path: {exc}") from exc
+        _validate_selection(payload.recipe, payload.profile)
+        recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
+        deadline_value, max_blocks_value = payload.deadline_ms, payload.max_blocks
+        backend_value, concurrency_value = payload.backend, payload.concurrency
+        dask_value, ray_value = payload.dask_scheduler, payload.ray_address
+        path_list = [_path_to_file(path) for path in payload.paths]
 
         def _task() -> list[Dict[str, Any]]:
             documents = batch_convert(

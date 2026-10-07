@@ -38,7 +38,7 @@ except ImportError:  # pragma: no cover - tests fallback when dependency missing
             return True
         except OSError:
             return False
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def _default_cache_dir() -> Path:
@@ -48,7 +48,11 @@ def _default_cache_dir() -> Path:
     return Path.home() / ".cache" / "sr_adapter"
 
 
-class TelemetrySettings(BaseModel):
+class _SettingsModel(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
+
+class TelemetrySettings(_SettingsModel):
     """Telemetry configuration covering Sentry + Prometheus exports."""
 
     sentry_dsn: Optional[str] = None
@@ -63,7 +67,7 @@ class TelemetrySettings(BaseModel):
         return value.strip() or "development"
 
 
-class DriverSettings(BaseModel):
+class DriverSettings(_SettingsModel):
     """Global defaults applied to driver configurations."""
 
     default_timeout: float = 30.0
@@ -112,20 +116,24 @@ class DriverSettings(BaseModel):
         return float(value)
 
 
-class DistributedSettings(BaseModel):
+class DistributedSettings(_SettingsModel):
     """Configuration for distributed/concurrent execution backends."""
 
     default_backend: str = "auto"
-    max_workers: Optional[int] = None
+    max_workers: Optional[int] = Field(default=None, ge=1)
     dask_scheduler: Optional[str] = None
     ray_address: Optional[str] = None
 
     @field_validator("default_backend")
     @classmethod
     def _normalize_backend(cls, value: str) -> str:  # noqa: D401
-        return value.strip().lower() or "auto"
+        value = value.strip().lower() or "auto"
+        if value not in {"auto", "sync", "sequential", "none", "thread", "threads", "threadpool", "async", "asyncio", "dask", "ray"}:
+            raise ValueError("Unknown distributed backend")
+        return value
 
-class EscalationSettings(BaseModel):
+
+class EscalationSettings(_SettingsModel):
     """Controls for the escalation meta-model and logging pipeline."""
 
     logging_enabled: bool = True
@@ -165,7 +173,7 @@ class EscalationSettings(BaseModel):
         return path if path.exists() else None
 
 
-class AutoProfileSettings(BaseModel):
+class AutoProfileSettings(_SettingsModel):
     """Adaptive profile controller parameters."""
 
     enabled: bool = True
@@ -205,7 +213,7 @@ class AutoProfileSettings(BaseModel):
         return _default_cache_dir() / "profiles" / "bandit_state.json"
 
 
-class KernelAutoTuneSettings(BaseModel):
+class KernelAutoTuneSettings(_SettingsModel):
     """Settings controlling the native kernel autotuner."""
 
     enabled: bool = True
@@ -230,8 +238,12 @@ class KernelAutoTuneSettings(BaseModel):
         if value is None:
             return ()
         if isinstance(value, int):
-            return (int(value),)
-        return tuple(int(entry) for entry in value)
+            values = (value,)
+        else:
+            values = tuple(int(entry) for entry in value)
+        if any(entry <= 0 for entry in values):
+            raise ValueError("Kernel batch sizes must be positive")
+        return values
 
     @property
     def resolved_state_path(self) -> Path:
@@ -240,7 +252,7 @@ class KernelAutoTuneSettings(BaseModel):
         return _default_cache_dir() / "kernel_autotune.json"
 
 
-class AdapterSettings(BaseModel):
+class AdapterSettings(_SettingsModel):
     """Composite settings object loaded from YAML + environment variables."""
 
     telemetry: TelemetrySettings = Field(default_factory=TelemetrySettings)
@@ -295,14 +307,23 @@ def _collect_env_overrides() -> Dict[str, Any]:
     for key, value in os.environ.items():
         if not key.startswith(prefix):
             continue
+        if key == "SR_ADAPTER_KERNEL_AUTOTUNE":
+            # Legacy cache-path override, read directly by get_autotune_store.
+            # Nested SR_ADAPTER_KERNEL_AUTOTUNE__... settings remain supported.
+            continue
         parts = key[len(prefix) :].split("__")
         cursor = overrides
         for idx, part in enumerate(parts):
             normalized = part.lower()
             if idx == len(parts) - 1:
+                if isinstance(cursor.get(normalized), dict):
+                    raise ValueError(f"Conflicting settings environment variable: {key}")
                 cursor[normalized] = value
             else:
-                cursor = cursor.setdefault(normalized, {})  # type: ignore[assignment]
+                child = cursor.setdefault(normalized, {})
+                if not isinstance(child, dict):
+                    raise ValueError(f"Conflicting settings environment variable: {key}")
+                cursor = child
     return overrides
 
 
