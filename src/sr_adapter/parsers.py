@@ -6,6 +6,7 @@ from __future__ import annotations
 import configparser
 import csv
 import json
+import os
 import re
 import zipfile
 import xml.etree.ElementTree as ET
@@ -24,7 +25,7 @@ from docx import Document as DocxDocument
 from openpyxl import load_workbook
 from pypdf import PdfReader
 
-from .loaders import _extract_image_text
+from .loaders import _extract_image_text, _read_text_best_effort
 from .schema import BBox, Block, Provenance, clone_model
 from .visual import LayoutCandidate, VisualLayoutAnalyzer
 
@@ -41,8 +42,8 @@ _LOG_LINE = re.compile(
 _MAX_CHARS_PER_CHUNK = 600
 _STRUCTURED_BLOCK_LIMIT = 400
 _R_IDENTIFIER = re.compile(r"^[A-Za-z.][A-Za-z0-9._]*$")
-_JSON_COMMENT_RE = re.compile(r"//.*?$|/\*.*?\*/", re.DOTALL | re.MULTILINE)
-_TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+_JSON_COMMENT_RE = re.compile(r'"(?:\\.|[^"\\])*"|//[^\r\n]*|/\*.*?\*/', re.DOTALL)
+_TRAILING_COMMA_RE = re.compile(r'"(?:\\.|[^"\\])*"|,(?=\s*[}\]])', re.DOTALL)
 _INI_ARROW_RE = re.compile(
     r"^(?P<indent>\s*)(?P<key>[^\s:=#;\[\]][^:=#;]*?)\s*(?:=>|->)\s*(?P<value>.+)$"
 )
@@ -350,6 +351,8 @@ def _stringify_scalar(value: object) -> str:
 def _strip_json_comments(text: str) -> str:
     def _replace(match: re.Match[str]) -> str:
         span = match.group(0)
+        if span.startswith('"'):
+            return span
         # Preserve newlines to keep downstream line numbers vaguely aligned.
         return "".join("\n" if ch == "\n" else " " for ch in span)
 
@@ -359,7 +362,9 @@ def _strip_json_comments(text: str) -> str:
 def _sanitize_json_like(text: str) -> str:
     cleaned = text.lstrip("\ufeff")
     cleaned = _strip_json_comments(cleaned)
-    cleaned = _TRAILING_COMMA_RE.sub(r"\1", cleaned)
+    cleaned = _TRAILING_COMMA_RE.sub(
+        lambda match: match.group(0) if match.group(0).startswith('"') else "", cleaned
+    )
     return cleaned
 
 
@@ -649,7 +654,7 @@ def _structured_to_blocks(
 
 def parse_txt(path: str | Path) -> List[Block]:
     source = Path(path)
-    text = source.read_text(encoding="utf-8", errors="ignore")
+    text, _ = _read_text_best_effort(source)
     blocks: List[Block] = []
     for chunk in _iter_refined_chunks(text):
         if "\n" in chunk:
@@ -679,7 +684,7 @@ def parse_txt(path: str | Path) -> List[Block]:
 
 def parse_md(path: str | Path) -> List[Block]:
     source = Path(path)
-    text = source.read_text(encoding="utf-8", errors="ignore")
+    text, _ = _read_text_best_effort(source)
     blocks: List[Block] = []
     in_code = False
     code_buffer: List[str] = []
@@ -714,14 +719,19 @@ def parse_md(path: str | Path) -> List[Block]:
 
 def parse_html(path: str | Path) -> List[Block]:
     source = Path(path)
-    html = source.read_text(encoding="utf-8", errors="ignore")
+    html, _ = _read_text_best_effort(source)
     soup = BeautifulSoup(html, "html.parser")
+    for element in soup(["script", "style", "noscript"]):
+        element.decompose()
     blocks: List[Block] = []
-    for element in soup.find_all(["title", "h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "pre", "code", "table"]):
-        text = element.get_text(" ", strip=True)
-        if not text:
+    block_tags = ["title", "h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "pre", "code", "table"]
+    for element in soup.find_all(block_tags):
+        if element.find_parent(block_tags) is not None:
             continue
         name = element.name or "p"
+        text = element.get_text() if name in {"pre", "code"} else element.get_text(" ", strip=True)
+        if not text:
+            continue
         if name == "title":
             blocks.append(_new_block("title", text, source, confidence=0.9))
         elif name in {"h1", "h2", "h3", "h4", "h5", "h6"}:
@@ -752,9 +762,11 @@ def parse_html(path: str | Path) -> List[Block]:
 
 def parse_csv(path: str | Path) -> List[Block]:
     source = Path(path)
-    with source.open("r", encoding="utf-8", errors="ignore", newline="") as handle:
-        reader = csv.reader(handle)
-        rows = [row for row in reader]
+    from io import StringIO
+
+    raw, _ = _read_text_best_effort(source)
+    delimiter = "\t" if source.suffix.lower() == ".tsv" else ","
+    rows = list(csv.reader(StringIO(raw, newline=""), delimiter=delimiter))
     text = "\n".join([", ".join(row) for row in rows])
     return [
         Block(
@@ -770,34 +782,27 @@ def parse_csv(path: str | Path) -> List[Block]:
 def stream_pdf(path: str | Path) -> Iterator[Block]:
     source = Path(path)
     reader = PdfReader(str(source))
-    analyzer = VisualLayoutAnalyzer(profile="pdf")
     emitted = False
     for index, page in enumerate(reader.pages):
         text = page.extract_text() or ""
-        candidates: List[LayoutCandidate] = []
         for order, chunk in enumerate(_iter_refined_chunks(text)):
             base = _block_from_chunk(chunk, source)
             attrs = dict(base.attrs)
             attrs.setdefault("page", str(index + 1))
-            base_block = clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.55))
             span_height = min(160.0, 24.0 + len(chunk) * 0.12)
             span_width = min(640.0, 120.0 + len(chunk) * 0.9)
             top = float(order) * (span_height + 6.0)
-            bbox = (36.0, top, 36.0 + span_width, top + span_height)
-            score = max(base_block.confidence, min(0.95, 0.35 + len(chunk) / 600.0))
-            candidates.append(
-                LayoutCandidate(
-                    block=base_block,
-                    bbox=bbox,
-                    page=index,
-                    score=score,
-                    order_hint=order,
-                    metadata={"layout_source": "pdf"},
-                )
-            )
-        for segment in analyzer.process(candidates):
+            # extract_text() provides no source coordinates. Keep the legacy
+            # size estimate separate from provenance and never classify or
+            # increase confidence using fabricated geometry.
+            attrs.update({
+                "layout_source": "pdf",
+                "layout_geometry": "heuristic",
+                "layout_bbox_estimate": [36.0, top, 36.0 + span_width, top + span_height],
+                "layout_analysis": "skipped_heuristic_geometry",
+            })
             emitted = True
-            yield segment.block
+            yield clone_model(base, attrs=attrs, prov=Provenance(uri=str(source), page=index, order=order))
     if not emitted:
         yield _new_block("other", "", source, confidence=0.1)
 
@@ -806,11 +811,38 @@ def parse_pdf(path: str | Path) -> List[Block]:
     return list(stream_pdf(path))
 
 
+def _image_layout_blocks(candidates: List[LayoutCandidate]) -> List[Block]:
+    """Use native layout only when real geometry and a kernel are available."""
+    if not candidates:
+        return []
+    disabled = os.getenv("SR_ADAPTER_DISABLE_NATIVE_RUNTIME", "").strip().lower() in {"1", "true", "yes", "on"}
+    status = "disabled" if disabled else "skipped_heuristic_geometry"
+    error = None
+    if not disabled and all(candidate.bbox is not None for candidate in candidates):
+        try:
+            analyzer = VisualLayoutAnalyzer(profile="image")
+            # Materialise before emitting so a kernel failure cannot produce
+            # partially enriched output followed by duplicated fallback text.
+            blocks = [segment.block for segment in analyzer.process(candidates)]
+            if len(blocks) != len(candidates):
+                raise ValueError("Layout analysis did not preserve every input block")
+            return blocks
+        except Exception as exc:
+            status = "unavailable"
+            error = type(exc).__name__
+    blocks = []
+    for candidate in sorted(candidates, key=lambda item: (item.page, item.order_hint)):
+        attrs = {**candidate.block.attrs, "layout_source": "image", "layout_analysis": status}
+        if error:
+            attrs["layout_error"] = error
+        blocks.append(clone_model(candidate.block, attrs=attrs))
+    return blocks
+
+
 def stream_image(path: str | Path) -> Iterator[Block]:
     source = Path(path)
     text, meta, segments = _extract_image_text(source)
 
-    analyzer = VisualLayoutAnalyzer(profile="image")
     emitted = 0
     truncated = False
 
@@ -851,19 +883,19 @@ def stream_image(path: str | Path) -> Iterator[Block]:
             continue
         if not seg_text:
             continue
-        prov = Provenance()
+        prov = Provenance(page=0, order=index)
         order = segment.get("order")
         if order is not None:
             try:
                 prov.order = int(order)
             except Exception:
-                prov.order = None
+                prov.order = index
         page = segment.get("page")
         if page is not None:
             try:
                 prov.page = int(page)
             except Exception:
-                prov.page = None
+                prov.page = 0
         bbox_raw = segment.get("bbox")
         bbox: Sequence[float] | None = None
         if bbox_raw and isinstance(bbox_raw, Sequence) and len(bbox_raw) == 4:
@@ -877,7 +909,14 @@ def stream_image(path: str | Path) -> Iterator[Block]:
                 bbox = tuple(float(v) for v in bbox_raw)
             except Exception:
                 prov.bbox = None
-        attrs: Dict[str, Any] = {"image_source": source_kind}
+        attrs: Dict[str, Any] = {
+            "image_source": source_kind,
+            "layout_geometry": "ocr" if bbox is not None else "heuristic",
+        }
+        order_hint = prov.order if prov.order is not None else index
+        if bbox is None:
+            top = float(order_hint) * 30.0
+            attrs["layout_bbox_estimate"] = [12.0, top, 12.0 + min(600.0, 80.0 + len(seg_text) * 1.2), top + 24.0]
         if source_kind == "ocr":
             languages = meta.get("image_ocr_languages")
             if languages:
@@ -897,10 +936,6 @@ def stream_image(path: str | Path) -> Iterator[Block]:
             source=str(source),
             confidence=conf_value,
         )
-        order_hint = prov.order if prov.order is not None else index
-        if bbox is None:
-            top = float(order_hint) * 30.0
-            bbox = (12.0, top, 12.0 + min(600.0, 80.0 + len(seg_text) * 1.2), top + 24.0)
         candidates.append(
             LayoutCandidate(
                 block=base_block,
@@ -919,11 +954,11 @@ def stream_image(path: str | Path) -> Iterator[Block]:
         yield meta_block
         emitted += 1
 
-    for segment in analyzer.process(candidates):
+    for block in _image_layout_blocks(candidates):
         if emitted >= _STRUCTURED_BLOCK_LIMIT:
             truncated = True
             break
-        yield segment.block
+        yield block
         emitted += 1
 
     if emitted == 0 and text:
@@ -959,93 +994,113 @@ def parse_image(path: str | Path) -> List[Block]:
 
 
 def parse_docx(path: str | Path) -> List[Block]:
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+
     source = Path(path)
     doc = DocxDocument(str(source))
     blocks: List[Block] = []
-    for paragraph in doc.paragraphs:
-        text = paragraph.text.strip()
-        if not text:
-            continue
-        style = (paragraph.style.name.lower() if paragraph.style and paragraph.style.name else "")
-        is_heading = "heading" in style if style else False
-        for chunk in _shatter_chunk(text):
-            base = _block_from_chunk(chunk, source)
-            data: Dict[str, Any] = {"confidence": max(base.confidence, 0.65)}
-            if is_heading and base.type == "paragraph":
-                data["type"] = "heading"
-            blocks.append(clone_model(base, **data))
-    for table in doc.tables:
-        rows = [[cell.text.strip() for cell in row.cells] for row in table.rows]
-        blocks.append(
-            Block(
+    # Iterating paragraphs and then tables loses their relative reading order.
+    for element in doc.element.body:
+        if element.tag.endswith("}p"):
+            paragraph = Paragraph(element, doc)
+            text = paragraph.text.strip()
+            if not text:
+                continue
+            style = paragraph.style.name.lower() if paragraph.style and paragraph.style.name else ""
+            for chunk in _shatter_chunk(text):
+                base = _block_from_chunk(chunk, source)
+                data: Dict[str, Any] = {"confidence": max(base.confidence, 0.65)}
+                if "heading" in style and base.type == "paragraph":
+                    data["type"] = "heading"
+                blocks.append(clone_model(base, **data))
+        elif element.tag.endswith("}tbl"):
+            table = Table(element, doc)
+            rows = [[cell.text.strip() for cell in row.cells] for row in table.rows]
+            blocks.append(Block(
                 type="table",
-                text="\n".join([", ".join(row) for row in rows]),
+                text="\n".join(", ".join(row) for row in rows),
                 attrs={"rows": json.dumps(rows, ensure_ascii=False)},
                 source=str(source),
                 confidence=0.75,
-            )
-        )
+            ))
     return blocks or [_new_block("other", "", source, confidence=0.1)]
+
+
+def _pptx_slide_names(archive: zipfile.ZipFile) -> List[str]:
+    import posixpath
+
+    names = set(archive.namelist())
+    presentation = "ppt/presentation.xml"
+    relations = "ppt/_rels/presentation.xml.rels"
+    if presentation in names and relations in names:
+        targets = {}
+        for relation in ET.fromstring(archive.read(relations)):
+            if relation.get("TargetMode") == "External":
+                continue
+            target = relation.get("Target", "")
+            targets[relation.get("Id")] = (
+                target.lstrip("/") if target.startswith("/")
+                else posixpath.normpath(posixpath.join("ppt", target))
+            )
+        ordered = []
+        for element in ET.fromstring(archive.read(presentation)).iter():
+            if element.tag.endswith("}sldId"):
+                relation_id = next((value for key, value in element.attrib.items() if key.endswith("}id")), None)
+                target = targets.get(relation_id)
+                if target and target in names and target.startswith("ppt/slides/"):
+                    ordered.append(target)
+        return ordered
+    return sorted(
+        (name for name in names if re.fullmatch(r"ppt/slides/slide\d+\.xml", name)),
+        key=lambda name: int(re.search(r"slide(\d+)\.xml$", name).group(1)),
+    )
 
 
 def parse_pptx(path: str | Path) -> List[Block]:
     source = Path(path)
     blocks: List[Block] = []
-    try:
-        with zipfile.ZipFile(str(source)) as zf:
-            slide_names = sorted(
-                name
-                for name in zf.namelist()
-                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
-            )
-            for index, slide_name in enumerate(slide_names, 1):
-                try:
-                    root = ET.fromstring(zf.read(slide_name))
-                except Exception:
-                    continue
-                texts: List[str] = []
-                for node in root.iter():
-                    if node.tag.endswith("}t") and (node.text or "").strip():
-                        texts.append(node.text.strip())
-                if not texts:
-                    continue
-                slide_text = "\n".join(texts)
-                for chunk in _iter_refined_chunks(slide_text):
-                    base = _block_from_chunk(chunk, source)
-                    attrs = dict(base.attrs)
-                    attrs.setdefault("slide", str(index))
-                    blocks.append(
-                        clone_model(base, attrs=attrs, confidence=max(base.confidence, 0.6))
-                    )
-    except Exception:
-        pass
+    with zipfile.ZipFile(str(source)) as archive:
+        for index, slide_name in enumerate(_pptx_slide_names(archive), 1):
+            root = ET.fromstring(archive.read(slide_name))
+            texts = [node.text.strip() for node in root.iter()
+                     if node.tag.endswith("}t") and (node.text or "").strip()]
+            for chunk in _iter_refined_chunks("\n".join(texts)):
+                base = _block_from_chunk(chunk, source)
+                blocks.append(clone_model(
+                    base,
+                    attrs={**base.attrs, "slide": str(index)},
+                    prov=Provenance(uri=str(source), page=index - 1),
+                    confidence=max(base.confidence, 0.6),
+                ))
     return blocks or [_new_block("other", "", source, confidence=0.2)]
 
 
 def parse_xlsx(path: str | Path) -> List[Block]:
     source = Path(path)
     workbook = load_workbook(filename=str(source), read_only=True, data_only=True)
-    sheet = workbook.active
-    rows = [
-        ["" if cell.value is None else str(cell.value) for cell in row]
-        for row in sheet.iter_rows(values_only=True)
-    ]
-    text = "\n".join([", ".join(row) for row in rows])
-    workbook.close()
-    return [
-        Block(
-            type="table",
-            text=text,
-            attrs={"rows": json.dumps(rows, ensure_ascii=False)},
-            source=str(source),
-            confidence=0.75,
-        )
-    ]
+    blocks: List[Block] = []
+    try:
+        for sheet in workbook.worksheets:
+            rows = [
+                ["" if value is None else str(value) for value in row]
+                for row in sheet.iter_rows(values_only=True)
+            ]
+            blocks.append(Block(
+                type="table",
+                text="\n".join(", ".join(row) for row in rows),
+                attrs={"rows": json.dumps(rows, ensure_ascii=False), "sheet": sheet.title},
+                source=str(source),
+                confidence=0.75,
+            ))
+    finally:
+        workbook.close()
+    return blocks
 
 
 def parse_json(path: str | Path) -> List[Block]:
     source = Path(path)
-    raw = source.read_text(encoding="utf-8", errors="ignore")
+    raw, _ = _read_text_best_effort(source)
     coercion_origin: str | None = None
     try:
         data, coercion = _load_json_like(raw)
@@ -1086,7 +1141,7 @@ def parse_json(path: str | Path) -> List[Block]:
 
 def parse_ini(path: str | Path) -> List[Block]:
     source = Path(path)
-    raw = source.read_text(encoding="utf-8", errors="ignore")
+    raw, _ = _read_text_best_effort(source)
     sanitized, coercion_meta, has_section, leading_pairs = _prepare_ini_input(raw)
     try:
         data, structure_meta = _parse_ini_structured(
@@ -1131,7 +1186,7 @@ def parse_ini(path: str | Path) -> List[Block]:
 
 def parse_jsonl(path: str | Path) -> List[Block]:
     source = Path(path)
-    text = source.read_text(encoding="utf-8", errors="ignore")
+    text, _ = _read_text_best_effort(source)
     lines = text.splitlines()
     budget = max(1, _STRUCTURED_BLOCK_LIMIT - 1)
     blocks: List[Block] = []
@@ -1219,7 +1274,7 @@ def parse_jsonl(path: str | Path) -> List[Block]:
 
 def parse_yaml(path: str | Path) -> List[Block]:
     source = Path(path)
-    raw = source.read_text(encoding="utf-8", errors="ignore")
+    raw, _ = _read_text_best_effort(source)
     try:
         docs = list(yaml.safe_load_all(raw))
     except Exception:
@@ -1300,7 +1355,7 @@ def parse_yaml(path: str | Path) -> List[Block]:
 
 def parse_toml(path: str | Path) -> List[Block]:
     source = Path(path)
-    raw = source.read_text(encoding="utf-8", errors="ignore")
+    raw, _ = _read_text_best_effort(source)
     try:
         try:
             import tomllib  # type: ignore[attr-defined]
@@ -1421,29 +1476,43 @@ def parse_eml(path: str | Path) -> List[Block]:
 
 def parse_ics(path: str | Path) -> List[Block]:
     source = Path(path)
-    raw_lines = source.read_text(encoding="utf-8", errors="ignore").splitlines()
+    raw, _ = _read_text_best_effort(source)
+    raw_lines = raw.splitlines()
     unfolded: List[str] = []
     for line in raw_lines:
         if line.startswith((" ", "\t")) and unfolded:
-            unfolded[-1] += line.strip()
+            unfolded[-1] += line[1:]
         else:
             unfolded.append(line)
 
     events: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
+    components: List[str] = []
     for line in unfolded:
         upper = line.upper()
-        if upper == "BEGIN:VEVENT":
-            current = {}
+        if upper.startswith("BEGIN:"):
+            component = upper.split(":", 1)[1]
+            components.append(component)
+            if component == "VEVENT":
+                current = {}
             continue
-        if upper == "END:VEVENT":
-            if current:
+        if upper.startswith("END:"):
+            component = upper.split(":", 1)[1]
+            if component == "VEVENT" and components and components[-1] == "VEVENT" and current:
                 events.append(current)
-            current = {}
+                current = {}
+            if components and components[-1] == component:
+                components.pop()
             continue
-        if ":" in line:
+        if components and components[-1] == "VEVENT" and ":" in line:
             key, value = line.split(":", 1)
-            current[key.strip().upper()] = value.strip()
+            key, separator, parameters = key.partition(";")
+            key = key.strip().upper()
+            if key in {"SUMMARY", "DESCRIPTION", "LOCATION", "COMMENT"}:
+                value = re.sub(r"\\([nN,;\\])", lambda match: "\n" if match.group(1).lower() == "n" else match.group(1), value)
+            current[key] = value
+            if separator:
+                current[f"{key}_PARAMS"] = parameters
 
     blocks: List[Block] = []
     for event in events:

@@ -53,9 +53,16 @@ def _read_text_best_effort(path: Path) -> Tuple[str, Dict[str, Any]]:
     """Try utf-8 first, then a few common encodings; if `charset_normalizer` is
     available, use it. Always returns text+meta without raising."""
     meta: Dict[str, Any] = {}
+    with path.open("rb") as handle:
+        prefix = handle.read(4)
+    bom_encoding = (
+        "utf-32" if prefix.startswith((b"\xff\xfe\x00\x00", b"\x00\x00\xfe\xff"))
+        else "utf-16" if prefix.startswith((b"\xff\xfe", b"\xfe\xff"))
+        else "utf-8-sig" if prefix.startswith(b"\xef\xbb\xbf") else "utf-8"
+    )
     try:
-        txt = path.read_text(encoding="utf-8", errors="strict")
-        meta["encoding"] = "utf-8"
+        txt = path.read_text(encoding=bom_encoding, errors="strict")
+        meta["encoding"] = bom_encoding
         return txt, meta
     except Exception:
         pass
@@ -447,18 +454,21 @@ def _read_xlsx(path: Path) -> Tuple[str, Dict[str, Any]]:
     try:
         import openpyxl  # type: ignore
         wb = openpyxl.load_workbook(str(path), data_only=True, read_only=True)
-        texts: List[str] = []
-        total_rows = 0
-        for ws in wb.worksheets:
-            for r, row in enumerate(ws.iter_rows(values_only=True)):
-                # 行数が極端に多いとき用の上限
-                if r > int(os.getenv("SR_ADAPTER_XLSX_MAX_ROWS", "10000")):
-                    break
-                total_rows += 1
-                vals = ["" if v is None else str(v) for v in row]
-                texts.append("\t".join(vals))
-        meta = {"xlsx_sheets": len(wb.worksheets), "xlsx_rows_read": total_rows}
-        return _normalize_newlines("\n".join(texts)), meta
+        try:
+            texts: List[str] = []
+            total_rows = 0
+            max_rows = max(0, int(os.getenv("SR_ADAPTER_XLSX_MAX_ROWS", "10000")))
+            for ws in wb.worksheets:
+                for r, row in enumerate(ws.iter_rows(values_only=True)):
+                    if r >= max_rows:
+                        break
+                    total_rows += 1
+                    vals = ["" if v is None else str(v) for v in row]
+                    texts.append("\t".join(vals))
+            meta = {"xlsx_sheets": len(wb.worksheets), "xlsx_rows_read": total_rows}
+            return _normalize_newlines("\n".join(texts)), meta
+        finally:
+            wb.close()
     except Exception as e:
         meta = _binary_preview(path.read_bytes())
         meta["xlsx_text_extraction"] = f"failed: {type(e).__name__}"
@@ -612,7 +622,9 @@ def _extract_image_text(path: Path) -> Tuple[str, Dict[str, Any], List[Dict[str,
                 if exif:
                     sample = {ExifTags.TAGS.get(k, str(k)): v for k, v in list(exif.items())[:40]}
                     if sample:
-                        meta["image_exif_sample"] = sample
+                        # EXIF may include byte strings and Pillow rational
+                        # objects; diagnostics must remain JSON-serialisable.
+                        meta["image_exif_sample"] = json.loads(json.dumps(sample, default=str))
                     exif_records: List[Dict[str, Any]] = []
                     for key, value in sample.items():
                         text_value: Optional[str] = None
@@ -798,6 +810,7 @@ def read_file_contents(path: Path, mime: str) -> Tuple[str, Dict[str, Any]]:
     mime: MIME type determined by the caller (used as a hint).
     """
     _size_guard(path)
+    mime = mime.split(";", 1)[0].strip().lower()
     suffix = path.suffix.lower()
     extra: Dict[str, Any] = {}
 

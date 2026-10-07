@@ -43,6 +43,7 @@ from .parsers import (
     stream_pdf,
 )
 from .language import detect_language_guesses, merge_language_hints
+from .loaders import _size_guard
 from .recipe import apply_recipe, apply_recipe_block, load_recipe
 from .schema import Block, Document, clone_model
 from .sniff import detect_type
@@ -63,6 +64,7 @@ class ParserRegistry:
             "text/markdown": "md",
             "text/html": "html",
             "text/csv": "csv",
+            "text/tab-separated-values": "csv",
             "application/json": "json",
             "application/ld+json": "json",
             "application/x-ndjson": "jsonl",
@@ -79,6 +81,9 @@ class ParserRegistry:
             "application/pdf": "pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+            "message/rfc822": "eml",
+            "text/calendar": "ics",
             "image/png": "image",
             "image/jpeg": "image",
             "image/tiff": "image",
@@ -100,7 +105,7 @@ class ParserRegistry:
 
     def resolve_with_key(self, *, detected: Optional[str], mime: Optional[str]) -> Tuple[ParserFunc, str]:
         if mime:
-            alias = self.mime_to_key.get(mime.split(";")[0].strip())
+            alias = self.mime_to_key.get(mime.split(";")[0].strip().lower())
             if alias:
                 key = self.alias_to_key.get(alias, alias)
                 func = self.by_key.get(key)
@@ -238,6 +243,7 @@ class PipelineOrchestrator:
     ) -> Document:
         metrics = PipelineMetrics()
         source = Path(path)
+        _size_guard(source)
         detected = detect_type(source)
 
         blocks = _parse(source, detected=detected, mime=mime)
@@ -382,6 +388,10 @@ class PipelineOrchestrator:
         document = Document(
             blocks=list(blocks),
             meta=meta,
+            warnings=list(dict.fromkeys(
+                str(block.attrs["parser_warning"])
+                for block in blocks if block.attrs.get("parser_warning")
+            )),
         )
         try:
             from .profile_auto import record_profile_outcome
@@ -485,36 +495,63 @@ def _annotate_languages(blocks: Iterable[Block]) -> Tuple[List[Block], List[str]
 
 def _parse(path: Path, *, detected: str, mime: Optional[str]) -> List[Block]:
     parser, key = REGISTRY.resolve_with_key(detected=detected, mime=mime)
-    streamer = _STREAMERS.get(key)
+    streamer = _registered_streamer(parser, key)
     try:
         if streamer:
             return list(streamer(path))
         result = parser(path)
         return list(result) if not isinstance(result, list) else result
-    except Exception:
-        # 防御的フォールバック：plain text
-        return parse_txt(path)
+    except (OSError, PermissionError):
+        raise
+    except Exception as exc:
+        return _parse_fallback(path, key, exc)
+
+
+def _registered_streamer(parser: ParserFunc, key: str):
+    # Runtime parser overrides must not be bypassed by built-in streamers.
+    builtins = {"pdf": parse_pdf, "image": parse_image}
+    return _STREAMERS.get(key) if parser is builtins.get(key) else None
+
+
+def _parse_fallback(path: Path, key: str, error: Exception) -> List[Block]:
+    warning = f"{key} parser failed ({type(error).__name__})"
+    if key in {"pdf", "image", "docx", "xlsx", "pptx"}:
+        # Binary bytes are not extracted text. Preserve an observable failure
+        # instead of manufacturing paragraphs from a damaged container.
+        return [Block(type="other", source=str(path), confidence=0.0,
+                      attrs={"parser_warning": warning})]
+    return [clone_model(block, attrs={**block.attrs, "parser_warning": warning})
+            for block in parse_txt(path)]
 
 
 def _stream_raw(path: Path, *, detected: str, mime: Optional[str]) -> Iterable[Block]:
     parser, key = REGISTRY.resolve_with_key(detected=detected, mime=mime)
-    streamer = _STREAMERS.get(key)
+    streamer = _registered_streamer(parser, key)
     if streamer:
+        emitted = False
         try:
-            yield from streamer(path)
+            for block in streamer(path):
+                emitted = True
+                yield block
             return
-        except Exception:
-            parser = parse_txt
-            key = "text"
+        except OSError:
+            raise
+        except Exception as exc:
+            if emitted:
+                raise
+            yield from _parse_fallback(path, key, exc)
+            return
     try:
-        result = parser(path)
-    except Exception:
-        result = parse_txt(path)
-    if isinstance(result, list):
-        for block in result:
+        emitted = False
+        for block in parser(path):
+            emitted = True
             yield block
-    else:
-        yield from result
+    except OSError:
+        raise
+    except Exception as exc:
+        if emitted:
+            raise
+        yield from _parse_fallback(path, key, exc)
 
 
 def stream_convert(
@@ -529,6 +566,7 @@ def stream_convert(
     """Stream blocks through parse→normalise→recipe without LLM escalation."""
 
     source = Path(path)
+    _size_guard(source)
     detected = detect_type(source)
     recipe_config = load_recipe(recipe)
     context = _profile_context(
@@ -551,8 +589,9 @@ def stream_convert(
             pass
 
     raw_blocks: Iterable[Block] = _stream_raw(source, detected=detected, mime=mime)
-    if isinstance(max_blocks, int) and max_blocks > 0:
-        raw_blocks = islice(raw_blocks, max_blocks)
+    effective_max = max_blocks if max_blocks is not None else profile_obj.max_blocks
+    if isinstance(effective_max, int) and effective_max > 0:
+        raw_blocks = islice(raw_blocks, effective_max)
 
     if runtime is None:
         normalized: Iterable[Block] = (normalize_block(block) for block in raw_blocks)

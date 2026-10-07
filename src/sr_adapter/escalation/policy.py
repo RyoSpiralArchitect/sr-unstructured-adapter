@@ -57,8 +57,7 @@ class EscalationPolicyEngine:
     ) -> None:
         self._settings = settings or get_settings().escalation
         self._model = model or load_escalation_model(self._settings)
-        min_score = self._settings.min_score or self._model.threshold
-        self._threshold = float(min_score)
+        self._threshold = float(self._settings.min_score)
         self._last: Optional[SelectionResult] = None
 
     @property

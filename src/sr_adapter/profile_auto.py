@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import json
+import math
+import os
 import random
+import tempfile
 import time
 from dataclasses import dataclass, asdict
+from threading import RLock
 from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Tuple
 
 from .llm_metrics import LLMMetricsSnapshot
@@ -41,6 +45,7 @@ class AdaptiveProfileSelector:
         self.store = get_profile_store()
         self._state_path = self.settings.resolved_state_path
         self._stats: MutableMapping[str, ProfileStats] = {}
+        self._lock = RLock()
         self._load_state()
 
     @property
@@ -66,27 +71,43 @@ class AdaptiveProfileSelector:
         for name, stats in payload.items():
             if not isinstance(stats, Mapping):
                 continue
-            self._stats[name] = ProfileStats(
-                trials=int(stats.get("trials", 0)),
-                reward_sum=float(stats.get("reward_sum", 0.0)),
-                last_updated=float(stats.get("last_updated", 0.0)),
-            )
+            try:
+                candidate = ProfileStats(
+                    trials=int(stats.get("trials", 0)),
+                    reward_sum=float(stats.get("reward_sum", 0.0)),
+                    last_updated=float(stats.get("last_updated", 0.0)),
+                )
+            except (TypeError, ValueError, OverflowError):
+                continue
+            if candidate.trials < 0 or not all(math.isfinite(value) for value in (candidate.reward_sum, candidate.last_updated)):
+                continue
+            self._stats[name] = candidate
 
     def _save_state(self) -> None:
         path = self._state_path
         path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {
-            "profiles": {
-                name: asdict(stats)
-                for name, stats in self._stats.items()
+        with self._lock:
+            payload = {
+                "profiles": {
+                    name: asdict(stats)
+                    for name, stats in self._stats.items()
+                }
             }
-        }
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            temporary = None
+            try:
+                with tempfile.NamedTemporaryFile("w", dir=path.parent, prefix=f".{path.name}.", encoding="utf-8", delete=False) as handle:
+                    temporary = handle.name
+                    json.dump(payload, handle, ensure_ascii=False, indent=2, allow_nan=False)
+                os.replace(temporary, path)
+            finally:
+                if temporary and os.path.exists(temporary):
+                    os.unlink(temporary)
 
     def _ensure_stats(self, name: str) -> ProfileStats:
-        if name not in self._stats:
-            self._stats[name] = ProfileStats()
-        return self._stats[name]
+        with self._lock:
+            if name not in self._stats:
+                self._stats[name] = ProfileStats()
+            return self._stats[name]
 
     def _candidate_profiles(self) -> Dict[str, ProcessingProfile]:
         resolved: Dict[str, ProcessingProfile] = {}
@@ -207,11 +228,12 @@ class AdaptiveProfileSelector:
         reward = (0.6 * latency_score) + (0.4 * quality_score) - (0.25 * penalty)
         reward = max(self.settings.min_reward, min(self.settings.max_reward, reward))
 
-        stats.trials += 1
-        stats.reward_sum += reward
-        stats.last_updated = time.time()
-        self._stats[name] = stats
-        self._save_state()
+        with self._lock:
+            stats.trials += 1
+            stats.reward_sum += reward
+            stats.last_updated = time.time()
+            self._stats[name] = stats
+            self._save_state()
 
 
 _SELECTOR: AdaptiveProfileSelector | None = None

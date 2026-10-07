@@ -263,6 +263,8 @@ class EmbeddingIndex:
 
     def __init__(self, dimension: int) -> None:
         self.dimension = int(dimension)
+        if self.dimension <= 0:
+            raise ValueError("Embedding dimension must be positive")
         self._vectors: List[List[float]] = []
         self._metadata: List[dict[str, Any]] = []
         self._faiss_index = None
@@ -270,26 +272,36 @@ class EmbeddingIndex:
             self._faiss_index = faiss.IndexFlatIP(self.dimension)
 
     def add(self, vector: Sequence[float], metadata: Optional[dict[str, Any]] = None) -> None:
-        dense = list(vector)
+        dense = [float(value) for value in vector]
         if len(dense) != self.dimension:
             raise ValueError(f"Expected vector of length {self.dimension}")
-        norm = math.sqrt(sum(v * v for v in dense)) or 1.0
+        if not all(math.isfinite(value) for value in dense):
+            raise ValueError("Embedding values must be finite")
+        norm = math.hypot(*dense) or 1.0
         dense = [v / norm for v in dense]
-        self._vectors.append(dense)
-        self._metadata.append(dict(metadata or {}))
+        record = dict(metadata or {})
         if self._faiss_index is not None:
             array = _np.array([dense], dtype="float32")
             self._faiss_index.add(array)
+        self._vectors.append(dense)
+        self._metadata.append(record)
 
     def extend(self, vectors: Iterable[Sequence[float]], metadata: Iterable[dict[str, Any]]) -> None:
-        for vector, meta in zip(vectors, metadata):
+        for vector, meta in zip(vectors, metadata, strict=True):
             self.add(vector, meta)
 
     def search(self, query: Sequence[float], *, top_k: int = 5) -> List[EmbeddingHit]:
-        dense_query = list(query)
+        if not isinstance(top_k, int) or isinstance(top_k, bool) or top_k < 0:
+            raise ValueError("top_k must be a non-negative integer")
+        dense_query = [float(value) for value in query]
         if len(dense_query) != self.dimension:
             raise ValueError(f"Expected query vector of length {self.dimension}")
-        norm = math.sqrt(sum(v * v for v in dense_query)) or 1.0
+        if not all(math.isfinite(value) for value in dense_query):
+            raise ValueError("Query values must be finite")
+        if top_k == 0 or not self._vectors:
+            return []
+        top_k = min(top_k, len(self._vectors))
+        norm = math.hypot(*dense_query) or 1.0
         dense_query = [v / norm for v in dense_query]
         if self._faiss_index is not None:
             array = _np.array([dense_query], dtype="float32")

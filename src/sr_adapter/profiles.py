@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -236,6 +237,8 @@ class ProfileStore:
 
     def load(self, name: Optional[str]) -> ProcessingProfile:
         target = name or _DEFAULT_PROFILE_NAME
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", target):
+            raise ValueError("Profile name must contain only letters, digits, underscores, and hyphens")
         if target in self._cache:
             return self._cache[target]
         for directory in self._search_paths:
@@ -298,7 +301,7 @@ def resolve_profile(
     if selector and selector.enabled:
         return selector.select(context=context)
 
-    if isinstance(profile, str) and profile.strip():
+    if isinstance(profile, str) and profile.strip() and profile.strip().lower() != "auto":
         return load_processing_profile(profile.strip())
     return load_processing_profile()
 

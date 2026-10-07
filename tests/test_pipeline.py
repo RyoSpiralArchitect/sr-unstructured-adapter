@@ -417,6 +417,7 @@ def test_parse_image_propagates_language_metadata(monkeypatch, tmp_path: Path) -
 
 
 def test_parse_image_orders_segments_with_native_kernel(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("SR_ADAPTER_DISABLE_NATIVE_RUNTIME", raising=False)
     image = tmp_path / "layout.png"
     _create_png(image, "placeholder")
 

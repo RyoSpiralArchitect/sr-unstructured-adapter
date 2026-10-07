@@ -87,3 +87,35 @@ def test_selector_records_outcomes(tmp_path):
 
     payload = json.loads(settings.resolved_state_path.read_text(encoding="utf-8"))
     assert profile.name in payload["profiles"]
+
+
+def test_selector_skips_invalid_saved_stats(tmp_path):
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps({"profiles": {
+        "balanced": {"trials": "broken"},
+        "archival": {"trials": 2, "reward_sum": 1.5},
+    }}), encoding="utf-8")
+    selector = AdaptiveProfileSelector(
+        settings=AutoProfileSettings(enabled=True, state_path=str(path)),
+        telemetry=_StubTelemetry(),
+    )
+    assert "balanced" not in selector._stats
+    assert selector._stats["archival"].trials == 2
+
+
+def test_selector_saves_complete_concurrent_outcomes(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    path = tmp_path / "state.json"
+    selector = AdaptiveProfileSelector(
+        settings=AutoProfileSettings(enabled=True, state_path=str(path)),
+        telemetry=_StubTelemetry(),
+    )
+    profile = selector.select()
+    def record(_):
+        selector.record_outcome(profile, {"block_count": 1, "metrics_total_ms": 1})
+        # Readers must always see one complete JSON object.
+        json.loads(path.read_text(encoding="utf-8"))
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(record, range(20)))
+    assert json.loads(path.read_text(encoding="utf-8"))["profiles"][profile.name]["trials"] == 20

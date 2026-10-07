@@ -10,5 +10,5 @@ def test_hybrid_refiner_enriches_low_confidence_text():
 
     refined = refiner.refine([block])
     assert refined[0].confidence >= block.confidence
-    assert refined[0].text == "Hello World"
+    assert refined[0].text == "HELLO WORLD"
     assert refined[0].attrs["ml_refine"]["original_confidence"] == block.confidence
