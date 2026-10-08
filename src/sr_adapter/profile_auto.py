@@ -2,20 +2,75 @@
 
 from __future__ import annotations
 
+import errno
 import json
 import math
 import os
 import random
 import tempfile
 import time
-from dataclasses import dataclass, asdict
+from contextlib import contextmanager
+from dataclasses import dataclass, asdict, replace
+from pathlib import Path
 from threading import RLock
-from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Dict, Iterable, Iterator, Mapping, Optional, Tuple
 
 from .llm_metrics import LLMMetricsSnapshot
 from .profiles import ProcessingProfile, get_profile_store, load_processing_profile
 from .settings import AutoProfileSettings, get_settings
 from .telemetry import TelemetryExporter
+
+
+_STATE_LOCK_TIMEOUT = 10.0
+
+
+@contextmanager
+def _state_file_lock(path: Path) -> Iterator[None]:
+    """Lock a stable sidecar, never the JSON inode replaced by each update.
+
+    All writers must use this protocol on a filesystem supporting advisory
+    locks and atomic replacement. The sidecar is deliberately never unlinked:
+    removing it would let queued and new writers lock different inodes.
+    """
+    with path.with_name(path.name + ".lock").open("a+b") as handle:
+        if os.name == "nt":
+            import msvcrt
+
+            if os.fstat(handle.fileno()).st_size == 0:
+                handle.write(b"\0")
+                handle.flush()
+
+            def acquire() -> None:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+
+            def release() -> None:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            def acquire() -> None:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+            def release() -> None:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+        deadline = time.monotonic() + _STATE_LOCK_TIMEOUT
+        while True:
+            try:
+                acquire()
+                break
+            except OSError as exc:
+                if exc.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
+                    raise
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(f"Timed out acquiring profile state lock: {path}") from exc
+                time.sleep(0.01)
+        try:
+            yield
+        finally:
+            release()
 
 
 @dataclass
@@ -43,8 +98,9 @@ class AdaptiveProfileSelector:
         self.settings = settings or get_settings().profile_automation
         self.telemetry = telemetry or TelemetryExporter()
         self.store = get_profile_store()
-        self._state_path = self.settings.resolved_state_path
-        self._stats: MutableMapping[str, ProfileStats] = {}
+        # Canonicalise aliases before deriving the sidecar lock's name.
+        self._state_path = self.settings.resolved_state_path.resolve()
+        self._stats: Dict[str, ProfileStats] = {}
         self._lock = RLock()
         self._load_state()
 
@@ -57,17 +113,26 @@ class AdaptiveProfileSelector:
         return tuple(self.settings.candidate_profiles)
 
     def _load_state(self) -> None:
+        with self._lock:
+            self._state_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                self._stats = self._read_state()
+            except OSError:
+                # Selection remains usable when this optional cache cannot be
+                # read. Recording uses a strict read so it cannot replace state
+                # whose contents are unknown to this worker.
+                pass
+
+    def _read_state(self) -> Dict[str, ProfileStats]:
         path = self._state_path
-        if not path.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            return
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            return
+        except (FileNotFoundError, json.JSONDecodeError, UnicodeError):
+            return {}
         payload = data.get("profiles", {}) if isinstance(data, dict) else {}
         if not isinstance(payload, dict):
-            return
+            return {}
+        result: Dict[str, ProfileStats] = {}
         for name, stats in payload.items():
             if not isinstance(stats, Mapping):
                 continue
@@ -81,33 +146,39 @@ class AdaptiveProfileSelector:
                 continue
             if candidate.trials < 0 or not all(math.isfinite(value) for value in (candidate.reward_sum, candidate.last_updated)):
                 continue
-            self._stats[name] = candidate
+            result[name] = candidate
+        return result
 
-    def _save_state(self) -> None:
+    def _write_state(self, stats: Mapping[str, ProfileStats]) -> None:
+        """Atomically publish a snapshot while the caller holds the file lock."""
         path = self._state_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with self._lock:
-            payload = {
-                "profiles": {
-                    name: asdict(stats)
-                    for name, stats in self._stats.items()
-                }
+        payload = {
+            "profiles": {
+                name: asdict(value)
+                for name, value in stats.items()
             }
-            temporary = None
-            try:
-                with tempfile.NamedTemporaryFile("w", dir=path.parent, prefix=f".{path.name}.", encoding="utf-8", delete=False) as handle:
-                    temporary = handle.name
-                    json.dump(payload, handle, ensure_ascii=False, indent=2, allow_nan=False)
-                os.replace(temporary, path)
-            finally:
-                if temporary and os.path.exists(temporary):
-                    os.unlink(temporary)
-
-    def _ensure_stats(self, name: str) -> ProfileStats:
-        with self._lock:
-            if name not in self._stats:
-                self._stats[name] = ProfileStats()
-            return self._stats[name]
+        }
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile("w", dir=path.parent, prefix=f".{path.name}.", encoding="utf-8", delete=False) as handle:
+                temporary = handle.name
+                json.dump(payload, handle, ensure_ascii=False, indent=2, allow_nan=False)
+                handle.flush()
+                os.fsync(handle.fileno())
+            deadline = time.monotonic() + _STATE_LOCK_TIMEOUT
+            while True:
+                try:
+                    os.replace(temporary, path)
+                    break
+                except PermissionError as exc:
+                    # Windows readers may briefly deny delete sharing. Keep
+                    # the writer lock and retry publishing the same snapshot.
+                    if getattr(exc, "winerror", None) not in (5, 32, 33) or time.monotonic() >= deadline:
+                        raise
+                    time.sleep(0.01)
+        finally:
+            if temporary and os.path.exists(temporary):
+                os.unlink(temporary)
 
     def _candidate_profiles(self) -> Dict[str, ProcessingProfile]:
         resolved: Dict[str, ProcessingProfile] = {}
@@ -187,11 +258,14 @@ class AdaptiveProfileSelector:
         if not self.enabled:
             return next(iter(available.values()))
 
+        # Another worker may have recorded outcomes since this selector started.
+        self._load_state()
         heuristic_choice = self._rule_based_choice(context, available)
         if heuristic_choice and heuristic_choice in available:
             return available[heuristic_choice]
 
-        stats_pairs = [(name, self._ensure_stats(name)) for name in available]
+        with self._lock:
+            stats_pairs = [(name, replace(self._stats.get(name, ProfileStats()))) for name in available]
         unexplored = [name for name, stats in stats_pairs if stats.trials <= 0]
         if unexplored:
             chosen_name = unexplored[0]
@@ -212,7 +286,6 @@ class AdaptiveProfileSelector:
         if not self.enabled:
             return
         name = profile.name
-        stats = self._ensure_stats(name)
         latency = float(meta.get("metrics_total_ms", 0.0) or 0.0)
         block_count = int(meta.get("block_count", 0) or 0)
         escalations = int(meta.get("llm_escalations", 0) or 0)
@@ -228,12 +301,16 @@ class AdaptiveProfileSelector:
         reward = (0.6 * latency_score) + (0.4 * quality_score) - (0.25 * penalty)
         reward = max(self.settings.min_reward, min(self.settings.max_reward, reward))
 
-        with self._lock:
+        # The read-modify-write is one cross-process operation. Saving a cached
+        # snapshot, even atomically, would discard outcomes recorded elsewhere.
+        with self._lock, _state_file_lock(self._state_path):
+            current = self._read_state()
+            stats = current.setdefault(name, ProfileStats())
             stats.trials += 1
             stats.reward_sum += reward
             stats.last_updated = time.time()
-            self._stats[name] = stats
-            self._save_state()
+            self._write_state(current)
+            self._stats = current
 
 
 _SELECTOR: AdaptiveProfileSelector | None = None
