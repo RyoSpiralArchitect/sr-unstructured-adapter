@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from sr_adapter.settings import get_settings, reset_settings_cache
 
 
@@ -87,3 +89,30 @@ def test_legacy_autotune_path_does_not_shadow_nested_settings(monkeypatch, tmp_p
         assert settings.kernel_autotune.enabled is True
     finally:
         reset_settings_cache()
+
+
+def test_api_key_tenants_absent_and_explicit_scopes(monkeypatch):
+    from sr_adapter.settings import load_api_key_tenants
+
+    monkeypatch.delenv("SR_ADAPTER_API_KEY_TENANTS", raising=False)
+    assert load_api_key_tenants() == {}
+    monkeypatch.setenv("SR_ADAPTER_API_KEY_TENANTS", '{"test-key": ["alpha", "beta-2"]}')
+    assert load_api_key_tenants() == {"test-key": frozenset({"alpha", "beta-2"})}
+
+
+@pytest.mark.parametrize("raw", [
+    "", "{}", "null", "[]", "not-json", '{"sensitive-test-key": ["alpha"]',
+    '{"sensitive-test-key": []}', '{"sensitive-test-key": "alpha"}',
+    '{"sensitive-test-key": ["alpha", "alpha"]}',
+    '{"sensitive-test-key": ["*"]}', '{"sensitive-test-key": ["../alpha"]}',
+    '{"sensitive-test-key": [" alpha"]}', '{"sensitive-test-key": [null]}',
+    '{"sensitive-test-key": [1]}', '{"": ["alpha"]}', '{" spaced ": ["alpha"]}',
+    '{"sensitive-test-key": ["alpha"], "sensitive-test-key": ["beta"]}',
+])
+def test_api_key_tenants_fails_closed_without_echoing_credentials(monkeypatch, raw):
+    from sr_adapter.settings import load_api_key_tenants
+
+    monkeypatch.setenv("SR_ADAPTER_API_KEY_TENANTS", raw)
+    with pytest.raises(ValueError, match="SR_ADAPTER_API_KEY_TENANTS") as error:
+        load_api_key_tenants()
+    assert "sensitive-test-key" not in str(error.value)

@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import json
 import os
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence, Tuple
@@ -355,6 +357,54 @@ def reset_settings_cache() -> None:
     get_settings.cache_clear()  # type: ignore[attr-defined]
 
 
+def load_api_key_tenants() -> Dict[str, frozenset[str]]:
+    """Read explicit API credential scopes without exposing values in errors.
+
+    ``SR_ADAPTER_API_KEY_TENANTS`` is a JSON object mapping each API key to
+    a nonempty list of exact tenant names. An absent variable keeps legacy
+    shared-key behavior; a present but invalid/empty value fails startup.
+    Values are read at app creation, independently of the settings cache.
+    """
+    raw = os.getenv("SR_ADAPTER_API_KEY_TENANTS")
+    if raw is None:
+        return {}
+    error = (
+        "SR_ADAPTER_API_KEY_TENANTS must be a nonempty JSON object mapping "
+        "unique API keys to nonempty arrays of exact tenant names"
+    )
+
+    def unique_object(pairs: list[tuple[str, Any]]) -> Dict[str, Any]:
+        result: Dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(error)
+            result[key] = value
+        return result
+
+    try:
+        data = json.loads(raw, object_pairs_hook=unique_object)
+        if not isinstance(data, dict) or not data:
+            raise ValueError
+        result = {}
+        for key, tenants in data.items():
+            if not key or any(not 33 <= ord(char) < 127 for char in key):
+                raise ValueError
+            if not isinstance(tenants, list) or not tenants:
+                raise ValueError
+            if any(
+                not isinstance(tenant, str)
+                or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", tenant)
+                for tenant in tenants
+            ):
+                raise ValueError
+            if len(set(tenants)) != len(tenants):
+                raise ValueError
+            result[key] = frozenset(tenants)
+        return result
+    except (ValueError, TypeError):
+        raise ValueError(error) from None
+
+
 __all__ = [
     "AdapterSettings",
     "DriverSettings",
@@ -363,5 +413,6 @@ __all__ = [
     "AutoProfileSettings",
     "KernelAutoTuneSettings",
     "get_settings",
+    "load_api_key_tenants",
     "reset_settings_cache",
 ]

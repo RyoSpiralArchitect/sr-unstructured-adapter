@@ -25,9 +25,9 @@ from typing import Any, Dict, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator
 
 from .pipeline import batch_convert, convert, stream_convert
-from .jobs import JobManager, SQLiteJobStore
+from .jobs import JobManager, JobRecord, SQLiteJobStore
 from .semantic import list_semantic_annotators
-from .settings import get_settings
+from .settings import get_settings, load_api_key_tenants
 from .sniff import detect_type
 from .version import get_adapter_version
 
@@ -134,7 +134,8 @@ def create_app():  # type: ignore[no-untyped-def]
                 keys.add(item)
         return keys
 
-    api_keys = _configured_api_keys()
+    key_tenants = load_api_key_tenants()
+    api_keys = _configured_api_keys() | key_tenants.keys()
 
     def _request_id_from(request: Request) -> str:
         candidate = request.headers.get("x-request-id")
@@ -153,9 +154,9 @@ def create_app():  # type: ignore[no-untyped-def]
             return auth.split(" ", 1)[1].strip()
         return None
 
-    def _require_api_key(request: Request) -> None:
+    def _require_api_key(request: Request) -> frozenset[str] | None:
         if not api_keys:
-            return
+            return None
         candidate = _extract_key(request)
         if not candidate or candidate not in api_keys:
             raise HTTPException(
@@ -163,8 +164,48 @@ def create_app():  # type: ignore[no-untyped-def]
                 detail="Unauthorized",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        # An explicit scope takes precedence over legacy unrestricted keys.
+        return key_tenants.get(candidate)
 
     auth_required = Depends(_require_api_key)
+
+    def _resolve_tenant(request: Request, tenant: str | None) -> str | None:
+        allowed_tenants = _require_api_key(request)
+        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
+        if tenant_value is None:
+            if allowed_tenants is None:
+                # Preserve recipe.llm.tenant precedence for legacy callers.
+                return None
+            tenant_value = os.getenv("SR_ADAPTER_TENANT", "default")
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", tenant_value):
+            raise HTTPException(status_code=422, detail="Invalid tenant name")
+        if allowed_tenants is not None and tenant_value not in allowed_tenants:
+            raise HTTPException(status_code=403, detail="Tenant access denied")
+        return tenant_value
+
+    def _tenant_dependency(
+        request: Request,
+        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+    ) -> str | None:
+        return _resolve_tenant(request, tenant)
+
+    tenant_required = Depends(_tenant_dependency)
+
+    def _job_tenant(tenant: str | None, recipe: str) -> str | None:
+        from .recipe import load_recipe
+
+        effective = str(tenant or load_recipe(recipe).llm.get("tenant") or os.getenv("SR_ADAPTER_TENANT", "default"))
+        # Invalid trusted configuration does not establish tenant ownership.
+        return effective if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", effective) else None
+
+    def _visible_job(record: JobRecord | None, allowed_tenants: frozenset[str] | None) -> bool:
+        if record is None:
+            return False
+        if allowed_tenants is None:
+            return True
+        # Historical jobs with no recorded tenant have no provable owner.
+        tenant = record.request.get("tenant")
+        return isinstance(tenant, str) and tenant in allowed_tenants
 
     rate_limit_rpm = 0
     env_rate_limit = os.getenv("SR_ADAPTER_API_RATE_LIMIT_RPM", "").strip()
@@ -277,12 +318,15 @@ def create_app():  # type: ignore[no-untyped-def]
             "true",
             "yes",
         }
-        if reset_incomplete and jobs_backend == "sqlite":
-            try:
-                job_manager.reset_incomplete(error="server restarted")
-            except Exception:
-                pass
         try:
+            if reset_incomplete and jobs_backend == "sqlite":
+                try:
+                    await run_in_threadpool(
+                        job_manager.reset_incomplete,
+                        error="Worker stopped before recording completion; outcome unknown; not replayed"
+                    )
+                except Exception:
+                    raise RuntimeError("Job recovery failed; server startup aborted") from None
             yield
         finally:
             await run_in_threadpool(job_manager.shutdown)
@@ -404,7 +448,15 @@ def create_app():  # type: ignore[no-untyped-def]
         # route before accepting multipart or JSON data, including mounted apps.
         if _protected_route(path):
             try:
-                _require_api_key(request)
+                allowed_tenants = _require_api_key(request)
+                route = path.rstrip("/") or "/"
+                if allowed_tenants is not None and route in {"/telemetry", "/metrics"}:
+                    raise HTTPException(status_code=403, detail="Aggregate telemetry requires an unrestricted API key")
+                if route in upload_routes | json_body_routes:
+                    _resolve_tenant(request, request.headers.get("x-sr-tenant"))
+                    # A tenant header cannot scope a host filesystem path.
+                    if allowed_tenants is not None and route in json_body_routes:
+                        raise HTTPException(status_code=403, detail="Path conversion requires an unrestricted API key")
             except HTTPException as exc:
                 return JSONResponse(
                     status_code=exc.status_code,
@@ -477,10 +529,9 @@ def create_app():  # type: ignore[no-untyped-def]
         llm_ok: bool = Query(True),
         deadline_ms: Optional[int] = Query(None, ge=0),
         max_blocks: Optional[int] = Query(None, ge=0),
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ) -> Dict[str, Any]:
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         _validate_selection(recipe, profile)
         tmp_path = await _upload_to_tempfile(file)
         try:
@@ -511,7 +562,7 @@ def create_app():  # type: ignore[no-untyped-def]
         profile: str = Query("balanced"),
         llm_ok: bool = Query(False),
         max_blocks: Optional[int] = Query(None, ge=0),
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ):  # type: ignore[no-untyped-def]
         if llm_ok:
@@ -519,7 +570,6 @@ def create_app():  # type: ignore[no-untyped-def]
                 status_code=422,
                 detail="Streaming conversion requires llm_ok=false (LLM escalation is not streamable).",
             )
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         _validate_selection(recipe, profile)
         tmp_path = await _upload_to_tempfile(file)
         doc_id = uuid.uuid4().hex
@@ -607,7 +657,7 @@ def create_app():  # type: ignore[no-untyped-def]
     def convert_path(
         payload: PathConversionRequest = Body(...),
         *,
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ) -> Dict[str, Any]:
         if not allow_paths:
@@ -615,7 +665,6 @@ def create_app():  # type: ignore[no-untyped-def]
                 status_code=403,
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         _validate_selection(payload.recipe, payload.profile)
         recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
         mime_value = payload.mime
@@ -638,7 +687,7 @@ def create_app():  # type: ignore[no-untyped-def]
     def batch_convert_paths(
         payload: BatchConversionRequest = Body(...),
         *,
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ) -> list[Dict[str, Any]]:
         if not allow_paths:
@@ -646,7 +695,6 @@ def create_app():  # type: ignore[no-untyped-def]
                 status_code=403,
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         _validate_selection(payload.recipe, payload.profile)
         recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
         deadline_value, max_blocks_value = payload.deadline_ms, payload.max_blocks
@@ -674,39 +722,39 @@ def create_app():  # type: ignore[no-untyped-def]
     def list_jobs(
         *,
         limit: int = Query(50, ge=1, le=500),
-        _: None = auth_required,
+        allowed_tenants: frozenset[str] | None = auth_required,
     ) -> list[Dict[str, Any]]:
-        return [record.to_dict() for record in job_manager.list(limit=limit)]
+        return [record.to_dict() for record in job_manager.list(limit=limit, tenants=allowed_tenants)]
 
     @app.get("/jobs/{job_id}")
     def job_status(
         job_id: str,
         *,
         include_result: bool = Query(False),
-        _: None = auth_required,
+        allowed_tenants: frozenset[str] | None = auth_required,
     ) -> Dict[str, Any]:
         record = job_manager.get(job_id)
-        if record is None:
+        if not _visible_job(record, allowed_tenants):
             raise HTTPException(status_code=404, detail="Job not found")
         return record.to_dict(include_result=bool(include_result and record.status == "succeeded"))
 
     @app.get("/jobs/{job_id}/result")
-    def job_result(job_id: str, _: None = auth_required):  # type: ignore[no-untyped-def]
+    def job_result(job_id: str, allowed_tenants: frozenset[str] | None = auth_required):  # type: ignore[no-untyped-def]
         record = job_manager.get(job_id)
-        if record is None:
+        if not _visible_job(record, allowed_tenants):
             raise HTTPException(status_code=404, detail="Job not found")
         if record.status == "succeeded":
             return record.result
-        if record.status == "failed":
-            raise HTTPException(status_code=409, detail=f"Job failed: {record.error}")
+        if record.status in {"failed", "interrupted"}:
+            raise HTTPException(status_code=409, detail=f"Job {record.status}: {record.error}")
         if record.status == "canceled":
             raise HTTPException(status_code=409, detail="Job canceled")
         raise HTTPException(status_code=409, detail=f"Job not ready (status={record.status})")
 
     @app.delete("/jobs/{job_id}")
-    def job_cancel(job_id: str, _: None = auth_required) -> Dict[str, Any]:
+    def job_cancel(job_id: str, allowed_tenants: frozenset[str] | None = auth_required) -> Dict[str, Any]:
         record = job_manager.get(job_id)
-        if record is None:
+        if not _visible_job(record, allowed_tenants):
             raise HTTPException(status_code=404, detail="Job not found")
         if job_manager.cancel(job_id):
             updated = job_manager.get(job_id)
@@ -722,10 +770,9 @@ def create_app():  # type: ignore[no-untyped-def]
         llm_ok: bool = Query(True),
         deadline_ms: Optional[int] = Query(None, ge=0),
         max_blocks: Optional[int] = Query(None, ge=0),
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ) -> Dict[str, Any]:
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         filename = file.filename
         content_type = file.content_type
         _validate_selection(recipe, profile)
@@ -759,7 +806,7 @@ def create_app():  # type: ignore[no-untyped-def]
                 "llm_ok": llm_ok,
                 "deadline_ms": deadline_ms,
                 "max_blocks": max_blocks,
-                "tenant": tenant_value,
+                "tenant": _job_tenant(tenant_value, recipe),
             },
         )
         return record.to_dict()
@@ -768,7 +815,7 @@ def create_app():  # type: ignore[no-untyped-def]
     def job_convert_path(
         payload: PathConversionRequest = Body(...),
         *,
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ) -> Dict[str, Any]:
         if not allow_paths:
@@ -776,7 +823,6 @@ def create_app():  # type: ignore[no-untyped-def]
                 status_code=403,
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         _validate_selection(payload.recipe, payload.profile)
         recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
         mime_value = payload.mime
@@ -807,7 +853,7 @@ def create_app():  # type: ignore[no-untyped-def]
                 "mime": mime_value,
                 "deadline_ms": deadline_value,
                 "max_blocks": max_blocks_value,
-                "tenant": tenant_value,
+                "tenant": _job_tenant(tenant_value, recipe),
             },
         )
         return record.to_dict()
@@ -816,7 +862,7 @@ def create_app():  # type: ignore[no-untyped-def]
     def job_batch_convert_paths(
         payload: BatchConversionRequest = Body(...),
         *,
-        tenant: str | None = Header(default=None, alias="X-SR-Tenant"),
+        tenant_value: str | None = tenant_required,
         _: None = auth_required,
     ) -> Dict[str, Any]:
         if not allow_paths:
@@ -824,7 +870,6 @@ def create_app():  # type: ignore[no-untyped-def]
                 status_code=403,
                 detail="Path conversion is disabled. Set SR_ADAPTER_API_ALLOW_PATHS=1 to enable.",
             )
-        tenant_value = tenant.strip() if isinstance(tenant, str) and tenant.strip() else None
         _validate_selection(payload.recipe, payload.profile)
         recipe, profile, llm_ok = payload.recipe, payload.profile, payload.llm_ok
         deadline_value, max_blocks_value = payload.deadline_ms, payload.max_blocks
@@ -858,7 +903,7 @@ def create_app():  # type: ignore[no-untyped-def]
                 "llm_ok": llm_ok,
                 "deadline_ms": deadline_value,
                 "max_blocks": max_blocks_value,
-                "tenant": tenant_value,
+                "tenant": _job_tenant(tenant_value, recipe),
                 "backend": backend_value,
                 "concurrency": concurrency_value,
                 "dask_scheduler": dask_value,
