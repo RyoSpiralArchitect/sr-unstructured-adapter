@@ -9,17 +9,26 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - python: "3.10"
+          - os: ubuntu-latest
+            python: "3.10"
             disable_native: "1"
-          - python: "3.11"
+          - os: ubuntu-latest
+            python: "3.11"
             disable_native: "0"
-          - python: "3.13"
+          - os: ubuntu-latest
+            python: "3.13"
             disable_native: "0"
+          - os: windows-latest
+            python: "3.11"
+            disable_native: "1"
+    defaults:
+      run:
+        shell: bash
     env:
       SR_ADAPTER_DISABLE_NATIVE_RUNTIME: ${{ matrix.disable_native }}
       SR_ADAPTER_DISABLE_LAYOUT_CACHE: "1"

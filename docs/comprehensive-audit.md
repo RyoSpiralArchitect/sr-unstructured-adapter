@@ -49,9 +49,26 @@ python scripts/smoke_llm.py --allow-live-api --provider all --output live-result
 
 ## Boundaries
 
-- Live validation covers OpenAI and Mistral only. Other providers have deterministic protocol tests; Gemini currently uses the non-streaming fallback. Bedrock/Vertex require an explicit supported endpoint.
+- Live validation covers OpenAI and Mistral only. Other providers have deterministic protocol tests; Gemini now has native SSE support, without live credential validation. Bedrock/Vertex require an explicit supported endpoint.
 - Provider integration checks are small synthetic examples, not a comparative model-quality benchmark.
 - Native layout classification, semantic hashing, escalation scores, and adaptive profile rewards remain heuristics. Optional OCR engines, FAISS, Dask, and Ray were not validated against production services or representative workloads.
-- API keys share configured tenants and jobs. This service does not implement per-tenant authorization. Path conversion is disabled by default and grants server file access when enabled.
-- Rate limiting is local to one process. Profile state writes are atomic and thread-safe within one process, but separate processes can overwrite learned statistics. SQLite persists completed results; it does not restart interrupted work.
+- Legacy API keys remain unrestricted. Optional exact tenant scopes restrict conversions and persisted jobs, and disallow host-path conversion and aggregate telemetry. Scoped keys for the same tenant share its jobs; there is no user-level authorization within a tenant.
+- Rate limiting remains local to one process. Profile persistence now serializes cooperating processes using an adjacent advisory lock and atomic publication. SQLite keeps completed results and marks abandoned work interrupted without replaying it. Local storage and stopped legacy workers are required for SQLite ownership migration.
 - The historical README benchmark table is not regenerated into a new performance claim.
+
+
+## Follow-up: operational boundaries
+
+The follow-up preserves the earlier live receipts and adds the following changes:
+
+| Boundary | Result |
+| --- | --- |
+| Tenant authorization | Exact credential scopes, authorization before body parsing, tenant ownership persisted with jobs, pre-limit list filtering, 404 for cross-tenant jobs, same-tenant key rotation, administrator-only host paths and aggregate metrics |
+| Interrupted work | OS owner leases distinguish stopped workers from live siblings; abandoned jobs become `interrupted`; no automatic replay; legacy schema migration and concurrent initialization/recovery covered |
+| Adaptive statistics | Existing JSON schema retained; cross-process reload/update/atomic publication under a stable sidecar lock; selection refreshes shared results; failed publication preserves the prior state |
+| Gemini streaming | Native synchronous and asynchronous SSE, candidate completion validation, trailing usage retention, URL-template support, and no replay after emitted output |
+| Portability | Ubuntu Python 3.10/3.11/3.13 plus Windows Python 3.11 with native runtime disabled; installed-wheel checks in each CI job |
+
+Deterministic regression scenarios include a process terminated with `os._exit`, a simultaneously live sibling worker, four concurrent SQLite constructors, four spawned adaptive writers preserving 200 updates plus prior statistics, malformed credential scope configuration, and legacy recipe tenant routing. OpenAI/Mistral were called again through all four interfaces with synthetic data. A real localhost HTTP server verified tenant isolation, key rotation, streaming upload conversion, completed-job persistence after restart, and shutdown.
+
+Gemini transport behavior is based on the [official generate-content REST reference](https://ai.google.dev/api/generate-content#method:-models.streamgeneratecontent), tested using mocked HTTP transport. No Gemini live credential was available. Native Windows compilation, production OCR/FAISS/Dask/Ray workloads, calibrated extraction quality, and distributed rate limiting remain outside these results.

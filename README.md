@@ -150,7 +150,7 @@ Recipes live under `src/sr_adapter/recipes` and control classification rules, co
 
 OpenAI and Azure metadata are sent only when the tenant explicitly sets `store: true`; the default does not enable provider storage. Escalation metadata is retained locally regardless. OpenAI defaults to `max_completion_tokens`; set `max_tokens` explicitly for a backend that requires it. Sampling options such as `temperature` are only sent when configured. Anthropic accepts only its supported user metadata; Gemini safety settings belong in `settings.safety_settings`.
 
-Mistral, OpenAI, Azure, Anthropic, Docker, vLLM and compatible proxy drivers support native streaming. Gemini currently uses the non-streaming fallback. Bedrock and Vertex require an explicit endpoint for the supported API surface. Consume every asynchronous stream with `async for chunk in driver.async_stream_generate(prompt)`.
+Mistral, OpenAI, Azure, Anthropic, Docker, vLLM, Gemini and compatible proxy drivers support native streaming. Gemini uses `:streamGenerateContent?alt=sse`, validates completion for every requested candidate, and retains final usage events. A custom Google proxy can set `settings.stream_endpoint`. The wire format follows the [Gemini REST reference](https://ai.google.dev/api/generate-content#method:-models.streamgeneratecontent). Bedrock and Vertex require an explicit endpoint for the supported API surface. Consume every asynchronous stream with `async for chunk in driver.async_stream_generate(prompt)`.
 
 ### Adapter settings
 1. Global runtime defaults live in `configs/settings.yaml` (telemetry, driver defaults, distributed backends).
@@ -223,15 +223,27 @@ curl -sS -F "file=@examples/sample.txt" "http://127.0.0.1:8000/convert-stream?re
 
 Notes:
 
-- The service assumes trusted operators. All configured API keys share access to tenant selection and jobs; it does not implement per-tenant authorization.
-- Path conversion is disabled by default. Enable it with `SR_ADAPTER_API_ALLOW_PATHS=1` and then use `POST /convert-path`. This grants authenticated callers access to server-readable regular files; enable it only for trusted local deployments.
+- Legacy `SR_ADAPTER_API_KEY(S)` grant unrestricted access. For tenant isolation, configure `SR_ADAPTER_API_KEY_TENANTS` as described below. Treat unrestricted keys as administrator credentials.
+- Path conversion is disabled by default. Enable it with `SR_ADAPTER_API_ALLOW_PATHS=1` and then use `POST /convert-path`. This grants unrestricted callers access to server-readable regular files; scoped keys cannot use path conversion even when enabled.
 - Upload guardrail: set `SR_ADAPTER_API_MAX_UPLOAD_MB=<float>` to enforce an upper bound (defaults to `SR_ADAPTER_MAX_SIZE_MB` when set, otherwise 200MB; set to `0` to disable).
 - Authentication and raw body limits run before parsing uploaded files or path JSON requests, including when the app is mounted. The multipart envelope gets 1 MiB of overhead above the per-file limit. JSON booleans and integer limits are strict.
 - Request IDs: responses include `X-Request-ID` (you can supply your own via the `X-Request-ID` request header).
 - Optional rate limiting: set `SR_ADAPTER_API_RATE_LIMIT_RPM=<int>` (requests/minute; default disabled). When running behind a reverse proxy, set `SR_ADAPTER_API_TRUST_PROXY_HEADERS=1` to key limits by `X-Forwarded-For`; only enable this when the proxy overwrites that header. The in-memory limiter is per process.
-- Telemetry endpoints: `GET /telemetry` (JSON) and `GET /metrics` (Prometheus; requires `telemetry.enable_prometheus=true`).
+- Telemetry endpoints: `GET /telemetry` (JSON) and `GET /metrics` (Prometheus; requires `telemetry.enable_prometheus=true`). Aggregate telemetry is unavailable to scoped keys because it includes other tenants.
 - Optional API key auth: set `SR_ADAPTER_API_KEYS=key1,key2` (or `SR_ADAPTER_API_KEY=key1`) and send `X-API-Key: key1` (or `Authorization: Bearer key1`). `GET /healthz` stays public for liveness checks.
 - Tenant override for LLM escalation: send `X-SR-Tenant: <tenant-name>` to force a specific tenant config.
+
+### Tenant-scoped credentials
+
+Set `SR_ADAPTER_API_KEY_TENANTS` to a JSON object of API keys and their exact tenant names. The following credentials are placeholders; supply your own secrets through the deployment environment:
+
+```bash
+export SR_ADAPTER_API_KEY_TENANTS='{"replace-with-alpha-key":["alpha"],"replace-with-beta-key":["beta"]}'
+```
+
+Scoped requests use `X-SR-Tenant`, or `SR_ADAPTER_TENANT` / `default` when the header is absent or blank. That tenant must appear in the key's scope and becomes the explicit conversion tenant. An invalid scope configuration prevents startup; it never silently disables authentication. A scope takes precedence if the same key also appears in the legacy unrestricted list.
+
+Job lists are filtered before applying `limit`; status, results, and cancellation are restricted to the job's recorded tenant. Keys for the same tenant share its jobs, so key rotation retains access. Cross-tenant and historical jobs with no recorded tenant return 404 to scoped callers. Scoped keys cannot use server-path routes or aggregate telemetry. Legacy requests without a tenant header retain recipe-level tenant selection.
 
 ### Async jobs
 For long-running conversions, submit a job and poll later:
@@ -253,6 +265,10 @@ To persist job status/results across restarts, configure the SQLite backend:
 export SR_ADAPTER_API_JOBS_BACKEND=sqlite
 export SR_ADAPTER_API_JOBS_DB_PATH=./sr_adapter_jobs.sqlite3
 ```
+
+On startup, abandoned queued/running jobs become `interrupted`, with an unknown outcome; the service never automatically repeats conversions or paid LLM calls. Jobs owned by another live process remain untouched. Completed results remain available after restart. This is an in-process executor with persistent status, not a distributed queue: cancellation must reach the process holding the job's future.
+
+Keep the database and its adjacent `.owners` directory together on a local filesystem. Stop old-version workers before upgrading the schema; they do not participate in owner locking. Do not delete owner sidecars while workers are running.
 
 ### Inspect LLM drivers
 ```bash
@@ -361,6 +377,6 @@ python scripts/smoke_llm.py --allow-live-api --provider all --output live-result
 
 Text normalization preserves code blocks. When prose normalization changes text with annotations, offsets are cleared and `attrs.spans_invalidated_by` explains why. Refinement preserves case and never treats an escalation probability as extraction accuracy. A failed binary parser yields a diagnostic warning instead of decoding container bytes as text; a parser that fails after emitting stream blocks raises instead of repeating the input.
 
-Layout classification, synthesized PDF/image geometry, semantic hash scores, and adaptive profile rewards remain heuristics. They are not calibrated quality measurements. Parser-generated synthetic geometry is marked as heuristic rather than claimed as a measured source region. Actual OCR availability depends on the optional OCR installation. Adaptive profile persistence coordinates threads within one process; multiple writers in separate processes can overwrite learned statistics. SQLite preserves completed job results, but does not resume work interrupted by process termination.
+Layout classification, synthesized PDF/image geometry, semantic hash scores, and adaptive profile rewards remain heuristics. They are not calibrated quality measurements. Parser-generated synthetic geometry is marked as heuristic rather than claimed as a measured source region. Actual OCR availability depends on the optional OCR installation. Adaptive profile updates reload and atomically replace the existing JSON under a stable `.lock` sidecar, so cooperating processes preserve each other's statistics. All writers must use this version and a filesystem supporting advisory locks and atomic replacement. Lock waits are bounded; failed feedback writes leave the previous state intact. SQLite preserves completed results and marks abandoned work `interrupted`; it does not automatically replay it.
 
 The benchmark table above is historical evidence for its recorded dataset, not a performance claim for this revision. Live provider smoke tests verify integration and response handling, not general extraction quality. See [the audit notes](docs/comprehensive-audit.md) for the tested surface and remaining boundaries.
