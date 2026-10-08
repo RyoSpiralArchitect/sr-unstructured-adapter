@@ -67,7 +67,7 @@ The follow-up preserves the earlier live receipts and adds the following changes
 | Interrupted work | OS owner leases distinguish stopped workers from live siblings; abandoned jobs become `interrupted`; no automatic replay; legacy schema migration and concurrent initialization/recovery covered |
 | Adaptive statistics | Existing JSON schema retained; cross-process reload/update/atomic publication under a stable sidecar lock; selection refreshes shared results; failed publication preserves the prior state |
 | Gemini streaming | Native synchronous and asynchronous SSE, candidate completion validation, trailing usage retention, URL-template support, and no replay after emitted output |
-| Portability | Ubuntu Python 3.10/3.11/3.13 plus Windows Python 3.11 with native runtime disabled; installed-wheel checks in each CI job |
+| Portability | Full suite on Ubuntu Python 3.10/3.11/3.13; Windows Python 3.11 checks API, job/profile persistence and provider protocols with native runtime disabled; installed-wheel conversion in each CI job |
 
 Deterministic regression scenarios include a process terminated with `os._exit`, a simultaneously live sibling worker, four concurrent SQLite constructors, four spawned adaptive writers preserving 200 updates plus prior statistics, malformed credential scope configuration, and legacy recipe tenant routing. OpenAI/Mistral were called again through all four interfaces with synthetic data. A real localhost HTTP server verified tenant isolation, key rotation, streaming upload conversion, completed-job persistence after restart, and shutdown.
 

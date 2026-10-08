@@ -45,7 +45,11 @@ jobs:
       - name: Lint
         run: ruff check .
       - name: Test core, API, and provider protocols without network
+        if: runner.os != 'Windows'
         run: pytest -q --benchmark-disable
+      - name: Test Windows API, persistence, and provider protocols
+        if: runner.os == 'Windows'
+        run: pytest -q --benchmark-disable tests/test_jobs.py tests/test_profile_auto.py tests/test_api.py tests/test_settings.py tests/test_driver_protocols.py tests/test_drivers_async.py
       - name: Build and verify installed wheel away from checkout
         run: |
           python -m build
@@ -53,7 +57,10 @@ jobs:
           cd "$RUNNER_TEMP"
           SR_ADAPTER_NATIVE_CACHE="$RUNNER_TEMP/wheel-native" python - <<'PY'
           import os
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
           from sr_adapter import Block
+          from sr_adapter.pipeline import convert
           from sr_adapter.recipe import load_recipe
           from sr_adapter.drivers.manager import TenantManager
           from sr_adapter.native import ensure_text_kernel, ensure_layout_kernel
@@ -62,5 +69,10 @@ jobs:
           if os.environ.get("SR_ADAPTER_DISABLE_NATIVE_RUNTIME") != "1":
               assert ensure_text_kernel()
               assert ensure_layout_kernel()
+          with TemporaryDirectory() as directory:
+              source = Path(directory) / "sample.txt"
+              source.write_text("wheel ready", encoding="utf-8")
+              document = convert(source, llm_ok=False)
+              assert any(block.text == "wheel ready" for block in document.blocks)
           print(Block(text="wheel ready"))
           PY
