@@ -25,7 +25,7 @@ jobs:
             disable_native: "0"
           - os: windows-latest
             python: "3.11"
-            disable_native: "1"
+            disable_native: "0"
     defaults:
       run:
         shell: bash
@@ -45,11 +45,7 @@ jobs:
       - name: Lint
         run: ruff check .
       - name: Test core, API, and provider protocols without network
-        if: runner.os != 'Windows'
         run: pytest -q --benchmark-disable
-      - name: Test Windows API, persistence, and provider protocols
-        if: runner.os == 'Windows'
-        run: pytest -q --benchmark-disable tests/test_jobs.py tests/test_profile_auto.py tests/test_api.py tests/test_settings.py tests/test_driver_protocols.py tests/test_drivers_async.py
       - name: Build and verify installed wheel away from checkout
         run: |
           python -m build
