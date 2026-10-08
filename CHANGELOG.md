@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Preserve document source content and order across Office, JSON, HTML, TSV, calendar, PDF and image parsing.
+- Align native/Python text normalization, retain code/case, and label heuristic geometry explicitly.
+- Repair provider metadata, SSE completion/retry handling, asynchronous fallback, tenant configuration and LLM response normalization.
+- Harden API authentication/body limits, strict request validation, job/upload cleanup and atomic CLI replay output.
+- Ship native sources and recipes in wheels; validate API/native/fallback paths on Python 3.10, 3.11 and 3.13.
+- Add an explicit, bounded live LLM smoke runner and comprehensive audit notes.
+
 ## [0.2.6] - 2026-02-26
 
 ### Added

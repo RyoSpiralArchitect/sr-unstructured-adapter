@@ -9,6 +9,7 @@ from typing import Any, AsyncIterator, Iterator, Mapping
 
 from .base import DriverError, LLMDriver, register_driver
 from .resilience import BackoffPolicy
+from .protocol import SSEDecoder, error_description, openai_metadata, response_object
 from ..llm_metrics import get_llm_registry
 
 try:  # pragma: no cover - exercised indirectly when dependency is present
@@ -23,7 +24,7 @@ class AzureDriver(LLMDriver):
     def __init__(self, name: str, config: Mapping[str, Any]):
         super().__init__(name, config)
         for key in ("endpoint", "deployment", "api_version", "api_key"):
-            if key not in self.config:
+            if not self.config.get(key):
                 raise DriverError(f"Azure driver requires '{key}' in configuration")
 
     def _coerce_timeout(self) -> httpx.Timeout:
@@ -55,11 +56,20 @@ class AzureDriver(LLMDriver):
         messages.append({"role": "user", "content": prompt})
         payload: dict[str, Any] = {
             "messages": messages,
-            "temperature": self.config.get("temperature", 0.2),
-            "max_tokens": self.config.get("max_tokens", 512),
         }
-        if metadata:
-            payload["metadata"] = dict(metadata)
+        token_field = "max_completion_tokens" if "max_completion_tokens" in self.config else "max_tokens"
+        payload[token_field] = self.config.get(token_field, 512)
+        for key in ("temperature", "top_p", "reasoning_effort", "response_format", "seed"):
+            if self.config.get(key) is not None:
+                payload[key] = self.config[key]
+        store = self.config.get("store")
+        if store is not None:
+            if not isinstance(store, bool):
+                raise DriverError("Azure 'store' configuration must be a boolean")
+            payload["store"] = store
+        # Keep adapter trace metadata local unless storage was opted into.
+        if metadata and store is True:
+            payload["metadata"] = openai_metadata(metadata)
         return payload
 
     def _params(self) -> dict[str, str]:
@@ -136,7 +146,7 @@ class AzureDriver(LLMDriver):
                     )
                     response = client.send(request)
                     response.raise_for_status()
-                    data = response.json()
+                    data = response_object(response.json())
                     response_bytes = len(response.content or b"")
                     self._record_success(
                         start=start,
@@ -144,15 +154,15 @@ class AzureDriver(LLMDriver):
                         response_bytes=response_bytes,
                     )
                     return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network failure path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network failure path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 time.sleep(delay)
         if last_error:
-            raise DriverError(f"Azure request failed: {last_error}") from last_error
+            raise DriverError(f"Azure request failed: {error_description(last_error)}") from last_error
         raise DriverError("Azure driver failed without exception context")
 
     def stream_generate(
@@ -181,6 +191,7 @@ class AzureDriver(LLMDriver):
         for attempt in range(retries + 1):
             start = time.perf_counter()
             accumulated = 0
+            emitted = False
             try:
                 with httpx.Client(timeout=timeout) as client:
                     request = client.build_request(
@@ -194,37 +205,34 @@ class AzureDriver(LLMDriver):
                         request.method,
                         request.url,
                         headers=request.headers,
-                        params=request.params,
                         content=request.content,
                     ) as response:
                         response.raise_for_status()
+                        decoder = SSEDecoder()
                         for chunk in response.iter_lines():
-                            if not chunk:
-                                continue
-                            accumulated += len(chunk)
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk.strip() == "[DONE]":
+                            accumulated += len(chunk.encode("utf-8")) + 1
+                            event = decoder.feed(chunk)
+                            if event is not None:
+                                emitted = True
+                                yield event
+                            if decoder.finished:
                                 break
-                            try:
-                                yield json.loads(chunk)
-                            except json.JSONDecodeError:
-                                continue
+                        decoder.ensure_complete()
                     self._record_success(
                         start=start,
                         request_bytes=request_bytes,
                         response_bytes=accumulated,
                     )
                     return
-            except httpx.HTTPError as exc:  # pragma: no cover - network failure path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network failure path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if emitted or attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 time.sleep(delay)
         if last_error:
-            raise DriverError(f"Azure streaming failed: {last_error}") from last_error
+            raise DriverError(f"Azure streaming failed: {error_description(last_error)}") from last_error
         raise DriverError("Azure streaming failed without exception context")
 
     async def async_generate(
@@ -260,7 +268,7 @@ class AzureDriver(LLMDriver):
                         json=payload,
                     )
                     response.raise_for_status()
-                    data = response.json()
+                    data = response_object(response.json())
                     response_bytes = len(response.content or b"")
                     self._record_success(
                         start=start,
@@ -268,15 +276,15 @@ class AzureDriver(LLMDriver):
                         response_bytes=response_bytes,
                     )
                     return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network failure path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network failure path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 await asyncio.sleep(delay)
         if last_error:
-            raise DriverError(f"Azure async request failed: {last_error}") from last_error
+            raise DriverError(f"Azure async request failed: {error_description(last_error)}") from last_error
         raise DriverError("Azure async request failed without exception context")
 
     async def async_stream_generate(
@@ -305,6 +313,7 @@ class AzureDriver(LLMDriver):
         for attempt in range(retries + 1):
             start = time.perf_counter()
             accumulated = 0
+            emitted = False
             try:
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     async with client.stream(
@@ -315,33 +324,31 @@ class AzureDriver(LLMDriver):
                         json=payload,
                     ) as response:
                         response.raise_for_status()
+                        decoder = SSEDecoder()
                         async for chunk in response.aiter_lines():
-                            if not chunk:
-                                continue
-                            accumulated += len(chunk)
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk.strip() == "[DONE]":
+                            accumulated += len(chunk.encode("utf-8")) + 1
+                            event = decoder.feed(chunk)
+                            if event is not None:
+                                emitted = True
+                                yield event
+                            if decoder.finished:
                                 break
-                            try:
-                                yield json.loads(chunk)
-                            except json.JSONDecodeError:
-                                continue
+                        decoder.ensure_complete()
                     self._record_success(
                         start=start,
                         request_bytes=request_bytes,
                         response_bytes=accumulated,
                     )
                     return
-            except httpx.HTTPError as exc:  # pragma: no cover - network failure path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network failure path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if emitted or attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 await asyncio.sleep(delay)
         if last_error:
-            raise DriverError(f"Azure async streaming failed: {last_error}") from last_error
+            raise DriverError(f"Azure async streaming failed: {error_description(last_error)}") from last_error
         raise DriverError("Azure async streaming failed without exception context")
 
 

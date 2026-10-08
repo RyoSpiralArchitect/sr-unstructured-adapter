@@ -9,6 +9,7 @@ from typing import Any, AsyncIterator, Iterator, Mapping
 
 from .base import DriverError, LLMDriver, register_driver
 from .resilience import BackoffPolicy
+from .protocol import SSEDecoder, error_description, response_object
 from ..llm_metrics import get_llm_registry
 
 try:  # pragma: no cover - optional dependency guard
@@ -23,7 +24,7 @@ class AnthropicDriver(LLMDriver):
     def __init__(self, name: str, config: Mapping[str, Any]):
         super().__init__(name, config)
         for key in ("api_key", "model"):
-            if key not in self.config:
+            if not self.config.get(key):
                 raise DriverError(f"Anthropic driver requires '{key}' in configuration")
         self._version = self.config.get("version", "2023-06-01")
 
@@ -55,13 +56,15 @@ class AnthropicDriver(LLMDriver):
                 {"role": "user", "content": prompt},
             ],
             "max_tokens": self.config.get("max_tokens", 512),
-            "temperature": self.config.get("temperature", 0.1),
         }
+        if self.config.get("temperature") is not None:
+            payload["temperature"] = self.config["temperature"]
         system_prompt = self.config.get("system_prompt")
         if system_prompt:
             payload["system"] = system_prompt
-        if metadata:
-            payload["metadata"] = dict(metadata)
+        # Messages accepts only user_id; adapter trace data stays local.
+        if metadata and metadata.get("user_id") is not None:
+            payload["metadata"] = {"user_id": str(metadata["user_id"])}
         return payload
 
     def _should_retry(self, exc: httpx.HTTPError) -> bool:
@@ -128,7 +131,7 @@ class AnthropicDriver(LLMDriver):
                     request = client.build_request("POST", url, headers=headers, json=payload)
                     response = client.send(request)
                     response.raise_for_status()
-                    data = response.json()
+                    data = response_object(response.json())
                     response_bytes = len(response.content or b"")
                     self._record_success(
                         start=start,
@@ -136,15 +139,15 @@ class AnthropicDriver(LLMDriver):
                         response_bytes=response_bytes,
                     )
                     return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 time.sleep(delay)
         if last_error:
-            raise DriverError(f"Anthropic request failed: {last_error}") from last_error
+            raise DriverError(f"Anthropic request failed: {error_description(last_error)}") from last_error
         raise DriverError("Anthropic driver failed without exception context")
 
     def stream_generate(
@@ -172,38 +175,37 @@ class AnthropicDriver(LLMDriver):
         for attempt in range(retries + 1):
             start = time.perf_counter()
             accumulated = 0
+            emitted = False
             try:
                 with httpx.Client(timeout=timeout) as client:
                     request = client.build_request("POST", url, headers=headers, json=payload)
                     with client.stream(request.method, request.url, headers=request.headers, content=request.content) as response:
                         response.raise_for_status()
+                        decoder = SSEDecoder()
                         for chunk in response.iter_lines():
-                            if not chunk:
-                                continue
-                            accumulated += len(chunk)
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk.strip() == "[DONE]":
+                            accumulated += len(chunk.encode("utf-8")) + 1
+                            event = decoder.feed(chunk)
+                            if event is not None:
+                                emitted = True
+                                yield event
+                            if decoder.finished:
                                 break
-                            try:
-                                yield json.loads(chunk)
-                            except json.JSONDecodeError:
-                                continue
+                        decoder.ensure_complete()
                     self._record_success(
                         start=start,
                         request_bytes=request_bytes,
                         response_bytes=accumulated,
                     )
                     return
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if emitted or attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 time.sleep(delay)
         if last_error:
-            raise DriverError(f"Anthropic streaming failed: {last_error}") from last_error
+            raise DriverError(f"Anthropic streaming failed: {error_description(last_error)}") from last_error
         raise DriverError("Anthropic streaming failed without exception context")
 
     async def async_generate(
@@ -233,7 +235,7 @@ class AnthropicDriver(LLMDriver):
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     response = await client.post(url, headers=headers, json=payload)
                     response.raise_for_status()
-                    data = response.json()
+                    data = response_object(response.json())
                     response_bytes = len(response.content or b"")
                     self._record_success(
                         start=start,
@@ -241,15 +243,15 @@ class AnthropicDriver(LLMDriver):
                         response_bytes=response_bytes,
                     )
                     return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 await asyncio.sleep(delay)
         if last_error:
-            raise DriverError(f"Anthropic async request failed: {last_error}") from last_error
+            raise DriverError(f"Anthropic async request failed: {error_description(last_error)}") from last_error
         raise DriverError("Anthropic async request failed without exception context")
 
     async def async_stream_generate(
@@ -277,37 +279,36 @@ class AnthropicDriver(LLMDriver):
         for attempt in range(retries + 1):
             start = time.perf_counter()
             accumulated = 0
+            emitted = False
             try:
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     async with client.stream("POST", url, headers=headers, json=payload) as response:
                         response.raise_for_status()
+                        decoder = SSEDecoder()
                         async for chunk in response.aiter_lines():
-                            if not chunk:
-                                continue
-                            accumulated += len(chunk)
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk.strip() == "[DONE]":
+                            accumulated += len(chunk.encode("utf-8")) + 1
+                            event = decoder.feed(chunk)
+                            if event is not None:
+                                emitted = True
+                                yield event
+                            if decoder.finished:
                                 break
-                            try:
-                                yield json.loads(chunk)
-                            except json.JSONDecodeError:
-                                continue
+                        decoder.ensure_complete()
                     self._record_success(
                         start=start,
                         request_bytes=request_bytes,
                         response_bytes=accumulated,
                     )
                     return
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if emitted or attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 await asyncio.sleep(delay)
         if last_error:
-            raise DriverError(f"Anthropic async streaming failed: {last_error}") from last_error
+            raise DriverError(f"Anthropic async streaming failed: {error_description(last_error)}") from last_error
         raise DriverError("Anthropic async streaming failed without exception context")
 
 
@@ -317,4 +318,3 @@ register_driver(
     metadata={"provider": "anthropic", "transport": "rest"},
     overwrite=True,
 )
-

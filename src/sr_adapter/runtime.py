@@ -6,11 +6,11 @@ from __future__ import annotations
 import json
 import os
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from threading import Lock
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 
-from .normalize import NativeTextNormalizer, normalize_blocks as _fallback_normalize
+from .normalize import NativeTextNormalizer, _normalize_block_py
 from .schema import Block, Provenance
 from .visual import LayoutCandidate, LayoutSegment, VisualLayoutAnalyzer
 from .kernel_autotune import get_autotune_store
@@ -86,7 +86,8 @@ class NativeKernelRuntime:
     ) -> None:
         self._text_normalizer: Optional[NativeTextNormalizer]
         try:
-            self._text_normalizer = text_normalizer or NativeTextNormalizer()
+            text_disabled = os.getenv("SR_ADAPTER_DISABLE_TEXT_KERNEL", "").strip().lower() in {"1", "true", "yes", "on"}
+            self._text_normalizer = None if text_disabled else (text_normalizer or NativeTextNormalizer())
         except Exception:
             self._text_normalizer = None
 
@@ -102,6 +103,7 @@ class NativeKernelRuntime:
             except Exception:
                 self._layout_analyzer = None
 
+        self._stats_lock = Lock()
         self._text_stats = KernelStats("text")
         self._layout_stats = KernelStats("layout")
 
@@ -121,17 +123,21 @@ class NativeKernelRuntime:
         start = time.perf_counter()
         payload_units = sum(len(block.text or "") for block in blocks)
         if self._text_normalizer is None:
-            normalized = list(_fallback_normalize(blocks))
+            normalized = [_normalize_block_py(block) for block in blocks]
             duration = time.perf_counter() - start
-            self._text_stats.record(duration, payload_units)
+            with self._stats_lock:
+                self._text_stats.record(duration, payload_units)
             return normalized
         try:
             normalized = self._text_normalizer.normalize_blocks(blocks)
         except Exception:
-            self._text_stats.record_failure()
+            with self._stats_lock:
+                self._text_stats.record_failure()
+                self._text_stats.record(time.perf_counter() - start, payload_units)
             raise
         duration = time.perf_counter() - start
-        self._text_stats.record(duration, payload_units)
+        with self._stats_lock:
+            self._text_stats.record(duration, payload_units)
         return normalized
 
     def normalize_stream(
@@ -160,21 +166,28 @@ class NativeKernelRuntime:
         start = time.perf_counter()
         emitted = 0
 
-        for segment in self._layout_analyzer.process(candidates):
-            emitted += 1
-            yield segment
-
-        duration = time.perf_counter() - start
-        self._layout_stats.record(duration, emitted)
+        try:
+            for segment in self._layout_analyzer.process(candidates):
+                emitted += 1
+                yield segment
+        except Exception:
+            with self._stats_lock:
+                self._layout_stats.record_failure()
+            raise
+        finally:
+            duration = time.perf_counter() - start
+            with self._stats_lock:
+                self._layout_stats.record(duration, emitted)
 
     # ---------------------------------------------------------------- telemetry
     def snapshot(self) -> RuntimeSnapshot:
-        return RuntimeSnapshot(
-            text_enabled=self.text_enabled,
-            layout_enabled=self.layout_enabled,
-            text_stats=self._text_stats,
-            layout_stats=self._layout_stats,
-        )
+        with self._stats_lock:
+            return RuntimeSnapshot(
+                text_enabled=self.text_enabled,
+                layout_enabled=self.layout_enabled,
+                text_stats=replace(self._text_stats),
+                layout_stats=replace(self._layout_stats),
+            )
 
     # ------------------------------------------------------------------- warming
     def warm(self) -> RuntimeSnapshot:
@@ -214,7 +227,7 @@ class NativeKernelRuntime:
         return self.snapshot()
 
 
-_RUNTIME_CACHE: Dict[Tuple[str, int, int], NativeKernelRuntime | bool] = {}
+_RUNTIME_CACHE: Dict[Tuple[str, int, int, bool], NativeKernelRuntime | bool] = {}
 _RUNTIME_LOCK = Lock()
 
 
@@ -222,7 +235,7 @@ def get_native_runtime(
     layout_profile: str = "default",
     layout_batch_size: int = 32,
 ) -> Optional[NativeKernelRuntime]:
-    if os.getenv("SR_ADAPTER_DISABLE_NATIVE_RUNTIME"):
+    if os.getenv("SR_ADAPTER_DISABLE_NATIVE_RUNTIME", "").strip().lower() in {"1", "true", "yes", "on"}:
         return None
 
     store = get_autotune_store()
@@ -230,20 +243,20 @@ def get_native_runtime(
     tuned_text = store.text_batch_bytes()
     if tuned_layout:
         layout_batch_size = int(tuned_layout)
-    text_normalizer: Optional[NativeTextNormalizer] = None
-    if tuned_text:
-        try:
-            text_normalizer = NativeTextNormalizer(max_batch_bytes=int(tuned_text))
-        except Exception:
-            text_normalizer = None
-
-    key = (layout_profile, max(1, layout_batch_size), int(tuned_text or 0))
+    text_disabled = os.getenv("SR_ADAPTER_DISABLE_TEXT_KERNEL", "").strip().lower() in {"1", "true", "yes", "on"}
+    key = (layout_profile, max(1, layout_batch_size), int(tuned_text or 0), text_disabled)
     with _RUNTIME_LOCK:
         cached = _RUNTIME_CACHE.get(key)
         if isinstance(cached, NativeKernelRuntime):
             return cached
         if cached is False:
             return None
+        text_normalizer: Optional[NativeTextNormalizer] = None
+        if tuned_text and not text_disabled:
+            try:
+                text_normalizer = NativeTextNormalizer(max_batch_bytes=int(tuned_text))
+            except Exception:
+                text_normalizer = None
         try:
             runtime = NativeKernelRuntime(
                 text_normalizer=text_normalizer,
@@ -282,4 +295,3 @@ __all__ = [
     "reset_native_runtime",
     "runtime_status_json",
 ]
-

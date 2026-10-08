@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 import time
 from dataclasses import dataclass
+from threading import RLock
 from typing import Iterator
 
 
@@ -24,7 +25,7 @@ class BackoffPolicy:
         delay = min(self.base_delay * (2 ** (attempt - 1)), self.max_delay)
         if self.jitter > 0.0:
             delay += random.uniform(0.0, self.jitter)
-        return max(delay, 0.0)
+        return max(min(delay, self.max_delay), 0.0)
 
     def iter_delays(self, retries: int) -> Iterator[float]:
         """Yield the sequence of delays for ``retries`` attempts."""
@@ -55,18 +56,20 @@ class CircuitBreaker:
         self._failure_count = 0
         self._opened_at: float | None = None
         self._window_start: float | None = None
+        self._lock = RLock()
 
     def allow_request(self) -> bool:
         """Return ``True`` when new requests should be attempted."""
 
-        if self._opened_at is None:
-            return True
-        elapsed = time.monotonic() - self._opened_at
-        if elapsed >= self.recovery_time:
-            # Reset after the cooldown window expires.
-            self.reset()
-            return True
-        return False
+        with self._lock:
+            if self._opened_at is None:
+                return True
+            elapsed = time.monotonic() - self._opened_at
+            if elapsed >= self.recovery_time:
+                # Reset after the cooldown window expires.
+                self.reset()
+                return True
+            return False
 
     def record_success(self) -> None:
         """Clear failure streak after a successful call."""
@@ -76,30 +79,32 @@ class CircuitBreaker:
     def record_failure(self) -> None:
         """Register a failed attempt and open the breaker if needed."""
 
-        now = time.monotonic()
-        if self._window_start is None or (now - self._window_start) > self.window:
-            self._window_start = now
-            self._failure_count = 0
-        self._failure_count += 1
-        if self._failure_count >= self.failure_threshold:
-            self._opened_at = now
+        with self._lock:
+            now = time.monotonic()
+            if self._window_start is None or (now - self._window_start) > self.window:
+                self._window_start = now
+                self._failure_count = 0
+            self._failure_count += 1
+            if self._failure_count >= self.failure_threshold:
+                self._opened_at = now
 
     def reset(self) -> None:
         """Return the breaker to the closed state."""
 
-        self._failure_count = 0
-        self._opened_at = None
-        self._window_start = None
+        with self._lock:
+            self._failure_count = 0
+            self._opened_at = None
+            self._window_start = None
 
     @property
     def is_open(self) -> bool:
         """Expose whether the breaker is currently open without mutating state."""
 
-        if self._opened_at is None:
-            return False
-        elapsed = time.monotonic() - self._opened_at
-        return elapsed < self.recovery_time
+        with self._lock:
+            if self._opened_at is None:
+                return False
+            elapsed = time.monotonic() - self._opened_at
+            return elapsed < self.recovery_time
 
 
 __all__ = ["BackoffPolicy", "CircuitBreaker"]
-

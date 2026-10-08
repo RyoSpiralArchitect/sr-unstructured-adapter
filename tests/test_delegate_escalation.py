@@ -85,6 +85,11 @@ def test_escalate_low_conf_attaches_llm_payload(monkeypatch):
     assert meta["escalation_rank"] in {1, 2}
     assert meta["escalation_score"] >= 0.5
     assert sorted(dummy_driver.last_metadata["indices"]) == [0, 1]
+    assert payload["request_metadata"] == dummy_driver.last_metadata
+    assert payload["request_metadata"]["recipe"] == "test"
+    assert payload["request_metadata"]["block_count"] == 2
+    dummy_driver.last_metadata["indices"].clear()
+    assert sorted(payload["request_metadata"]["indices"]) == [0, 1]
 
 
 def test_escalate_low_conf_returns_original_when_disabled(monkeypatch):
@@ -286,3 +291,45 @@ def test_escalate_low_conf_context_overrides_disable_related_context(monkeypatch
     assert "First" in choice_text
     assert "Second" not in choice_text
     assert "[RELATED CONTEXT]" not in choice_text
+
+
+def test_prompt_template_preserves_literal_json_and_substitution_text(monkeypatch):
+    reset_escalation_policy()
+    driver = _DummyDriver()
+    monkeypatch.setattr("sr_adapter.delegate._driver_manager", _DummyDriverManager(driver))
+    monkeypatch.setattr("sr_adapter.delegate.load_recipe", lambda _: _recipe(True, {
+        "prompt_template": 'Return {"type": "paragraph"} for {recipe}: {context}',
+    }))
+    result = escalate_low_conf([Block(text="literal {recipe}", confidence=0.1)], "test")
+    prompt = result[0].attrs["llm_escalations"][0]["prompt"]
+    assert prompt == 'Return {"type": "paragraph"} for test: literal {recipe}'
+
+
+def test_context_limits_include_separators_and_respect_zero():
+    from sr_adapter.delegate import _render_block_texts, _select_related_context
+    blocks = [Block(text="abc"), Block(text="def")]
+    assert _render_block_texts(blocks, [0, 1], max_chars=6) == "abc\n\nd"
+    assert _render_block_texts(blocks, [0, 1], max_chars=0) == ""
+    assert _select_related_context(blocks, target_indices=[0], top_k=1, neighbor_window=1, max_blocks=0, embed_dim=64, use_semantic_field=False) == []
+
+
+def test_invalid_selection_never_invokes_driver(monkeypatch):
+    reset_escalation_policy()
+    driver = _DummyDriver()
+    monkeypatch.setattr("sr_adapter.delegate._driver_manager", _DummyDriverManager(driver))
+    monkeypatch.setattr("sr_adapter.delegate.load_recipe", lambda _: _recipe(True))
+    blocks = [Block(text="keep", confidence=0.1)]
+    selection = SelectionResult(indices=[-1], candidates=[], threshold=0.5, limit=1)
+    assert escalate_low_conf(blocks, "test", selection=selection) == blocks
+    assert driver.last_metadata is None
+
+
+def test_invalid_driver_response_preserves_original_blocks(monkeypatch):
+    reset_escalation_policy()
+    driver = _DummyDriver()
+    monkeypatch.setattr(driver, "generate", lambda *args, **kwargs: {"unknown": "shape"})
+    monkeypatch.setattr("sr_adapter.delegate._driver_manager", _DummyDriverManager(driver))
+    monkeypatch.setattr("sr_adapter.delegate.load_recipe", lambda _: _recipe(True))
+    blocks = [Block(text="keep", confidence=0.1)]
+    assert escalate_low_conf(blocks, "test") == blocks
+    assert "llm_escalations" not in blocks[0].attrs

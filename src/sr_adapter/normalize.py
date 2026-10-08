@@ -49,9 +49,9 @@ def _infer_type_py(block: Block) -> str:
     if text.count("\n") >= 1 and all(line.startswith("- ") for line in text.splitlines()):
         return "list"
     if _HEADER_PREFIX.match(text) and len(text) < 120:
-        return "header"
+        return "heading"
     if len(text.split()) <= 6 and text.isupper():
-        return "header"
+        return "heading"
     if ":" in text and text.count(":") == 1 and len(text) < 80:
         return "kv"
     return "paragraph"
@@ -73,6 +73,8 @@ def normalize_block(block: Block) -> Block:
 
 def normalize_blocks(blocks: Iterable[Block]) -> List[Block]:
     """Apply text normalisation and lightweight type inference."""
+    # A failed native batch may already have consumed a one-shot iterator.
+    blocks = list(blocks)
     normalizer = _get_native_normalizer()
     if normalizer:
         try:
@@ -85,13 +87,20 @@ def normalize_blocks(blocks: Iterable[Block]) -> List[Block]:
 
 
 def _normalize_block_py(block: Block) -> Block:
+    if block.type == "code":
+        return clone_model(block)
     text = _normalise_text_py(block.text)
-    attrs = dict(block.attrs)
-    if "text" in attrs:
-        attrs["text"] = _normalise_text_py(attrs["text"])
+    attrs = {
+        key: _normalise_text_py(value) if isinstance(value, str) else value
+        for key, value in block.attrs.items()
+    }
+    spans = block.spans
+    if text != block.text and spans:
+        spans = []
+        attrs["spans_invalidated_by"] = "text_normalization"
     candidate = clone_model(block, text=text)
     inferred_type = _infer_type_py(candidate)
-    updated = clone_model(candidate, attrs=attrs, type=inferred_type)
+    updated = clone_model(candidate, attrs=attrs, spans=spans, type=inferred_type)
     if not updated.text:
         updated = clone_model(updated, confidence=min(updated.confidence, 0.2))
     return updated
@@ -131,7 +140,8 @@ class NativeTextNormalizer:
         for idx, block in enumerate(block_list):
             nfkc_text = unicodedata.normalize("NFKC", block.text or "")
             text_bytes = nfkc_text.encode("utf-8")
-            allow_infer = block.type == "paragraph"
+            # Type inference uses Python's Unicode rules on both paths.
+            allow_infer = False
             type_code = _TYPE_TO_CODE.get(block.type, _TYPE_TO_CODE["other"])
             block_positions.append(len(payloads))
             payloads.append((text_bytes, type_code, allow_infer, block.confidence))
@@ -168,21 +178,27 @@ class NativeTextNormalizer:
                 start = end
         updated_blocks: List[Block] = []
         for idx, block in enumerate(block_list):
+            if block.type == "code":
+                updated_blocks.append(clone_model(block))
+                continue
             result = results[block_positions[idx]]
             text = result.text
             attrs = dict(block.attrs)
             for key, attr_index in attr_positions.get(idx, []):
                 attr_result = results[attr_index]
                 attrs[key] = attr_result.text
-            new_type = block.type
-            if block.type == "paragraph":
-                new_type = _CODE_TO_TYPE.get(result.type_code, "paragraph")
+            new_type = _infer_type_py(clone_model(block, text=text))
+            spans = block.spans
+            if text != block.text and spans:
+                spans = []
+                attrs["spans_invalidated_by"] = "text_normalization"
             new_conf = max(0.0, min(1.0, result.confidence))
             updated_blocks.append(
                 clone_model(
                     block,
                     text=text,
                     attrs=attrs,
+                    spans=spans,
                     type=new_type,
                     confidence=new_conf,
                 )
@@ -201,7 +217,8 @@ def _disable_native() -> None:
 
 
 def _get_native_normalizer() -> Optional[NativeTextNormalizer]:
-    if os.getenv("SR_ADAPTER_DISABLE_TEXT_KERNEL"):
+    if any(os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+           for name in ("SR_ADAPTER_DISABLE_TEXT_KERNEL", "SR_ADAPTER_DISABLE_NATIVE_RUNTIME")):
         return None
     if ensure_text_kernel is None:
         return None
@@ -218,4 +235,3 @@ def _get_native_normalizer() -> Optional[NativeTextNormalizer]:
             return None
         _NATIVE_NORMALIZER = normalizer
         return normalizer
-

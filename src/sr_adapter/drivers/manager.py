@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import re
+from copy import deepcopy
+from hashlib import sha256
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Lock
 from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional
 
 import yaml
@@ -35,7 +39,21 @@ class TenantConfig:
 
 def _resolve_env(value: Any) -> Any:
     if isinstance(value, str):
-        return os.path.expandvars(value)
+        def expand(match: re.Match[str]) -> str:
+            name = match.group("braced") or match.group("plain")
+            current = os.environ.get(name)
+            separator = match.group("separator")
+            if separator is not None and (current is None or (separator == ":-" and not current)):
+                return match.group("default") or ""
+            if current is None:
+                raise DriverError(f"Required environment variable '{name}' is not set")
+            return current
+
+        return re.sub(
+            r"\$\{(?P<braced>[A-Za-z_][A-Za-z0-9_]*)(?:(?P<separator>:-|-|:)(?P<default>[^}]*))?\}|\$(?P<plain>[A-Za-z_][A-Za-z0-9_]*)",
+            expand,
+            value,
+        )
     if isinstance(value, dict):
         return {key: _resolve_env(val) for key, val in value.items()}
     if isinstance(value, list):
@@ -48,7 +66,16 @@ class TenantManager:
 
     def __init__(self, base_path: Path | None = None):
         if base_path is None:
-            base_path = Path(__file__).resolve().parents[4] / "configs" / "tenants"
+            configured = os.getenv("SR_ADAPTER_TENANT_DIR")
+            if configured:
+                base_path = Path(configured).expanduser()
+            else:
+                candidates = (
+                    Path.cwd() / "configs" / "tenants",
+                    Path(__file__).resolve().parents[3] / "configs" / "tenants",
+                    Path(__file__).resolve().parents[1] / "configs" / "tenants",
+                )
+                base_path = next((path for path in candidates if path.is_dir()), candidates[-1])
         self.base_path = Path(base_path)
         self._cache: Dict[str, TenantConfig] = {}
 
@@ -68,19 +95,30 @@ class TenantManager:
         return sorted(all_tenants)
 
     def get(self, tenant: str) -> TenantConfig:
+        if not isinstance(tenant, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", tenant):
+            raise DriverError("Tenant name must be a simple configuration name")
         if tenant in self._cache:
-            return self._cache[tenant]
+            return deepcopy(self._cache[tenant])
         for suffix in (".yaml", ".yml"):
             candidate = self.base_path / f"{tenant}{suffix}"
+            if not candidate.resolve().is_relative_to(self.base_path.resolve()):
+                raise DriverError("Tenant configuration must remain inside the tenant directory")
             if candidate.exists():
-                data = yaml.safe_load(candidate.read_text(encoding="utf-8")) or {}
+                try:
+                    data = yaml.safe_load(candidate.read_text(encoding="utf-8")) or {}
+                except (OSError, yaml.YAMLError) as exc:
+                    raise DriverError(f"Could not load configuration for tenant '{tenant}'") from exc
+                if not isinstance(data, Mapping):
+                    raise DriverError(f"Tenant '{tenant}' configuration must be a mapping")
                 driver = data.get("driver")
                 if not driver:
                     raise DriverError(f"Tenant '{tenant}' is missing a driver name")
                 settings = _resolve_env(data.get("settings", {}))
+                if not isinstance(settings, Mapping):
+                    raise DriverError(f"Tenant '{tenant}' settings must be a mapping")
                 config = TenantConfig(name=tenant, driver=str(driver), settings=dict(settings))
                 self._cache[tenant] = config
-                return config
+                return deepcopy(config)
         raise DriverError(f"Tenant '{tenant}' not found under {self.base_path}")
 
 
@@ -96,6 +134,7 @@ class DriverManager:
         self.tenant_manager = tenant_manager or TenantManager()
         self.settings = settings or get_settings()
         self._driver_cache: MutableMapping[str, LLMDriver] = {}
+        self._cache_lock = Lock()
 
     def get_driver(self, tenant: str, llm_config: Mapping[str, Any]) -> LLMDriver:
         tenant_config = self.tenant_manager.get(tenant)
@@ -103,7 +142,7 @@ class DriverManager:
         settings: Dict[str, Any] = dict(tenant_config.settings)
         recipe_settings = llm_config.get("settings")
         if isinstance(recipe_settings, Mapping):
-            settings.update(recipe_settings)  # recipe level overrides
+            settings.update(_resolve_env(dict(recipe_settings)))  # recipe level overrides
         driver_defaults = self.settings.drivers
         settings.setdefault("timeout", driver_defaults.default_timeout)
         if driver_defaults.user_agent and "user_agent" not in settings:
@@ -115,14 +154,16 @@ class DriverManager:
         settings.setdefault("circuit_breaker_failures", driver_defaults.circuit_breaker_failures)
         settings.setdefault("circuit_breaker_recovery", driver_defaults.circuit_breaker_recovery)
         settings.setdefault("circuit_breaker_window", driver_defaults.circuit_breaker_window)
-        cache_key = self._cache_key(driver_name, settings)
-        if cache_key not in self._driver_cache:
-            self._driver_cache[cache_key] = create_registered_driver(driver_name, settings)
-        return self._driver_cache[cache_key]
+        cache_key = f"{tenant}:{self._cache_key(driver_name, settings)}"
+        with self._cache_lock:
+            if cache_key not in self._driver_cache:
+                self._driver_cache[cache_key] = create_registered_driver(driver_name, settings)
+            return self._driver_cache[cache_key]
 
     @staticmethod
     def _cache_key(driver_name: str, settings: Mapping[str, Any]) -> str:
-        return json.dumps({"driver": driver_name, "settings": settings}, sort_keys=True, default=str)
+        serialized = json.dumps({"driver": driver_name, "settings": settings}, sort_keys=True, default=str)
+        return sha256(serialized.encode("utf-8")).hexdigest()
 
     @staticmethod
     def registered_driver_names() -> tuple[str, ...]:

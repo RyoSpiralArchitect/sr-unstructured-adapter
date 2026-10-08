@@ -55,7 +55,8 @@ _EXTENSION_MAP: Dict[str, str] = {
 
 def _sniff_magic(path: Path) -> str | None:
     try:
-        header = path.read_bytes()[:4]
+        with path.open("rb") as handle:
+            header = handle.read(max(map(len, _MAGIC_SIGNATURES)))
     except OSError:
         return None
     for signature, kind in _MAGIC_SIGNATURES.items():
@@ -92,4 +93,3 @@ def detect_type(path: str | Path) -> str:
             return "text"
 
     return "text"
-

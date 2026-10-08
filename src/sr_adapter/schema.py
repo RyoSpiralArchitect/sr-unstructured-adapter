@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -17,10 +17,10 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 class BBox(BaseModel):
     """Axis-aligned bounding box in source coordinate space."""
 
-    x0: float
-    y0: float
-    x1: float
-    y1: float
+    x0: float = Field(allow_inf_nan=False)
+    y0: float = Field(allow_inf_nan=False)
+    x1: float = Field(allow_inf_nan=False)
+    y1: float = Field(allow_inf_nan=False)
 
     @model_validator(mode="after")
     def _check_order(self):
@@ -130,7 +130,8 @@ class DocumentMeta(BaseModel):
     size_bytes: Optional[int] = None
     page_count: Optional[int] = None
     languages: List[str] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    primary_language: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metrics_parse_ms: Optional[float] = None
     metrics_normalize_ms: Optional[float] = None
     metrics_recipe_ms: Optional[float] = None

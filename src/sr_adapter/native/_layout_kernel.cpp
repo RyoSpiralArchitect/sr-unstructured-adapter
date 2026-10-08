@@ -131,7 +131,8 @@ int analyze_layout(const LayoutBoxC *boxes, std::int32_t count, double threshold
         }
         const double ly = lhs.first.y0;
         const double ry = rhs.first.y0;
-        if (std::fabs(ly - ry) > 1e-3) {
+        // Exact ordering is transitive; an epsilon comparator is not.
+        if (ly != ry) {
             return ly < ry;
         }
         if (lhs.first.order_hint != rhs.first.order_hint) {

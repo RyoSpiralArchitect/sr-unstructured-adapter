@@ -9,6 +9,7 @@ from typing import Any, AsyncIterator, Iterator, Mapping
 
 from .base import DriverError, LLMDriver, register_driver
 from .resilience import BackoffPolicy
+from .protocol import SSEDecoder, error_description, response_object
 from ..llm_metrics import get_llm_registry
 
 try:  # pragma: no cover - optional dependency guard
@@ -24,7 +25,7 @@ class VLLMDriver(LLMDriver):
         super().__init__(name, config)
         if "endpoint" not in self.config:
             self.config["endpoint"] = "http://localhost:8000"
-        if "model" not in self.config:
+        if not self.config.get("model"):
             raise DriverError("vLLM driver requires 'model' in configuration")
 
     def _coerce_timeout(self) -> httpx.Timeout:
@@ -35,10 +36,16 @@ class VLLMDriver(LLMDriver):
 
     def _endpoint(self) -> str:
         endpoint = self.config.get("endpoint", "http://localhost:8000").rstrip("/")
-        return f"{endpoint}/v1/chat/completions"
+        if endpoint.endswith("/chat/completions"):
+            return endpoint
+        if not endpoint.endswith("/v1"):
+            endpoint += "/v1"
+        return f"{endpoint}/chat/completions"
 
     def _headers(self) -> dict[str, str]:
         headers = {"content-type": "application/json"}
+        if self.config.get("api_key"):
+            headers["Authorization"] = f"Bearer {self.config['api_key']}"
         user_agent = self.config.get("user_agent")
         if user_agent:
             headers["user-agent"] = str(user_agent)
@@ -56,8 +63,6 @@ class VLLMDriver(LLMDriver):
         system_prompt = self.config.get("system_prompt")
         if system_prompt:
             payload["messages"].insert(0, {"role": "system", "content": system_prompt})
-        if metadata:
-            payload["metadata"] = dict(metadata)
         return payload
 
     def _should_retry(self, exc: httpx.HTTPError) -> bool:
@@ -127,7 +132,7 @@ class VLLMDriver(LLMDriver):
                     request = client.build_request("POST", url, headers=headers, json=payload)
                     response = client.send(request)
                     response.raise_for_status()
-                    data = response.json()
+                    data = response_object(response.json())
                     response_bytes = len(response.content or b"")
                     self._record_success(
                         start=start,
@@ -135,15 +140,15 @@ class VLLMDriver(LLMDriver):
                         response_bytes=response_bytes,
                     )
                     return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 time.sleep(delay)
         if last_error:
-            raise DriverError(f"vLLM request failed: {last_error}") from last_error
+            raise DriverError(f"vLLM request failed: {error_description(last_error)}") from last_error
         raise DriverError("vLLM driver failed without exception context")
 
     def stream_generate(
@@ -167,38 +172,37 @@ class VLLMDriver(LLMDriver):
         for attempt in range(retries + 1):
             start = time.perf_counter()
             accumulated = 0
+            emitted = False
             try:
                 with httpx.Client(timeout=timeout) as client:
                     request = client.build_request("POST", url, headers=headers, json=payload)
                     with client.stream(request.method, request.url, headers=request.headers, content=request.content) as response:
                         response.raise_for_status()
+                        decoder = SSEDecoder()
                         for chunk in response.iter_lines():
-                            if not chunk:
-                                continue
-                            accumulated += len(chunk)
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk.strip() == "[DONE]":
+                            accumulated += len(chunk.encode("utf-8")) + 1
+                            event = decoder.feed(chunk)
+                            if event is not None:
+                                emitted = True
+                                yield event
+                            if decoder.finished:
                                 break
-                            try:
-                                yield json.loads(chunk)
-                            except json.JSONDecodeError:
-                                continue
+                        decoder.ensure_complete()
                     self._record_success(
                         start=start,
                         request_bytes=request_bytes,
                         response_bytes=accumulated,
                     )
                     return
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if emitted or attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 time.sleep(delay)
         if last_error:
-            raise DriverError(f"vLLM streaming failed: {last_error}") from last_error
+            raise DriverError(f"vLLM streaming failed: {error_description(last_error)}") from last_error
         raise DriverError("vLLM streaming failed without exception context")
 
     async def async_generate(
@@ -224,7 +228,7 @@ class VLLMDriver(LLMDriver):
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     response = await client.post(url, headers=headers, json=payload)
                     response.raise_for_status()
-                    data = response.json()
+                    data = response_object(response.json())
                     response_bytes = len(response.content or b"")
                     self._record_success(
                         start=start,
@@ -232,15 +236,15 @@ class VLLMDriver(LLMDriver):
                         response_bytes=response_bytes,
                     )
                     return data
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 await asyncio.sleep(delay)
         if last_error:
-            raise DriverError(f"vLLM async request failed: {last_error}") from last_error
+            raise DriverError(f"vLLM async request failed: {error_description(last_error)}") from last_error
         raise DriverError("vLLM async request failed without exception context")
 
     async def async_stream_generate(
@@ -264,37 +268,36 @@ class VLLMDriver(LLMDriver):
         for attempt in range(retries + 1):
             start = time.perf_counter()
             accumulated = 0
+            emitted = False
             try:
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     async with client.stream("POST", url, headers=headers, json=payload) as response:
                         response.raise_for_status()
+                        decoder = SSEDecoder()
                         async for chunk in response.aiter_lines():
-                            if not chunk:
-                                continue
-                            accumulated += len(chunk)
-                            if chunk.startswith("data: "):
-                                chunk = chunk[6:]
-                            if chunk.strip() == "[DONE]":
+                            accumulated += len(chunk.encode("utf-8")) + 1
+                            event = decoder.feed(chunk)
+                            if event is not None:
+                                emitted = True
+                                yield event
+                            if decoder.finished:
                                 break
-                            try:
-                                yield json.loads(chunk)
-                            except json.JSONDecodeError:
-                                continue
+                        decoder.ensure_complete()
                     self._record_success(
                         start=start,
                         request_bytes=request_bytes,
                         response_bytes=accumulated,
                     )
                     return
-            except httpx.HTTPError as exc:  # pragma: no cover - network error path
+            except (httpx.HTTPError, ValueError, DriverError) as exc:  # pragma: no cover - network error path
                 last_error = exc
                 self._record_failure(start=start, exc=exc)
-                if attempt >= retries or not self._should_retry(exc):
+                if emitted or attempt >= retries or self.circuit_breaker.is_open or not self._should_retry(exc):
                     break
                 delay = backoff.compute(attempt + 1)
                 await asyncio.sleep(delay)
         if last_error:
-            raise DriverError(f"vLLM async streaming failed: {last_error}") from last_error
+            raise DriverError(f"vLLM async streaming failed: {error_description(last_error)}") from last_error
         raise DriverError("vLLM async streaming failed without exception context")
 
 
@@ -305,4 +308,3 @@ register_driver(
     metadata={"provider": "vllm", "transport": "rest"},
     overwrite=True,
 )
-

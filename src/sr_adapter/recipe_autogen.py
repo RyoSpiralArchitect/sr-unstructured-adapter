@@ -120,14 +120,19 @@ class RecipeSuggester:
     def __init__(self, examples: Sequence[RecipeExample]) -> None:
         if not examples:
             raise ValueError("At least one example is required")
+        if len({example.target_type for example in examples}) != 1:
+            raise ValueError("Examples for a single recipe rule must share a target type")
         self.examples = list(examples)
 
     def build_pattern(self) -> str:
         texts = [example.text for example in self.examples]
         pattern = _merge_groups(texts)
-        if pattern.count("|") > len(texts) * 2:
-            # Guard against runaway alternations – fall back to a loose pattern.
-            pattern = r"^.*$"
+        regex = re.compile(pattern)
+        if not all(regex.fullmatch(text) for text in texts):
+            # Different token shapes and non-ASCII alphabets cannot always be
+            # generalised by the group merger. Preserve observed positives
+            # without broadening the rule to every possible input.
+            pattern = r"^(?:" + "|".join(re.escape(text) for text in dict.fromkeys(texts)) + r")$"
         return pattern
 
     def suggest(self, negatives: Sequence[str] | None = None) -> RecipeSuggestion:
@@ -143,7 +148,7 @@ class RecipeSuggester:
         negative_rate = 0.0
         if negatives:
             negative_rate = 1.0 - (false_positives / max(len(negatives), 1))
-        score = max(0.0, (positive_rate + negative_rate) / 2.0)
+        score = max(0.0, (positive_rate + negative_rate) / 2.0) if negatives else positive_rate
         attrs = {}
         for example in self.examples:
             attrs.update(example.attrs)
@@ -205,10 +210,6 @@ def render_yaml(name: str, suggestion: RecipeSuggestion) -> str:
                 "confidence": max(0.5, min(0.99, suggestion.score)),
             }
         ],
-        "fallback": {
-            "as": suggestion.target_type,
-            "confidence": max(0.4, min(0.95, suggestion.score)),
-        },
     }
     return yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
 

@@ -16,14 +16,14 @@ try:  # pragma: no cover - maintain compatibility with Pydantic v1
 except ImportError:  # pragma: no cover - for Pydantic v1
     ConfigDict = None  # type: ignore[assignment]
 
-from .schema import Block, clone_model
+from .schema import Block, BlockType, clone_model
 
 
 class _RecipePatternModel(BaseModel):
     """Pydantic representation of a single recipe rule."""
 
     when: str
-    target_type: str = Field(alias="as")
+    target_type: BlockType = Field(alias="as")
     attrs: Dict[str, str] = Field(default_factory=dict)
     confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
@@ -38,7 +38,7 @@ class _RecipePatternModel(BaseModel):
 class _RecipeFallbackModel(BaseModel):
     """Validation schema for fallback behaviour."""
 
-    target_type: str = Field(alias="as")
+    target_type: BlockType = Field(alias="as")
     attrs: Dict[str, str] = Field(default_factory=dict)
     confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
@@ -141,6 +141,8 @@ def _compile_pattern(entry: _RecipePatternModel) -> RecipePattern:
 def _load_recipe_dict(name: str) -> Mapping[str, Any]:
     from importlib import resources
 
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", name):
+        raise ValueError("Recipe name must contain only letters, digits, underscores, and hyphens")
     package = "sr_adapter.recipes"
     with resources.files(package).joinpath(f"{name}.yaml").open("r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle)
@@ -220,4 +222,3 @@ def apply_recipe(blocks: Iterable[Block], recipe_name: str) -> List[Block]:
 
     recipe = load_recipe(recipe_name)
     return [_apply_recipe_to_block(block, recipe) for block in blocks]
-

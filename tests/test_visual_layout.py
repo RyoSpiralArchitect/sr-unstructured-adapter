@@ -66,7 +66,7 @@ class _DummyKernel:
 
 def test_visual_calibration_store_persists(tmp_path: Path) -> None:
     cache_path = tmp_path / "calibration.json"
-    store = LayoutCalibrationStore(cache_path)
+    store = LayoutCalibrationStore(cache_path, enabled=True)
     kernel = _DummyKernel()
 
     analyzer = VisualLayoutAnalyzer(

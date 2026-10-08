@@ -47,8 +47,6 @@ class HybridRefiner:
 
     def _refine_text(self, text: str) -> str:
         candidate = text.strip()
-        if candidate.isupper() and len(candidate) < 160:
-            candidate = candidate.title()
         candidate = candidate.replace("\u3000", " ")
         candidate = " ".join(candidate.split())
         return candidate
@@ -62,7 +60,8 @@ class HybridRefiner:
             features = build_features(block)
             score = self._model.score(features, block=block)
             attrs = dict(block.attrs)
-            meta = dict(attrs.get("ml_refine", {}))
+            previous_meta = attrs.get("ml_refine")
+            meta = dict(previous_meta) if isinstance(previous_meta, dict) else {}
             meta.update(
                 {
                     "score": float(score),
@@ -70,13 +69,17 @@ class HybridRefiner:
                 }
             )
             attrs["ml_refine"] = meta
-            updated_text = self._refine_text(block.text or "")
-            new_confidence = max(block.confidence, min(1.0, score))
+            # Whitespace can be significant in code and span offsets refer to
+            # the original text. A selection score measures the need for LLM
+            # review, so it must never promote extraction confidence.
+            updated_text = (
+                block.text if block.type == "code" or block.spans
+                else self._refine_text(block.text or "")
+            )
             refined.append(
                 clone_model(
                     block,
                     text=updated_text,
-                    confidence=new_confidence,
                     attrs=attrs,
                 )
             )

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import ctypes
-import os
-import subprocess
-import sys
+import math
 from dataclasses import dataclass
+from .build import ensure_library
 from pathlib import Path
 from threading import Lock
 from typing import Iterable, List, Optional, Sequence
@@ -52,67 +51,8 @@ _LABEL_MAP = {
     3: "figure",
 }
 
-_SUFFIX = {
-    "linux": ".so",
-    "darwin": ".dylib",
-    "win32": ".dll",
-}
-
-
-def _library_suffix() -> str:
-    for key, suffix in _SUFFIX.items():
-        if sys.platform.startswith(key):
-            return suffix
-    return ".so"
-
-
-def _library_path() -> Path:
-    return Path(__file__).with_name("_layout_kernel" + _library_suffix())
-
-
-def _source_path() -> Path:
-    return Path(__file__).with_name("_layout_kernel.cpp")
-
-
-def _compile_library(target: Path) -> None:
-    source = _source_path()
-    if not source.exists():
-        raise LayoutKernelError(f"missing kernel source: {source}")
-
-    compiler = os.environ.get("CXX", "c++")
-    cmd = [
-        compiler,
-        "-std=c++17",
-        "-O3",
-        "-fPIC",
-        "-shared",
-        str(source),
-        "-o",
-        str(target),
-    ]
-    try:
-        subprocess.run(cmd, check=True, capture_output=True)
-    except subprocess.CalledProcessError as exc:  # pragma: no cover - surfaced in tests
-        raise LayoutKernelError(exc.stderr.decode("utf-8", "ignore") or str(exc)) from exc
-
-
 def _ensure_library() -> Path:
-    target = _library_path()
-    source = _source_path()
-    needs_build = not target.exists()
-    if not needs_build and source.exists():
-        needs_build = target.stat().st_mtime < source.stat().st_mtime
-    if needs_build:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        _compile_library(target)
-    legacy = Path(__file__).with_suffix(_library_suffix())
-    if legacy.exists() and legacy != target:
-        try:
-            legacy.unlink()
-        except OSError:
-            pass
-    return target
-
+    return ensure_library(Path(__file__).with_name("_layout_kernel.cpp"), LayoutKernelError)
 
 class LayoutKernel:
     """Thin ctypes wrapper around the native layout kernel."""
@@ -163,8 +103,14 @@ class LayoutKernel:
     def analyze(self, boxes: Sequence[LayoutBox], threshold: float) -> List[LayoutResult]:
         if not boxes:
             return []
+        if not math.isfinite(threshold):
+            raise ValueError("layout threshold must be finite")
         c_boxes = (self._Box * len(boxes))()
         for idx, box in enumerate(boxes):
+            if not all(math.isfinite(v) for v in (box.x0, box.y0, box.x1, box.y1, box.score)):
+                raise ValueError("layout coordinates and scores must be finite")
+            if box.x1 < box.x0 or box.y1 < box.y0:
+                raise ValueError("layout boxes must have ordered coordinates")
             c_boxes[idx] = self._Box(
                 float(box.x0),
                 float(box.y0),
@@ -182,6 +128,8 @@ class LayoutKernel:
                 ctypes.c_double(float(threshold)),
                 results,
             )
+        if not 0 <= written <= len(boxes):
+            raise LayoutKernelError("kernel returned an invalid result count")
         output: List[LayoutResult] = []
         for i in range(int(written)):
             entry = results[i]
@@ -199,7 +147,7 @@ class LayoutKernel:
         return output
 
     def calibrate(self, scores: Iterable[float], current: float) -> float:
-        values = [float(v) for v in scores if not isinstance(v, bool)]
+        values = [float(v) for v in scores if not isinstance(v, bool) and math.isfinite(float(v))]
         if not values:
             return float(current)
         arr = (ctypes.c_double * len(values))(*values)
@@ -213,13 +161,15 @@ class LayoutKernel:
 
 
 _kernel: Optional[LayoutKernel] = None
+_KERNEL_LOCK = Lock()
 
 
 def ensure_layout_kernel() -> LayoutKernel:
     global _kernel
-    if _kernel is None:
-        _kernel = LayoutKernel()
-    return _kernel
+    with _KERNEL_LOCK:
+        if _kernel is None:
+            _kernel = LayoutKernel()
+        return _kernel
 
 
 __all__ = ["LayoutKernel", "LayoutKernelError", "LayoutBox", "LayoutResult", "ensure_layout_kernel"]
