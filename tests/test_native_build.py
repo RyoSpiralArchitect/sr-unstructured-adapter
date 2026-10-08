@@ -89,7 +89,7 @@ def test_windows_kernels_load_without_compiler_runtime_path(tmp_path, monkeypatc
     # Load in a fresh process, outside the compiler directory, with only
     # Windows system DLLs on PATH. Do not register compiler DLL directories.
     environment = dict(os.environ)
-    environment["PATH"] = str(Path(environment["SystemRoot"]) / "System32")
+    environment["PATH"] = str(Path(os.environ["SystemRoot"]) / "System32")
     probe = """import ctypes, sys
 text = ctypes.CDLL(sys.argv[1])
 layout = ctypes.CDLL(sys.argv[2])

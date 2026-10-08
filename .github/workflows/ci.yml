@@ -68,7 +68,7 @@ jobs:
           with TemporaryDirectory() as directory:
               source = Path(directory) / "sample.txt"
               source.write_text("wheel ready", encoding="utf-8")
-              document = convert(source, llm_ok=False)
+              document = convert(source, "default", llm_ok=False)
               assert any(block.text == "wheel ready" for block in document.blocks)
           print(Block(text="wheel ready"))
           PY
