@@ -354,7 +354,7 @@ pytest -q
 The suite covers driver management, pipeline behaviours, native kernel orchestration, and CLI workflows.
 
 ### Continuous integration
-GitHub Actions runs on Ubuntu with Python 3.10, 3.11 and 3.13. It checks lint, API/provider protocols, native and fallback paths, then builds and exercises an installed wheel. Benchmark timings are disabled in this correctness CI; there is no performance gate.
+GitHub Actions runs on Ubuntu with Python 3.10, 3.11 and 3.13, plus Windows with Python 3.11 and native runtime disabled. It checks lint, API/provider protocols, native and fallback paths, then builds and exercises an installed wheel. Benchmark timings are disabled in this correctness CI; there is no performance gate.
 
 
 ## Verification and behavioral limits

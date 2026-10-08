@@ -51,4 +51,16 @@ jobs:
           python -m build
           python -m pip install --force-reinstall --no-deps dist/*.whl
           cd "$RUNNER_TEMP"
-          SR_ADAPTER_NATIVE_CACHE="$RUNNER_TEMP/wheel-native" python -c "from sr_adapter import Block; from sr_adapter.recipe import load_recipe; from sr_adapter.drivers.manager import TenantManager; from sr_adapter.native import ensure_text_kernel, ensure_layout_kernel; assert load_recipe('default'); assert 'default' in TenantManager().list_tenants(); ensure_text_kernel(); ensure_layout_kernel(); print(Block(text='wheel ready'))"
+          SR_ADAPTER_NATIVE_CACHE="$RUNNER_TEMP/wheel-native" python - <<'PY'
+          import os
+          from sr_adapter import Block
+          from sr_adapter.recipe import load_recipe
+          from sr_adapter.drivers.manager import TenantManager
+          from sr_adapter.native import ensure_text_kernel, ensure_layout_kernel
+          assert load_recipe("default")
+          assert "default" in TenantManager().list_tenants()
+          if os.environ.get("SR_ADAPTER_DISABLE_NATIVE_RUNTIME") != "1":
+              assert ensure_text_kernel()
+              assert ensure_layout_kernel()
+          print(Block(text="wheel ready"))
+          PY
