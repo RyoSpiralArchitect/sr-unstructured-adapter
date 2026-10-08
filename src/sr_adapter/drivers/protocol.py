@@ -74,3 +74,49 @@ class SSEDecoder:
     def ensure_complete(self) -> None:
         if not self.finished:
             raise DriverError("LLM stream ended before its completion event")
+
+
+class GeminiSSEDecoder(SSEDecoder):
+    """Require each requested candidate's finishReason and preserve final usage.
+
+    Gemini has no [DONE] sentinel. Completion is validated at EOF so usage-only
+    events following the final candidate are still delivered to the caller.
+    """
+
+    def __init__(self, *, candidate_count: int = 1) -> None:
+        super().__init__()
+        if type(candidate_count) is not int or candidate_count < 1:
+            raise DriverError("Google candidateCount must be a positive integer")
+        self._candidate_count = candidate_count
+        self._completed: set[int] = set()
+        self._blocked = False
+
+    def feed(self, line: str) -> Mapping[str, Any] | None:
+        event = super().feed(line)
+        if self.finished:
+            raise DriverError("Google stream contained an unexpected completion marker")
+        if event is None:
+            return None
+        feedback = event.get("promptFeedback") or {}
+        if not isinstance(feedback, Mapping):
+            raise DriverError("Google stream contained malformed prompt feedback")
+        reason = feedback.get("blockReason")
+        if isinstance(reason, str) and reason and reason != "BLOCK_REASON_UNSPECIFIED":
+            self._blocked = True
+        candidates = event.get("candidates", [])
+        if not isinstance(candidates, list):
+            raise DriverError("Google stream contained malformed candidates")
+        for candidate in candidates:
+            if not isinstance(candidate, Mapping):
+                raise DriverError("Google stream contained a malformed candidate")
+            index = candidate.get("index", 0 if self._candidate_count == 1 else None)
+            if type(index) is not int or not 0 <= index < self._candidate_count:
+                raise DriverError("Google stream contained an invalid candidate index")
+            reason = candidate.get("finishReason")
+            if isinstance(reason, str) and reason and reason != "FINISH_REASON_UNSPECIFIED":
+                self._completed.add(index)
+        return event
+
+    def ensure_complete(self) -> None:
+        if self._data or (not self._blocked and len(self._completed) != self._candidate_count):
+            raise DriverError("Google stream ended before every candidate completed")

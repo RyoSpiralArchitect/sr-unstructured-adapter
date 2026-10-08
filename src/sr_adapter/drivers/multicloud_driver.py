@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Iterator, Mapping
+from typing import Any, Mapping
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from .base import DriverError, register_driver
 from .openai_driver import OpenAIDriver
-from .protocol import openai_metadata
+from .protocol import GeminiSSEDecoder, openai_metadata
 
 
 class JSONChatProxyDriver(OpenAIDriver):
@@ -122,14 +123,26 @@ class GoogleAIDriver(JSONChatProxyDriver):
             payload["safetySettings"] = self.config["safety_settings"]
         return payload
 
-    def supports_streaming(self) -> bool:
-        return False
+    def _stream_endpoint(self) -> str:
+        endpoint = str(self.config.get("stream_endpoint") or self._endpoint())
+        if "{model}" in endpoint:
+            endpoint = endpoint.format(model=self.config["model"])
+        parts = urlsplit(endpoint)
+        path = parts.path
+        if path.endswith(":generateContent"):
+            path = path.removesuffix(":generateContent") + ":streamGenerateContent"
+        elif not path.endswith(":streamGenerateContent") and not self.config.get("stream_endpoint"):
+            raise DriverError("Google streaming requires a :generateContent endpoint or explicit stream_endpoint")
+        query = [(key, value) for key, value in parse_qsl(parts.query, keep_blank_values=True) if key != "alt"]
+        query.append(("alt", "sse"))
+        return urlunsplit((parts.scheme, parts.netloc, path, urlencode(query), parts.fragment))
 
-    def stream_generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> Iterator[Mapping[str, Any]]:
-        yield self.generate(prompt, metadata=metadata)
+    def _stream_payload(self, prompt: str, metadata: Mapping[str, Any] | None) -> dict[str, Any]:
+        return self._build_payload(prompt, metadata)
 
-    async def async_stream_generate(self, prompt: str, *, metadata: Mapping[str, Any] | None = None) -> AsyncIterator[Mapping[str, Any]]:
-        yield await self.async_generate(prompt, metadata=metadata)
+    def _stream_decoder(self) -> GeminiSSEDecoder:
+        count = (self.config.get("generation_config") or {}).get("candidateCount", 1)
+        return GeminiSSEDecoder(candidate_count=count)
 
 
 class XaiDriver(JSONChatProxyDriver):

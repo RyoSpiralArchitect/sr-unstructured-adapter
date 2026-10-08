@@ -77,6 +77,17 @@ class OpenAIDriver(LLMDriver):
         endpoint = self.config.get("endpoint", "https://api.openai.com/v1").rstrip("/")
         return f"{endpoint}/chat/completions"
 
+    def _stream_endpoint(self) -> str:
+        return self._endpoint()
+
+    def _stream_payload(self, prompt: str, metadata: Mapping[str, Any] | None) -> dict[str, Any]:
+        payload = self._build_payload(prompt, metadata)
+        payload["stream"] = True
+        return payload
+
+    def _stream_decoder(self) -> SSEDecoder:
+        return SSEDecoder()
+
     def _should_retry(self, exc: httpx.HTTPError) -> bool:
         status = getattr(getattr(exc, "response", None), "status_code", None)
         if isinstance(exc, httpx.TimeoutException):
@@ -169,10 +180,9 @@ class OpenAIDriver(LLMDriver):
         if httpx is None:  # pragma: no cover - dependency guard
             raise DriverError("httpx is required to use the OpenAI driver")
         self._ensure_circuit_closed()
-        url = self._endpoint()
+        url = self._stream_endpoint()
         headers = self._headers()
-        payload = self._build_payload(prompt, metadata)
-        payload["stream"] = True
+        payload = self._stream_payload(prompt, metadata)
         timeout = self._coerce_timeout()
         retries = int(self.config.get("max_retries", 2))
         backoff = BackoffPolicy(
@@ -191,7 +201,7 @@ class OpenAIDriver(LLMDriver):
                     request = client.build_request("POST", url, headers=headers, json=payload)
                     with client.stream(request.method, request.url, headers=request.headers, content=request.content) as response:
                         response.raise_for_status()
-                        decoder = SSEDecoder()
+                        decoder = self._stream_decoder()
                         for chunk in response.iter_lines():
                             accumulated += len(chunk.encode("utf-8")) + 1
                             event = decoder.feed(chunk)
@@ -273,10 +283,9 @@ class OpenAIDriver(LLMDriver):
         if httpx is None:  # pragma: no cover - dependency guard
             raise DriverError("httpx is required to use the OpenAI driver")
         self._ensure_circuit_closed()
-        url = self._endpoint()
+        url = self._stream_endpoint()
         headers = self._headers()
-        payload = self._build_payload(prompt, metadata)
-        payload["stream"] = True
+        payload = self._stream_payload(prompt, metadata)
         timeout = self._coerce_timeout()
         retries = int(self.config.get("max_retries", 2))
         backoff = BackoffPolicy(
@@ -294,7 +303,7 @@ class OpenAIDriver(LLMDriver):
                 async with httpx.AsyncClient(timeout=timeout) as client:
                     async with client.stream("POST", url, headers=headers, json=payload) as response:
                         response.raise_for_status()
-                        decoder = SSEDecoder()
+                        decoder = self._stream_decoder()
                         async for chunk in response.aiter_lines():
                             accumulated += len(chunk.encode("utf-8")) + 1
                             event = decoder.feed(chunk)

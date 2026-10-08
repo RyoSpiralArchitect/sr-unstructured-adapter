@@ -186,7 +186,7 @@ def test_provider_payloads_keep_adapter_metadata_separate():
     assert "safetySettings" not in payload
     assert payload["systemInstruction"] == {"parts": [{"text": "review"}]}
     assert payload["generationConfig"] == {"maxOutputTokens": 32, "temperature": 0}
-    assert google.supports_streaming() is False
+    assert google.supports_streaming() is True
 
 
 def test_mistral_serializes_typed_escalation_metadata(install_transport):
@@ -306,3 +306,162 @@ def test_circuit_breaker_stops_remaining_retries(driver, install_transport, asyn
     with pytest.raises(DriverError, match="circuit breaker is open"):
         driver.generate("hello")
     assert len(requests) == 1
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_google_stream_uses_native_sse_and_preserves_usage(install_transport, asynchronous):
+    requests = []
+    events = [
+        {"candidates": [{"index": 0, "content": {"parts": [{"text": "猫"}]}}]},
+        {"candidates": [{"index": 0, "finishReason": "STOP"}]},
+        {"usageMetadata": {"totalTokenCount": 7}},
+    ]
+
+    def handler(request):
+        requests.append(request)
+        assert request.url.path.endswith(":streamGenerateContent")
+        assert dict(request.url.params) == {"custom": "a b", "alt": "sse"}
+        assert request.headers["x-goog-api-key"] == "test"
+        payload = json.loads(request.content)
+        assert "stream" not in payload
+        assert "metadata" not in payload
+        assert payload["contents"][0]["parts"] == [{"text": "hello"}]
+        return httpx.Response(200, content="".join(f"data: {json.dumps(event)}\n\n" for event in events))
+
+    install_transport(handler)
+    driver = GoogleAIDriver("googleai", {
+        "api_key": "test", "model": "test",
+        "endpoint": "https://example.test/models/{model}:generateContent?custom=a+b&alt=json",
+    })
+
+    async def collect():
+        return [event async for event in driver.async_stream_generate("hello", metadata={"tenant": "secret"})]
+
+    chunks = asyncio.run(collect()) if asynchronous else list(driver.stream_generate("hello", metadata={"tenant": "secret"}))
+    assert chunks == events
+    assert len(requests) == 1
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("events,success", [
+    ([{"candidates": [{"index": 0, "finishReason": "STOP"}]},
+      {"candidates": [{"index": 1, "finishReason": "MAX_TOKENS"}]}], True),
+    ([{"candidates": [{"index": 0, "finishReason": "STOP"}]}], False),
+    ([{"candidates": [{"index": 0, "finishReason": "STOP"}]},
+      {"candidates": [{"index": 0, "finishReason": "STOP"}]}], False),
+    ([{"candidates": [{"index": 1, "finishReason": "FINISH_REASON_UNSPECIFIED"}]}], False),
+    ([{"candidates": [{"index": -1, "finishReason": "STOP"}]}], False),
+    ([{"candidates": [{"index": 2, "finishReason": "STOP"}]}], False),
+    ([{"candidates": [{"finishReason": "STOP"}]}], False),
+    ([{"promptFeedback": {"blockReason": "SAFETY"}}], True),
+    ([{"promptFeedback": {"blockReason": "BLOCK_REASON_UNSPECIFIED"}}], False),
+    ([{"error": {"message": "provider error"}}], False),
+    ([{"candidates": "malformed"}], False),
+    ([], False),
+])
+def test_google_stream_validates_completion_for_every_candidate(install_transport, asynchronous, events, success):
+    wire = "".join(f"data: {json.dumps(event)}\n\n" for event in events)
+    install_transport(lambda request: httpx.Response(200, content=wire))
+    driver = GoogleAIDriver("googleai", {"api_key": "test", "model": "test", "generation_config": {"candidateCount": 2}})
+
+    async def collect():
+        return [event async for event in driver.async_stream_generate("hello")]
+
+    def run():
+        return asyncio.run(collect()) if asynchronous else list(driver.stream_generate("hello"))
+
+    if success:
+        assert run() == events
+    else:
+        with pytest.raises(DriverError):
+            run()
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("wire", [
+    b'data: {"candidates":[{"finishReason":"STOP"}]}\n',
+    b'data: [DONE]\n\n',
+    b'data: not-json\n\n',
+])
+def test_google_stream_rejects_incomplete_sse_or_foreign_terminators(install_transport, asynchronous, wire):
+    install_transport(lambda request: httpx.Response(200, content=wire))
+    driver = GoogleAIDriver("googleai", {"api_key": "test", "model": "test"})
+
+    async def collect():
+        return [event async for event in driver.async_stream_generate("hello")]
+
+    with pytest.raises(DriverError):
+        if asynchronous:
+            asyncio.run(collect())
+        else:
+            list(driver.stream_generate("hello"))
+
+
+def test_google_custom_stream_endpoint():
+    driver = GoogleAIDriver("vertex", {
+        "api_key": "test", "model": "test", "endpoint": "https://example.test/proxy",
+        "stream_endpoint": "https://example.test/stream?token=opaque",
+    })
+    assert driver._stream_endpoint() == "https://example.test/stream?token=opaque&alt=sse"
+    driver.config.pop("stream_endpoint")
+    with pytest.raises(DriverError, match="stream_endpoint"):
+        driver._stream_endpoint()
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+@pytest.mark.parametrize("partial", [False, True])
+def test_google_stream_retries_only_before_first_emission(install_transport, asynchronous, partial):
+    requests = []
+    seen = []
+    final = {"candidates": [{"finishReason": "STOP"}]}
+
+    def handler(request):
+        requests.append(request)
+        if len(requests) == 1:
+            if partial:
+                return httpx.Response(200, stream=_BrokenAsyncStream() if asynchronous else _BrokenSyncStream())
+            return httpx.Response(429, json={"error": {"message": "retry later"}})
+        return httpx.Response(200, content=f"data: {json.dumps(final)}\n\n")
+
+    install_transport(handler)
+    driver = GoogleAIDriver("googleai", {"api_key": "test", "model": "test", "max_retries": 2, "retry_backoff_base": 0, "retry_jitter": 0})
+
+    async def collect():
+        async for event in driver.async_stream_generate("hello"):
+            seen.append(event)
+
+    def run():
+        if asynchronous:
+            asyncio.run(collect())
+        else:
+            seen.extend(driver.stream_generate("hello"))
+
+    if partial:
+        with pytest.raises(DriverError, match="ReadError"):
+            run()
+        assert len(requests) == 1
+        assert len(seen) == 1
+    else:
+        run()
+        assert len(requests) == 2
+        assert seen == [final]
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_google_explicit_stream_endpoint_expands_model(install_transport, asynchronous):
+    def handler(request):
+        assert request.url.path == "/models/test-model:streamGenerateContent"
+        assert dict(request.url.params) == {"alt": "sse"}
+        return httpx.Response(200, content=b'data: {"candidates":[{"finishReason":"STOP"}]}\n\n')
+
+    install_transport(handler)
+    driver = GoogleAIDriver("googleai", {
+        "api_key": "test", "model": "test-model",
+        "stream_endpoint": "https://example.test/models/{model}:streamGenerateContent",
+    })
+
+    async def collect():
+        return [event async for event in driver.async_stream_generate("hello")]
+
+    events = asyncio.run(collect()) if asynchronous else list(driver.stream_generate("hello"))
+    assert events == [{"candidates": [{"finishReason": "STOP"}]}]
