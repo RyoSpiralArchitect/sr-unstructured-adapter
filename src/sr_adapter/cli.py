@@ -533,6 +533,9 @@ def _handle_llm(args: argparse.Namespace) -> int:
             return 10
         json.dump(asdict(normalized), sys.stdout, ensure_ascii=False, indent=2)
         sys.stdout.write("\n")
+        if not normalized.is_complete:
+            print(f"LLM response did not complete (status={normalized.status})", file=sys.stderr)
+            return 10
         return 0
     if args.llm_command == "replay":
         dataset = args.input.expanduser()
@@ -621,8 +624,17 @@ def _handle_llm(args: argparse.Namespace) -> int:
                     target = output_handle or sys.stdout
                     json.dump(payload, target, ensure_ascii=False)
                     target.write("\n")
+                    stats.written += 1
+                    if not normalized.is_complete:
+                        stats.errors.append(
+                            f"LLM response on line {line_number} did not complete (status={normalized.status})"
+                        )
+                        if not args.skip_errors:
+                            _report_replay_summary(stats, limit=args.limit)
+                            return 10
+                        continue
                     stats.processed += 1
-            replay_completed = stats.processed > 0
+            replay_completed = stats.written > 0
         finally:
             if output_handle:
                 try:
@@ -632,9 +644,12 @@ def _handle_llm(args: argparse.Namespace) -> int:
                 finally:
                     output_temporary.unlink(missing_ok=True)
         if stats.processed == 0:
+            if stats.written:
+                _report_replay_summary(stats, limit=args.limit)
+                return 10
             print("No prompts were processed from the dataset", file=sys.stderr)
             return 9
-        if args.skip_errors or args.limit is not None:
+        if stats.errors or args.skip_errors or args.limit is not None:
             _report_replay_summary(stats, limit=args.limit)
         if stats.errors:
             return 10
@@ -863,6 +878,7 @@ def _extract_prompt(record: dict | None) -> str | None:
 @dataclass
 class ReplayStats:
     processed: int = 0
+    written: int = 0
     attempted: int = 0
     errors: list[str] = field(default_factory=list)
     limit_reached: bool = False

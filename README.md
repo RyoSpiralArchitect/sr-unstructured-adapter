@@ -108,6 +108,33 @@ Turn chaotic documents into structured payloads with a pipeline that speaks both
 - To enrich escalations with retrieval context, set `llm.context.top_k` (or `llm.context_top_k`) in the recipe and the adapter will append a related-context section to the prompt.
 - Profiles can override recipe-level retrieval context parameters by setting `llm.context` in the selected processing profile.
 
+### LLM completion status
+Normalized responses and each choice include a `status`. HTTP success alone does not establish that text generation finished:
+
+| Status | Meaning |
+| --- | --- |
+| `complete` | Nonempty text with a recognized normal stop reason |
+| `truncated` | Output token limit or context limit reached |
+| `blocked` | Provider refusal, content filtering, or blocked prompt |
+| `tool_call` | A tool call requiring handling by the caller |
+| `empty` | No choices, or a normal stop without usable text |
+| `unknown` | Missing, unfamiliar, or nonfinal finish reason |
+| `mixed` | Returned choices have different statuses |
+
+`result.is_complete` is true only for `complete`; this says nothing about factual correctness or extraction accuracy. Finish reasons, partial text, and the original provider response remain available. The mappings follow the [OpenAI Chat Completions reference](https://developers.openai.com/api/reference/resources/chat), [Claude stop reasons](https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons), and [Gemini finish reasons](https://ai.google.dev/api/generate-content#FinishReason).
+
+The pipeline preserves incomplete responses in `attrs.llm_escalations` and adds a document warning without changing the source text. `meta.llm_escalations` counts selected blocks receiving a new response; `llm_completed` and `llm_incomplete` split that count by completion. These counts precede output block truncation and are not provider request counts. Configuration/transport failures still use the existing failure logging path. Adaptive profile feedback uses completed responses; it does not treat refused or truncated responses as successful completion.
+
+`llm run` prints the normalized response and exits with code 10 for any noncomplete status, including missing finish reasons. `llm replay` also fails and preserves any existing output file. With `--skip-errors`, replay retains incomplete response rows, continues processing, and still exits nonzero; only complete responses count toward `--limit`.
+
+For bounded live integration checks using synthetic text and existing environment credentials:
+
+```bash
+python scripts/smoke_llm.py --allow-live-api --provider all --output live-results.json
+```
+
+The runner covers OpenAI (`OPENAI_API_KEY`), Mistral (`MISTRAL_API_KEY`), and Gemini (`GEMINI_API_KEY`) through sync, async, streaming, and async streaming calls. It allows at most four requests per provider, disables retries, and stops that provider after its first failure. Select a single provider with `--provider` or override its model with `--openai-model`, `--mistral-model`, or `--gemini-model`. An output path must be new and writable before any request; receipts are updated after each mode. Missing credentials, skipped modes, and interrupted requests remain visible alongside passes. A receipt left `running` after termination means the request's outcome is unknown; inspect it before deciding to run again. See the [October completion audit](docs/llm-completion-audit.md) for observed results and limitations.
+
 ### Escalation gate benchmarks
 Use the built-in ablation harness to quantify the confidence gate trade-offs:
 

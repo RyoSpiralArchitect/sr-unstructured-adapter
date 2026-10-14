@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "run_id": "15041bcc-786b-4458-b500-1c4adc19dbfe",
+  "created_at": "2026-10-14T15:56:03.956801+00:00",
+  "synthetic_data_only": true,
+  "max_requests": 12,
+  "max_output_tokens_per_request": 96,
+  "results": [
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "mode": "sync",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {
+        "prompt_tokens": 25,
+        "completion_tokens": 9,
+        "total_tokens": 34,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "elapsed_ms": 3545.83
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "mode": "async",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {
+        "prompt_tokens": 25,
+        "completion_tokens": 9,
+        "total_tokens": 34,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "elapsed_ms": 3148.15
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "mode": "stream",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {},
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "events": 11,
+      "elapsed_ms": 1783.63
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4.1-mini",
+      "mode": "async_stream",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {},
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "events": 11,
+      "elapsed_ms": 2183.99
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-small-latest",
+      "mode": "sync",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "total_tokens": 33,
+        "completion_tokens": 11,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "service_tier": "standard"
+      },
+      "response_model": "mistral-small-latest",
+      "elapsed_ms": 2407.63
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-small-latest",
+      "mode": "async",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "total_tokens": 33,
+        "completion_tokens": 11,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "service_tier": "standard"
+      },
+      "response_model": "mistral-small-latest",
+      "elapsed_ms": 2770.55
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-small-latest",
+      "mode": "stream",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "total_tokens": 33,
+        "completion_tokens": 11,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "service_tier": "standard"
+      },
+      "response_model": "mistral-small-latest",
+      "events": 5,
+      "elapsed_ms": 2329.67
+    },
+    {
+      "provider": "mistral",
+      "model": "mistral-small-latest",
+      "mode": "async_stream",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "stop"
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "total_tokens": 33,
+        "completion_tokens": 11,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "service_tier": "standard"
+      },
+      "response_model": "mistral-small-latest",
+      "events": 5,
+      "elapsed_ms": 2130.33
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-flash-lite",
+      "mode": "sync",
+      "attempted": true,
+      "status": "failed",
+      "error_type": "DriverError",
+      "http_status": 404,
+      "elapsed_ms": 1101.64
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-flash-lite",
+      "mode": "async",
+      "attempted": false,
+      "status": "skipped",
+      "reason": "previous_failure"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-flash-lite",
+      "mode": "stream",
+      "attempted": false,
+      "status": "skipped",
+      "reason": "previous_failure"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-flash-lite",
+      "mode": "async_stream",
+      "attempted": false,
+      "status": "skipped",
+      "reason": "previous_failure"
+    }
+  ]
+}

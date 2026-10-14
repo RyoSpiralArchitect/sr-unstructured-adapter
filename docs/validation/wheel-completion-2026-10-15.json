@@ -1,0 +1,8 @@
+{
+  "package_source": "installed-wheel",
+  "synthetic_local_provider": true,
+  "pipeline_completed": 0,
+  "pipeline_incomplete": 1,
+  "cli_exit_code": 10,
+  "status": "passed"
+}

@@ -342,8 +342,6 @@ def escalate_low_conf(
     try:
         raw_response = driver.generate(prompt, metadata=metadata)
         normalized = _normalizer.normalize(driver.name, raw_response, prompt=prompt)
-        if not normalized.choices:
-            raise ValueError("LLM provider returned no choices")
     except Exception as exc:  # pragma: no cover - network failure path
         logger.warning(
             "LLM escalation failed for tenant '%s' with driver '%s': %s",

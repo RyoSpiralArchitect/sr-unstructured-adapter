@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "run_id": "de951607-7871-4570-80b7-3f2facabad61",
+  "created_at": "2026-10-14T15:57:38.374479+00:00",
+  "synthetic_data_only": true,
+  "max_requests": 4,
+  "max_output_tokens_per_request": 96,
+  "results": [
+    {
+      "provider": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "mode": "sync",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "STOP"
+      ],
+      "usage": {
+        "promptTokenCount": 20,
+        "candidatesTokenCount": 10,
+        "totalTokenCount": 30,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 20
+          }
+        ],
+        "serviceTier": "standard",
+        "prompt_tokens": 20,
+        "completion_tokens": 10,
+        "total_tokens": 30
+      },
+      "response_model": "gemini-3.1-flash-lite",
+      "elapsed_ms": 2445.63
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "mode": "async",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "STOP"
+      ],
+      "usage": {
+        "promptTokenCount": 20,
+        "candidatesTokenCount": 10,
+        "totalTokenCount": 30,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 20
+          }
+        ],
+        "serviceTier": "standard",
+        "prompt_tokens": 20,
+        "completion_tokens": 10,
+        "total_tokens": 30
+      },
+      "response_model": "gemini-3.1-flash-lite",
+      "elapsed_ms": 2296.43
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "mode": "stream",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "STOP"
+      ],
+      "usage": {
+        "promptTokenCount": 20,
+        "candidatesTokenCount": 10,
+        "totalTokenCount": 30,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 20
+          }
+        ],
+        "serviceTier": "standard",
+        "prompt_tokens": 20,
+        "completion_tokens": 10,
+        "total_tokens": 30
+      },
+      "response_model": "gemini-3.1-flash-lite",
+      "events": 3,
+      "elapsed_ms": 2167.88
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "mode": "async_stream",
+      "attempted": true,
+      "status": "passed",
+      "completion_status": "complete",
+      "content_matches": true,
+      "finish_reasons": [
+        "STOP"
+      ],
+      "usage": {
+        "promptTokenCount": 20,
+        "candidatesTokenCount": 10,
+        "totalTokenCount": 30,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 20
+          }
+        ],
+        "serviceTier": "standard",
+        "prompt_tokens": 20,
+        "completion_tokens": 10,
+        "total_tokens": 30
+      },
+      "response_model": "gemini-3.1-flash-lite",
+      "events": 3,
+      "elapsed_ms": 2353.88
+    }
+  ]
+}

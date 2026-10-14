@@ -114,7 +114,7 @@ def _stub_malformed_llm(monkeypatch):
         def generate(self, prompt, **kwargs):
             if prompt == "bad":
                 return {"choices": ["malformed"]}
-            return {"choices": [{"message": {"content": "valid response"}}]}
+            return {"choices": [{"message": {"content": "valid response"}, "finish_reason": "stop"}]}
 
     class Manager:
         tenant_manager = TenantManager()

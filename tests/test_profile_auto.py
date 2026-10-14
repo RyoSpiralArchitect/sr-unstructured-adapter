@@ -92,6 +92,18 @@ def test_selector_records_outcomes(tmp_path):
     assert profile.name in payload["profiles"]
 
 
+def test_incomplete_responses_do_not_receive_completion_reward(tmp_path):
+    selector = AdaptiveProfileSelector(
+        settings=AutoProfileSettings(enabled=True, state_path=str(tmp_path / "state.json")),
+        telemetry=_StubTelemetry(),
+    )
+    profile = selector.store.load("balanced")
+    selector.record_outcome(profile, {"block_count": 1, "llm_escalations": 1, "llm_completed": 0})
+    incomplete_reward = selector._stats[profile.name].reward_sum
+    selector.record_outcome(profile, {"block_count": 1, "llm_escalations": 1, "llm_completed": 1})
+    complete_reward = selector._stats[profile.name].reward_sum - incomplete_reward
+    assert complete_reward > incomplete_reward
+
 def test_selector_skips_invalid_saved_stats(tmp_path):
     path = tmp_path / "state.json"
     path.write_text(json.dumps({"profiles": {

@@ -101,7 +101,7 @@ def test_cli_llm_run_accepts_metadata_file(monkeypatch, tmp_path, capsys):
 
         def generate(self, prompt: str, *, metadata=None):
             assert metadata == {"trace": "id-456"}
-            return {"choices": [{"message": {"content": prompt}, "index": 0}], "usage": {}}
+            return {"choices": [{"message": {"content": prompt}, "index": 0, "finish_reason": "stop"}], "usage": {}}
 
     driver = _MetadataDriver()
 

@@ -137,6 +137,8 @@ class DocumentMeta(BaseModel):
     metrics_recipe_ms: Optional[float] = None
     metrics_total_ms: Optional[float] = None
     llm_escalations: int = 0
+    llm_completed: int = 0
+    llm_incomplete: int = 0
     truncated_blocks: int = 0
     block_count: int = 0
     env_no_llm: bool = False
