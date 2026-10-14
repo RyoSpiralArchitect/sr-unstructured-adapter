@@ -1,1 +1,3 @@
 include scripts/smoke_llm.py
+include scripts/vlm_benchmark.py
+include data/vlm_benchmark/pilot-v1.json

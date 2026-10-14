@@ -1,0 +1,1114 @@
+{
+  "schema_version": 1,
+  "status": "frozen",
+  "spec_sha256": "accbe311d59fd9996e400f4c494a2492eb13944d58f0cb9a30991289bda0a029",
+  "annotation_status": "Agent-authored gold; real source pages visually inspected before inference; not independent human validation.",
+  "image_long_edge": 1800,
+  "font": {
+    "filename": "Arial Unicode.ttf",
+    "sha256": "876af2cd4854644e7f3e7feb2f688997fdb3343c6df6693611209c9dfb47ccec"
+  },
+  "adapter": {
+    "recipe": "default",
+    "profile": "archival",
+    "llm_ok": false
+  },
+  "source": {
+    "git_head": "ddffe070155ed07e7428dc641e3f2397433d7b90",
+    "files": {
+      "src/sr_adapter/__init__.py": "b90378f56dad3f9ef545c60769ecb4533945a76357dc754e23b23022d28efaff",
+      "src/sr_adapter/adapter.py": "90ff7547ec3e8987ff01eba8cb69a8c24d0ec416d08de005913d3f16c64d389d",
+      "src/sr_adapter/api.py": "6ff6c7b4ae7de47b489f72b0aad98aa273c8d1b7987a4a4872727396cc5c4a02",
+      "src/sr_adapter/cli.py": "bd5c45e0ef4f9826cb997cf5e33e11504a0dbeee99f1b3da220c23fb8dbd130d",
+      "src/sr_adapter/confidence.py": "e5357e26c58405d5661c6b90744b026197166e5c247bf42f6f8dd67edfb4f838",
+      "src/sr_adapter/delegate.py": "0f77f7fc609e580fc51dcf27ae8c7a169f4a8e930d7abf4551dd61ae66bf52f2",
+      "src/sr_adapter/distributed.py": "b771554ee9cd7a08ea3f2f211e6213b1c3137999989648aa245f09448fed8760",
+      "src/sr_adapter/drivers/__init__.py": "67638765d946dd85ada5cd8847fc5e31e1e7bb9c3d6b758a737d55920e44af0d",
+      "src/sr_adapter/drivers/anthropic_driver.py": "91ad0830f41ae59e7bea7cebde69202f7e5ca3dcbfb757804034f6cd2001ee1b",
+      "src/sr_adapter/drivers/azure_driver.py": "fe8f200610bc8b89a78c9f6c3d7837dd6127dfb1721375d316f60d17e1215823",
+      "src/sr_adapter/drivers/base.py": "cb5fb000d4aae6170beccc45ee9ebd65a09a59cc180499f06752fba3bdc384c4",
+      "src/sr_adapter/drivers/docker_driver.py": "0057833be2efdc3eb598fb2dc270c237fec8e39217fb55f1f9f966863a763f60",
+      "src/sr_adapter/drivers/manager.py": "f78819b39e54944683af1ca68be7abdc5855450ac046e0e1370595c265f3e793",
+      "src/sr_adapter/drivers/multicloud_driver.py": "7534f6d4f7831f7d80c5b5942d35846cdbc30e1f0fe502e3b8ab9d6e2ece9526",
+      "src/sr_adapter/drivers/openai_driver.py": "ecfec1d2d15c661ed0364557c4f4da923fedeed70229895c0dc628b945400fd7",
+      "src/sr_adapter/drivers/protocol.py": "d21437f91685b159d751fcb9e75790ff29c409bcacb8e2c587cf570bf22a4cd2",
+      "src/sr_adapter/drivers/resilience.py": "972f5879320f54e079a354979314fa28b914793cb54306e5279b9e275e97ea07",
+      "src/sr_adapter/drivers/vllm_driver.py": "da596faeb7973c5f75be2e88ca3fa2bfafd94877e9631db5a82389c1eef30941",
+      "src/sr_adapter/embedding.py": "a2e75b0c900f9ff938887d26a72e29e3c87cc6a613405aefe53ba8b01b69d977",
+      "src/sr_adapter/escalation/__init__.py": "dbd558bfc738bcf05555b0b2bacd3f52a890ae76cc4c7dc77e190ab0cb1a4b02",
+      "src/sr_adapter/escalation/features.py": "39360dd8110fb0d28031f29371f148c9b83b2dcea8f469d1cb90125a3eadaa21",
+      "src/sr_adapter/escalation/logging.py": "2315bfbb55925a380e9955e0d7ef9b7ad9ebc5867821755bd2a040ee7d2add36",
+      "src/sr_adapter/escalation/model.py": "58d359e75337c4fc9fe084d7e8d27145a37b4f3dda56d3f7f21db77083a6c178",
+      "src/sr_adapter/escalation/policy.py": "93b2d81d54f21ade1cd22b96d5f6de79732185e8d17e9087a501b1cdf5b3fbda",
+      "src/sr_adapter/jobs.py": "f7bb5a1b892e13a02370ffa084b51185aec832b54b38f557a0c5828a90557157",
+      "src/sr_adapter/kernel_autotune.py": "6c1ef225cd3c6c5b9efd166f367439b8f8334ca5ccf90e67222a43a146e0708d",
+      "src/sr_adapter/language.py": "df9dd9077881130720b9667c53b254449ebe27f7145314330574408999916b53",
+      "src/sr_adapter/llm_metrics.py": "8acc685b1d9f5803f40cf5ae3732a33e0bcfb4657491cf6149641c7f6c669f1e",
+      "src/sr_adapter/loaders.py": "fd7a8b6c1d7a3a6a1e9acddbf5ea395d259c1ef1d071e151f45cabcf9f5030e2",
+      "src/sr_adapter/messages.py": "aab2af8cc9ef6f275d69d500378daf7ce5dc00308519147f4a42d32dfc5100d9",
+      "src/sr_adapter/metadata.py": "74efe3bbc60cad996e840c52ea0cb124d133bf380c19a9d930a859946deeeec6",
+      "src/sr_adapter/models.py": "e2e34bbd6306ecca9dc86df038ef9bdbb03c003980cb8c6ecd6ec595a7698e53",
+      "src/sr_adapter/native/__init__.py": "6d69904543e4c0412ed8b43133329a563fbe234b494d79af2359c3bbd791743f",
+      "src/sr_adapter/native/build.py": "602fcdb5db9a4400bdeafdc5dd6df52f86b02d9378c71d7d423f8b0bb2513f21",
+      "src/sr_adapter/native/layout.py": "60e9161ef65ed12564dd83cdd746eae29ab4006fb57ca7b377ed32c441dc93b3",
+      "src/sr_adapter/native/text.py": "92ef99de9afaf63fb566a9ea731f2ef9f1ced8e55030166d69f1cf0d81f0323e",
+      "src/sr_adapter/normalize.py": "3bfe2cfe6860355038da67f0a50598f3fd583ec5854406a7bbd5f802a22d302b",
+      "src/sr_adapter/normalizer/__init__.py": "e7436c34fe12375889abfd67e1dc2be1f84099e2b0690cadbbae2ab91a431f70",
+      "src/sr_adapter/normalizer/llm_normalizer.py": "89b35de9c7f872ecb48af282291e8d8d7cba08919d4c9a978a1e76a726f376ee",
+      "src/sr_adapter/parsers.py": "bc6033a9fa4aba2ccf793f8301a32a189bdaf0c72dc9d42a6116a208c6207049",
+      "src/sr_adapter/pipeline.py": "caa1c151627f60789547700235ffff9298877a884832e237c29799a74598e922",
+      "src/sr_adapter/profile_auto.py": "6a09628107ed6b84ba0fd473a438e3a6597a4c7810fed68463f64e84549800fa",
+      "src/sr_adapter/profiles.py": "343bf63aee5a1687263b86e7710bc5996cb01b6c05635f990ac38ca80b163262",
+      "src/sr_adapter/recipe.py": "413ad83eaa683a00d466d2031dee2bed66acd1ba1d7c4c0398c9a2a6e4edf370",
+      "src/sr_adapter/recipe_autogen.py": "f17ee3030320a96e695107fefdfdf151ef02160f83ff59cd3726d1b617b7d6d0",
+      "src/sr_adapter/recipes/__init__.py": "3b3a40e513e7d3a19981410cc50c5aed0efc520f398913d2e8cac24491a6aaa8",
+      "src/sr_adapter/refiner.py": "2368afc18d531a767a3969f1c764952f390af57b4b70623aeebcf32a8e6aa121",
+      "src/sr_adapter/runtime.py": "a0dadbbdc6551e6ff7fa3980cd189c3916bc12ae56cac4d2d4b5a24de39ef039",
+      "src/sr_adapter/schema.py": "af5e0c3850e668233841aa47bd9388f6c3d85ee14c8e2df73c4b6e9210fdded4",
+      "src/sr_adapter/semantic.py": "baaf1b5c5aed0468230d2ec23498c88409dd877389b58921cc76e40ad864eec9",
+      "src/sr_adapter/settings.py": "8d99a7d739f4eff409e412ce691449bb7bb06a28b824570edd78722545f7fa8a",
+      "src/sr_adapter/sniff.py": "311d28f9f794804ab37bf39015708662ab6be0ae6ca92a99d2ddebb6a1e4c37a",
+      "src/sr_adapter/telemetry.py": "5f4b91caef46bec377d78d74d91b9e896d1651086ade8053691dc84600684b0c",
+      "src/sr_adapter/version.py": "5d33c964229d09030a807720f31b3a444986de5b1c62f18625c8996af8219e96",
+      "src/sr_adapter/visual.py": "84d3b27f45c400f801e3ed066f8ee79e34f631953b716913fafaf110056d33a1",
+      "src/sr_adapter/writer.py": "f167bdfd8c87bcadf8992ab7f5d8b3601d79eb21be983feb1e223f57d007bc5e",
+      "src/sr_adapter/configs/tenants/default.yaml": "86703995b9eb6e619f30031f5d3d4986f938cfbd6eef3c56539cca26f3e91328",
+      "src/sr_adapter/recipes/call_log.yaml": "99876c05d91632e8164c3e168663b68fff1331dcbabba638f588bc2a2f8735a8",
+      "src/sr_adapter/recipes/chat_log.yaml": "f3c0e68d2642b4953efad78f8142388e24d93220ad5d3fe58be8a68cbfa651e5",
+      "src/sr_adapter/recipes/default.yaml": "d291eed2e57ac86cf62e9b3b9ba520a3c26dd3977b53f91bc923f051808c0431",
+      "src/sr_adapter/recipes/sensor_log.yaml": "5d6a9c178c7ce53c0f53d124d4edc131afd46314f685f81322eab5b618c789a4",
+      "src/sr_adapter/native/_layout_kernel.cpp": "efead87f9c87b5e3fff94f8dbf37bf6295dd7ce431ca7ce900f4295830ea4718",
+      "src/sr_adapter/native/_text_kernel.cpp": "ecdb1cd41082217957be949c00ebd8232a9824e1a60e31bcaf3385f0f44bb7fe",
+      "scripts/vlm_benchmark.py": "4aeb74751711b2a32248035c9b3a0ed33c8b37ac0a5777f3125fe5b67e704ca2"
+    },
+    "versions": {
+      "pypdf": "6.20.1",
+      "pydantic": "2.14.1",
+      "Pillow": "12.3.0",
+      "httpx": "0.28.1",
+      "reportlab": "5.0.1"
+    }
+  },
+  "cases": [
+    {
+      "id": "syn-budget",
+      "kind": "synthetic",
+      "tags": [
+        "table",
+        "units",
+        "similar_ids",
+        "unknown"
+      ],
+      "source": {
+        "filename": "input.pdf",
+        "sha256": "98073a0dec8d41b1153497cc6ab4396b8d11c3d47674eb7591537e3ffaf55233"
+      },
+      "pdf": {
+        "path": "syn-budget/input.pdf",
+        "sha256": "98073a0dec8d41b1153497cc6ab4396b8d11c3d47674eb7591537e3ffaf55233"
+      },
+      "images": [
+        {
+          "path": "syn-budget/page-1.png",
+          "sha256": "ebfdf38eb974a98af73501e0ff1c06c6074dd20ef9c5c07c0575a736dc3c6652",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "syn-budget/text.json",
+        "sha256": "6360789255177dd94b1b752e1d53cfa6fc76223b07fbcbe571e4e62f196e5d66"
+      },
+      "adapter": {
+        "path": "syn-budget/adapter.json",
+        "sha256": "0bc086ba33dda3c4a15a6ecdba4b49d15f302b15d47a4afaf0548630d1bd2879"
+      },
+      "fields": [
+        {
+          "id": "sensor_price",
+          "question": "品目ID A-017 の単価は何円か。円を付けて答える。",
+          "accepted": [
+            "12500円"
+          ],
+          "page": 1,
+          "evidence": [
+            "12,500"
+          ],
+          "anchors": [
+            "12,500"
+          ]
+        },
+        {
+          "id": "board_price",
+          "question": "品目ID A-071 の単価は何円か。円を付けて答える。",
+          "accepted": [
+            "125000円"
+          ],
+          "page": 1,
+          "evidence": [
+            "125,000"
+          ],
+          "anchors": [
+            "125,000"
+          ]
+        },
+        {
+          "id": "sensor_quantity",
+          "question": "A-017 の数量を単位付きで答える。",
+          "accepted": [
+            "12台"
+          ],
+          "page": 1,
+          "evidence": [
+            "１２台"
+          ],
+          "anchors": [
+            "12台"
+          ]
+        },
+        {
+          "id": "power_quantity",
+          "question": "B-004 の数量を単位付きで答える。",
+          "accepted": [
+            "0台"
+          ],
+          "page": 1,
+          "evidence": [
+            "0台"
+          ],
+          "anchors": [
+            "0台"
+          ]
+        },
+        {
+          "id": "board_date",
+          "question": "A-071 の確定納期を日付で答える。未定ならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "approver",
+          "question": "確定した承認者の氏名は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "承認者：未定。"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 7.620541990036145,
+        "adapter": 192.6396670169197
+      },
+      "extracted_characters": 179,
+      "adapter_characters": 178,
+      "adapter_blocks": 1
+    },
+    {
+      "id": "syn-revisions",
+      "kind": "synthetic",
+      "tags": [
+        "multipage",
+        "version",
+        "signed_number",
+        "unknown"
+      ],
+      "source": {
+        "filename": "input.pdf",
+        "sha256": "f982c5ae7854c4502ad3c0896ebd7474493b19e6e9f7815cccb484d2c09eeefb"
+      },
+      "pdf": {
+        "path": "syn-revisions/input.pdf",
+        "sha256": "f982c5ae7854c4502ad3c0896ebd7474493b19e6e9f7815cccb484d2c09eeefb"
+      },
+      "images": [
+        {
+          "path": "syn-revisions/page-1.png",
+          "sha256": "c6301277fc54013607a6997c7d6414b49b7ff0614a3024d9a0986666500db674",
+          "page": 1
+        },
+        {
+          "path": "syn-revisions/page-2.png",
+          "sha256": "274193bec97c9eb620d9a566041e049c66d5bfae52b82c1bf24b1cd62be90ac7",
+          "page": 2
+        }
+      ],
+      "text": {
+        "path": "syn-revisions/text.json",
+        "sha256": "497d8d9f22cbf69b228bf9be184bdde6e62f3f7a8c6c516b2377b07687286d43"
+      },
+      "adapter": {
+        "path": "syn-revisions/adapter.json",
+        "sha256": "e07f8373690f46fa9bef5f6a5be88e5fca1dd0485dd5ab7e5efa3b44f7aee2ba"
+      },
+      "fields": [
+        {
+          "id": "current_id",
+          "question": "現行版の図番は何か。",
+          "accepted": [
+            "R-180"
+          ],
+          "page": 2,
+          "evidence": [
+            "R-180"
+          ],
+          "anchors": [
+            "R-180"
+          ]
+        },
+        {
+          "id": "current_pressure",
+          "question": "現行版の圧力上限を単位付きで答える。",
+          "accepted": [
+            "1.52 MPa"
+          ],
+          "page": 2,
+          "evidence": [
+            "1.52 MPa"
+          ],
+          "anchors": [
+            "1.52"
+          ]
+        },
+        {
+          "id": "old_pressure",
+          "question": "旧版の圧力上限を単位付きで答える。",
+          "accepted": [
+            "1.25 MPa"
+          ],
+          "page": 1,
+          "evidence": [
+            "1.25 MPa"
+          ],
+          "anchors": [
+            "1.25"
+          ]
+        },
+        {
+          "id": "current_offset",
+          "question": "現行版のゼロ点補正を符号・単位付きで答える。",
+          "accepted": [
+            "-0.03 mm"
+          ],
+          "page": 2,
+          "evidence": [
+            "-0.03 mm"
+          ],
+          "anchors": [
+            "-0.03"
+          ]
+        },
+        {
+          "id": "current_date",
+          "question": "現行版の発効日はいつか。",
+          "accepted": [
+            "2026年10月12日"
+          ],
+          "page": 2,
+          "evidence": [
+            "2026年10月12日"
+          ],
+          "anchors": [
+            "2026年10月12日"
+          ]
+        },
+        {
+          "id": "current_approver",
+          "question": "現行版の確定した承認者は誰か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 2,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 10.956957994494587,
+        "adapter": 24.86070798477158
+      },
+      "extracted_characters": 242,
+      "adapter_characters": 210,
+      "adapter_blocks": 32
+    },
+    {
+      "id": "syn-columns",
+      "kind": "synthetic",
+      "tags": [
+        "columns",
+        "row_binding",
+        "unknown"
+      ],
+      "source": {
+        "filename": "input.pdf",
+        "sha256": "ca97060c9b203f4784140665a5dec82453b3b7338c6f9a87f4ff3da384b2917a"
+      },
+      "pdf": {
+        "path": "syn-columns/input.pdf",
+        "sha256": "ca97060c9b203f4784140665a5dec82453b3b7338c6f9a87f4ff3da384b2917a"
+      },
+      "images": [
+        {
+          "path": "syn-columns/page-1.png",
+          "sha256": "8eab7e3ad90a3b5aaf0ed6b8896dff7d2f453e02f0b803e0b5a6c01b67a131ae",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "syn-columns/text.json",
+        "sha256": "6fc0db77b835f1ca8441dc1d66ab72b9636051b7e438bc8d00ade5693355bc62"
+      },
+      "adapter": {
+        "path": "syn-columns/adapter.json",
+        "sha256": "f7d9f3760a26e774277830babe45e8316ad1b9bed8fbed0f8fa585cdfd19abbc"
+      },
+      "fields": [
+        {
+          "id": "east_running",
+          "question": "東地区の稼働台数を単位付きで答える。",
+          "accepted": [
+            "18台"
+          ],
+          "page": 1,
+          "evidence": [
+            "18台"
+          ],
+          "anchors": [
+            "18"
+          ]
+        },
+        {
+          "id": "west_running",
+          "question": "西地区の稼働台数を単位付きで答える。",
+          "accepted": [
+            "81台"
+          ],
+          "page": 1,
+          "evidence": [
+            "81台"
+          ],
+          "anchors": [
+            "81"
+          ]
+        },
+        {
+          "id": "west_stopped",
+          "question": "西地区の停止台数を単位付きで答える。",
+          "accepted": [
+            "0台"
+          ],
+          "page": 1,
+          "evidence": [
+            "0台"
+          ],
+          "anchors": [
+            "0台"
+          ]
+        },
+        {
+          "id": "east_temp",
+          "question": "東地区の温度上限を単位付きで答える。",
+          "accepted": [
+            "38.5 ℃",
+            "38.5°C"
+          ],
+          "page": 1,
+          "evidence": [
+            "38.5 ℃"
+          ],
+          "anchors": [
+            "38.5"
+          ]
+        },
+        {
+          "id": "west_staff",
+          "question": "西地区の配置人数を単位付きで答える。",
+          "accepted": [
+            "7人"
+          ],
+          "page": 1,
+          "evidence": [
+            "配置人数：東地区 4人、西地区 7人。"
+          ],
+          "anchors": [
+            "7人"
+          ]
+        },
+        {
+          "id": "east_lead",
+          "question": "東地区の確定した責任者は誰か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 7.8157500247471035,
+        "adapter": 14.285833982285112
+      },
+      "extracted_characters": 156,
+      "adapter_characters": 157,
+      "adapter_blocks": 1
+    },
+    {
+      "id": "syn-raster",
+      "kind": "synthetic",
+      "tags": [
+        "image_only",
+        "signed_number",
+        "units",
+        "unknown"
+      ],
+      "source": {
+        "filename": "input.pdf",
+        "sha256": "4ec0810c772f9bc1fd2c5233a91d9ff82f040d1cd4c44d3620d2c3509143534c"
+      },
+      "pdf": {
+        "path": "syn-raster/input.pdf",
+        "sha256": "4ec0810c772f9bc1fd2c5233a91d9ff82f040d1cd4c44d3620d2c3509143534c"
+      },
+      "images": [
+        {
+          "path": "syn-raster/page-1.png",
+          "sha256": "51ba037991c66b13566fbfece6443764d27fc5d253605a8d5e69cb1cceb4ffe2",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "syn-raster/text.json",
+        "sha256": "be0ada80ff9f5f02aa63918527b960aee2242402e538dfeb5cd7f02e3b7e7aaf"
+      },
+      "adapter": {
+        "path": "syn-raster/adapter.json",
+        "sha256": "3242aea355f10b0c819306e0b42e463b3df0a9d988a4b57f652a27de1074c453"
+      },
+      "fields": [
+        {
+          "id": "s041_value",
+          "question": "測定ID S-041 の測定値を単位付きで答える。",
+          "accepted": [
+            "0.105 mm"
+          ],
+          "page": 1,
+          "evidence": [
+            "0.105 mm"
+          ],
+          "anchors": [
+            "0.105"
+          ]
+        },
+        {
+          "id": "s014_value",
+          "question": "測定ID S-014 の測定値を符号・単位付きで答える。",
+          "accepted": [
+            "-0.015 mm"
+          ],
+          "page": 1,
+          "evidence": [
+            "-0.015 mm"
+          ],
+          "anchors": [
+            "-0.015"
+          ]
+        },
+        {
+          "id": "s140_status",
+          "question": "測定ID S-140 の合否欄は何か。",
+          "accepted": [
+            "不合格"
+          ],
+          "page": 1,
+          "evidence": [
+            "不合格"
+          ],
+          "anchors": [
+            "不合格"
+          ]
+        },
+        {
+          "id": "s014_date",
+          "question": "S-014 の確定した再検日を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "inspector",
+          "question": "検査担当の氏名を答える。",
+          "accepted": [
+            "星野"
+          ],
+          "page": 1,
+          "evidence": [
+            "検査担当：星野。"
+          ],
+          "anchors": [
+            "星野"
+          ]
+        },
+        {
+          "id": "retest_lead",
+          "question": "再検責任者の氏名は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "再検責任者は未記載。"
+          ],
+          "anchors": [
+            "未記載"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 2.403167018201202,
+        "adapter": 9.348750027129427
+      },
+      "extracted_characters": 0,
+      "adapter_characters": 0,
+      "adapter_blocks": 1
+    },
+    {
+      "id": "da-development",
+      "kind": "digital_agency",
+      "tags": [
+        "timeline",
+        "planned_vs_fixed",
+        "unknown"
+      ],
+      "source": {
+        "filename": "別添10 アプリケーション開発の進め方（想定）.pdf",
+        "sha256": "e7a30e1cb525bead5dc3aa1f2e1c6deefc6de5b156359fc081ce772e83d80486"
+      },
+      "pdf": {
+        "path": "da-development/input.pdf",
+        "sha256": "b97fc42f53d3c7382e65aebbbdb8c427e87585ba4017fcd92f123307cf21ec30"
+      },
+      "images": [
+        {
+          "path": "da-development/page-1.png",
+          "sha256": "5d66e9981f37837d7dcb7282ced81fa85af9b06d8c9fce24a937de997dc8eee5",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "da-development/text.json",
+        "sha256": "59f7b70f0cd769740e0fd22256a1fbdfcb4bdf0e11fc127ee55228054d5f655b"
+      },
+      "adapter": {
+        "path": "da-development/adapter.json",
+        "sha256": "1827c08731cd0a01e2ff17e95a57beba969ddd76eedc697b50b7e223a832e931"
+      },
+      "fields": [
+        {
+          "id": "beta_desired",
+          "question": "ベータ版1stリリースを行いたい時期として本文に書かれた年と季節は何か。",
+          "accepted": [
+            "2023年夏"
+          ],
+          "page": 1,
+          "evidence": [
+            "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。（協議の上決定する）"
+          ],
+          "anchors": [
+            "2023年夏"
+          ]
+        },
+        {
+          "id": "beta_fixed",
+          "question": "ベータ版1stリリースの確定した年月日は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。（協議の上決定する）"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "sprint_length",
+          "question": "確定したスプリントの期間を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "スプリントの期間やリリース頻度は未定。（協議の上決定する）"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "formal_period",
+          "question": "本文③に書かれた新正式版リリースの時期を、年を補わず答える。",
+          "accepted": [
+            "3月下旬"
+          ],
+          "page": 1,
+          "evidence": [
+            "３月下旬に(新)正式版のリリースを行う。（具体的な日程は協議の上決定する）"
+          ],
+          "anchors": [
+            "3月下旬"
+          ]
+        },
+        {
+          "id": "formal_exact",
+          "question": "新正式版リリースの確定した具体的な年月日は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "３月下旬に(新)正式版のリリースを行う。（具体的な日程は協議の上決定する）"
+          ],
+          "anchors": [
+            "協議の上決定"
+          ]
+        },
+        {
+          "id": "development_order",
+          "question": "本文②では、何の優先順に開発を進めるか。対象の名称だけ答える。",
+          "accepted": [
+            "プロダクトバックログ"
+          ],
+          "page": 1,
+          "evidence": [
+            "プロダクトバックログの優先順に開発を進め、順次リリースを行う。"
+          ],
+          "anchors": [
+            "プロダクトバックログ"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 38.55483399820514,
+        "adapter": 50.91008299496025
+      },
+      "extracted_characters": 518,
+      "adapter_characters": 518,
+      "adapter_blocks": 1
+    },
+    {
+      "id": "da-roles",
+      "kind": "digital_agency",
+      "tags": [
+        "diagram_vs_table",
+        "role_binding",
+        "unknown"
+      ],
+      "source": {
+        "filename": "別添12 デジタル庁の体制（想定）.pdf",
+        "sha256": "3d08c7da34433881a47543cdecabc194cb7a8414b1d147e42c736f2ee73678e2"
+      },
+      "pdf": {
+        "path": "da-roles/input.pdf",
+        "sha256": "88fd9f801ac91a17c761715b94031c5581a0cf151074d966be217a38d0885798"
+      },
+      "images": [
+        {
+          "path": "da-roles/page-1.png",
+          "sha256": "6abeecca12f39439ac028201a8f1b7f1834cb5718eb750ebccf0c01594e231ec",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "da-roles/text.json",
+        "sha256": "bb9a064461e0069edaedd00e50b53342775ff98d67037a2cbe807c69d5b34911"
+      },
+      "adapter": {
+        "path": "da-roles/adapter.json",
+        "sha256": "71359a133f0cb1ffc1e349dd326b073e81c1b3875f95c490ec7d4ddf5a5df553"
+      },
+      "fields": [
+        {
+          "id": "table_decision",
+          "question": "下半分の表で、本事業の執行責任を持ち決裁を行うポジション名は何か。",
+          "accepted": [
+            "事業責任者"
+          ],
+          "page": 1,
+          "evidence": [
+            "事業責任者 本事業の執行責任を持ち決裁を行う 定期的な状況報告を受け、事業全体に関わる重要な意思決定やリリースの承認を行う"
+          ],
+          "anchors": [
+            "事業責任者",
+            "執行責任"
+          ]
+        },
+        {
+          "id": "diagram_decision",
+          "question": "上半分の図で「執行責任・決裁」の領域に置かれた白い箱の役職名を、そのまま答える。",
+          "accepted": [
+            "プロジェクトマネージャー"
+          ],
+          "page": 1,
+          "evidence": [
+            "プロジェクトマネージャー"
+          ],
+          "anchors": [
+            "プロジェクトマネージャー"
+          ]
+        },
+        {
+          "id": "backlog_role",
+          "question": "表で、プロダクトバックログの優先順位を決定・承認するポジション名は何か。",
+          "accepted": [
+            "PdM／プロダクトマネージャー",
+            "プロダクトマネージャー",
+            "PdM"
+          ],
+          "page": 1,
+          "evidence": [
+            "PdM／プロダクトマネージャー プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+          ],
+          "anchors": [
+            "プロダクトバックログ",
+            "プロダクトマネージャー",
+            "PdM"
+          ]
+        },
+        {
+          "id": "code_review_role",
+          "question": "表で、コードレビュー等でアプリケーション開発業務を支援するポジション名は何か。",
+          "accepted": [
+            "エンジニア"
+          ],
+          "page": 1,
+          "evidence": [
+            "エンジニア 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+          ],
+          "anchors": [
+            "エンジニア",
+            "コードレビュー"
+          ]
+        },
+        {
+          "id": "staff_count",
+          "question": "エンジニアに配置する確定人数を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "各ポジションへの配置人数は未定である。"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "contract_role",
+          "question": "表で、契約や予算関連の管理業務を行うポジション名は何か。",
+          "accepted": [
+            "PjM／プロジェクトマネージャー",
+            "プロジェクトマネージャー",
+            "PjM"
+          ],
+          "page": 1,
+          "evidence": [
+            "PjM／プロジェクトマネージャー 事業全体の計画策定や推進、契約や予算関連の管理業務を行う"
+          ],
+          "anchors": [
+            "プロジェクトマネージャー",
+            "PjM",
+            "契約"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 32.37924998393282,
+        "adapter": 82.30524999089539
+      },
+      "extracted_characters": 686,
+      "adapter_characters": 685,
+      "adapter_blocks": 2
+    },
+    {
+      "id": "da-story-policy",
+      "kind": "digital_agency",
+      "tags": [
+        "table",
+        "negative_condition",
+        "unknown"
+      ],
+      "source": {
+        "filename": "別添6 要求事項一覧_ストーリー定義.pdf",
+        "sha256": "ff9413ba6ac4f8799c687424cbe7c80bd4aad147aa6021e72a697ce6f4e980bc"
+      },
+      "pdf": {
+        "path": "da-story-policy/input.pdf",
+        "sha256": "24b5397781b317be53132c3fd161787bc9b48f413ff76af67a7c9cdef21337be"
+      },
+      "images": [
+        {
+          "path": "da-story-policy/page-1.png",
+          "sha256": "06906012624463df8757a56b0b6e0628f4668dd4529315cd356f0d90516845cf",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "da-story-policy/text.json",
+        "sha256": "e1ef5ae71c3a5631c810880df0f1458746d664db6be35e4a4ee31531a66acb68"
+      },
+      "adapter": {
+        "path": "da-story-policy/adapter.json",
+        "sha256": "dc611c674e4d392f03c3c5d11241f8971048040d4a1a9f951a26a1e220c99978"
+      },
+      "fields": [
+        {
+          "id": "keep_flow",
+          "question": "既存のフローをほぼ維持しつつ主に表現を見直す方針のラベル名は何か。",
+          "accepted": [
+            "新 UI へ移管し提供"
+          ],
+          "page": 1,
+          "evidence": [
+            "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+          ],
+          "anchors": [
+            "新UIへ移管し提供",
+            "既存のフロー"
+          ]
+        },
+        {
+          "id": "link_label",
+          "question": "現マイナポへのリンクをベータ版環境に設置する方針のラベル名は何か。",
+          "accepted": [
+            "現マイナポに残し誘導"
+          ],
+          "page": 1,
+          "evidence": [
+            "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+          ],
+          "anchors": [
+            "現マイナポに残し誘導",
+            "リンク"
+          ]
+        },
+        {
+          "id": "link_screen",
+          "question": "「現マイナポに残し誘導」はベータ版環境で画面を「提供する」「提供しない」のどちらか。",
+          "accepted": [
+            "提供しない"
+          ],
+          "page": 1,
+          "evidence": [
+            "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+          ],
+          "anchors": [
+            "提供しない"
+          ]
+        },
+        {
+          "id": "alpha_label",
+          "question": "アルファ版ですでに実現しているストーリーを扱うラベル名は何か。",
+          "accepted": [
+            "アルファ版を保持拡充"
+          ],
+          "page": 1,
+          "evidence": [
+            "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+          ],
+          "anchors": [
+            "アルファ版を保持拡充",
+            "実現"
+          ]
+        },
+        {
+          "id": "pending_detail",
+          "question": "「要検討」行の詳細として具体的な方針は何か。横線だけならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": null,
+          "evidence": [],
+          "anchors": []
+        },
+        {
+          "id": "research_label",
+          "question": "ニーズやあるべき姿、実績などを調べてから開発方針を決定するラベル名は何か。",
+          "accepted": [
+            "調査"
+          ],
+          "page": 1,
+          "evidence": [
+            "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+          ],
+          "anchors": [
+            "調査"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 113.09658299433067,
+        "adapter": 113.36012501851656
+      },
+      "extracted_characters": 323,
+      "adapter_characters": 313,
+      "adapter_blocks": 11
+    },
+    {
+      "id": "da-definitions-image",
+      "kind": "digital_agency",
+      "tags": [
+        "image_only",
+        "table",
+        "diagram",
+        "unknown"
+      ],
+      "source": {
+        "filename": "別添9 要求事項一覧_定義.pdf",
+        "sha256": "1b0fe85ad145bd5c7e30222ab93cb92bc232aa5a94e2e76dad9721edc7b8eb30"
+      },
+      "pdf": {
+        "path": "da-definitions-image/input.pdf",
+        "sha256": "933d5996f3906e2897240e2ba7ed9bdeec6a8160f2c9b89e19617bb16b5a440a"
+      },
+      "images": [
+        {
+          "path": "da-definitions-image/page-1.png",
+          "sha256": "340fb312bd4a15390132b770b95b79bbe0086e752db1f686adc2f513f0383a79",
+          "page": 1
+        }
+      ],
+      "text": {
+        "path": "da-definitions-image/text.json",
+        "sha256": "be0ada80ff9f5f02aa63918527b960aee2242402e538dfeb5cd7f02e3b7e7aaf"
+      },
+      "adapter": {
+        "path": "da-definitions-image/adapter.json",
+        "sha256": "0c1778410f668f7fc66946add552792b3eacb4723d649e658bada6d1d7c9ae13"
+      },
+      "fields": [
+        {
+          "id": "initiative_sample_date",
+          "question": "表のInitiative行のSampleにある、全人類土星移住の年月を答える。",
+          "accepted": [
+            "2060年11月"
+          ],
+          "page": 1,
+          "evidence": [
+            "2060年11月の全人類土星移住"
+          ],
+          "anchors": [
+            "2060年11月"
+          ]
+        },
+        {
+          "id": "epic_sample_date",
+          "question": "表のEpic行のSampleにある、シャトル初回打ち上げの年月を答える。",
+          "accepted": [
+            "2050年3月"
+          ],
+          "page": 1,
+          "evidence": [
+            "2050年3月のシャトル初回打ち上げ"
+          ],
+          "anchors": [
+            "2050年3月"
+          ]
+        },
+        {
+          "id": "story_link",
+          "question": "Storyと紐付ける対象を、図の右側の灰色の箱の表記で答える。",
+          "accepted": [
+            "既存マイナポ機能"
+          ],
+          "page": 1,
+          "evidence": [
+            "既存マイナポ機能"
+          ],
+          "anchors": [
+            "既存マイナポ機能"
+          ]
+        },
+        {
+          "id": "objectives_count",
+          "question": "本文でInitiativeが連動すると書かれたObjectiveの点数を数字のみで答える。",
+          "accepted": [
+            "3"
+          ],
+          "page": 1,
+          "evidence": [
+            "InitiativeはObjective3点と連動します。"
+          ],
+          "anchors": [
+            "3点"
+          ]
+        },
+        {
+          "id": "subtasks_sample",
+          "question": "表のSubtasks行のSample欄の内容を答える。空欄ならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": null,
+          "evidence": [],
+          "anchors": []
+        },
+        {
+          "id": "diagram_top",
+          "question": "構成図の最上段にある灰色の箱の英語表記を答える。",
+          "accepted": [
+            "Beta Objectives"
+          ],
+          "page": 1,
+          "evidence": [
+            "Beta Objectives"
+          ],
+          "anchors": [
+            "Beta Objectives"
+          ]
+        }
+      ],
+      "preparation_ms": {
+        "text": 221.29670798312873,
+        "adapter": 215.5748330114875
+      },
+      "extracted_characters": 0,
+      "adapter_characters": 0,
+      "adapter_blocks": 1
+    }
+  ],
+  "created_at": "2026-10-14T16:41:30.773317+00:00",
+  "visual_review": {
+    "note": "Agent visually inspected all 9 rendered pages, checked all 48 gold fields against source images, and verified embedded synthetic glyphs. Real labels preserve diagram/table disagreement. Not independent human gold.",
+    "at": "2026-10-14T16:43:43.423921+00:00"
+  }
+}

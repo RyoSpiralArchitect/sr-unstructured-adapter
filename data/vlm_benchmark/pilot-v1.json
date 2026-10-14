@@ -1,0 +1,1077 @@
+{
+  "schema_version": 1,
+  "annotation_status": "Agent-authored gold; real source pages visually inspected before inference; not independent human validation.",
+  "cases": [
+    {
+      "id": "syn-budget",
+      "kind": "synthetic",
+      "tags": [
+        "table",
+        "units",
+        "similar_ids",
+        "unknown"
+      ],
+      "source_pages": [
+        1
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "北星研究室 / 調達一覧（確定版）",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "品目ID",
+                    "品目",
+                    "数量",
+                    "単価（円）",
+                    "納期"
+                  ],
+                  [
+                    "A-017",
+                    "センサー",
+                    "１２台",
+                    "12,500",
+                    "2026年11月6日"
+                  ],
+                  [
+                    "A-071",
+                    "制御基板",
+                    "3枚",
+                    "125,000",
+                    "未定"
+                  ],
+                  [
+                    "B-004",
+                    "電源",
+                    "0台",
+                    "8,050",
+                    "2026年11月9日"
+                  ]
+                ],
+                "widths": [
+                  105,
+                  170,
+                  105,
+                  160,
+                  230
+                ],
+                "x": 36,
+                "top": 120
+              }
+            ],
+            "notes": [
+              "単価は税抜。数量と単価を掛けた値は記載していない。",
+              "承認者：未定。"
+            ]
+          }
+        ],
+        "raster_only": false
+      },
+      "fields": [
+        {
+          "id": "sensor_price",
+          "question": "品目ID A-017 の単価は何円か。円を付けて答える。",
+          "accepted": [
+            "12500円"
+          ],
+          "page": 1,
+          "evidence": [
+            "12,500"
+          ],
+          "anchors": [
+            "12,500"
+          ]
+        },
+        {
+          "id": "board_price",
+          "question": "品目ID A-071 の単価は何円か。円を付けて答える。",
+          "accepted": [
+            "125000円"
+          ],
+          "page": 1,
+          "evidence": [
+            "125,000"
+          ],
+          "anchors": [
+            "125,000"
+          ]
+        },
+        {
+          "id": "sensor_quantity",
+          "question": "A-017 の数量を単位付きで答える。",
+          "accepted": [
+            "12台"
+          ],
+          "page": 1,
+          "evidence": [
+            "１２台"
+          ],
+          "anchors": [
+            "12台"
+          ]
+        },
+        {
+          "id": "power_quantity",
+          "question": "B-004 の数量を単位付きで答える。",
+          "accepted": [
+            "0台"
+          ],
+          "page": 1,
+          "evidence": [
+            "0台"
+          ],
+          "anchors": [
+            "0台"
+          ]
+        },
+        {
+          "id": "board_date",
+          "question": "A-071 の確定納期を日付で答える。未定ならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "approver",
+          "question": "確定した承認者の氏名は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "承認者：未定。"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "syn-revisions",
+      "kind": "synthetic",
+      "tags": [
+        "multipage",
+        "version",
+        "signed_number",
+        "unknown"
+      ],
+      "source_pages": [
+        1,
+        2
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "青藍試験設備 / 旧版 / 参照のみ",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "項目",
+                    "値"
+                  ],
+                  [
+                    "図番",
+                    "R-108"
+                  ],
+                  [
+                    "圧力上限",
+                    "1.25 MPa"
+                  ],
+                  [
+                    "ゼロ点補正",
+                    "-0.08 mm"
+                  ],
+                  [
+                    "発効日",
+                    "2026年10月1日"
+                  ],
+                  [
+                    "承認者",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  280,
+                  490
+                ],
+                "x": 36,
+                "top": 120
+              }
+            ],
+            "notes": [
+              "旧版と現行版を混同しないこと。"
+            ]
+          },
+          {
+            "title": "青藍試験設備 / 現行版 / 本番適用",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "項目",
+                    "値"
+                  ],
+                  [
+                    "図番",
+                    "R-180"
+                  ],
+                  [
+                    "圧力上限",
+                    "1.52 MPa"
+                  ],
+                  [
+                    "ゼロ点補正",
+                    "-0.03 mm"
+                  ],
+                  [
+                    "発効日",
+                    "2026年10月12日"
+                  ],
+                  [
+                    "承認者",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  280,
+                  490
+                ],
+                "x": 36,
+                "top": 120
+              }
+            ],
+            "notes": [
+              "旧版と現行版を混同しないこと。"
+            ]
+          }
+        ],
+        "raster_only": false
+      },
+      "fields": [
+        {
+          "id": "current_id",
+          "question": "現行版の図番は何か。",
+          "accepted": [
+            "R-180"
+          ],
+          "page": 2,
+          "evidence": [
+            "R-180"
+          ],
+          "anchors": [
+            "R-180"
+          ]
+        },
+        {
+          "id": "current_pressure",
+          "question": "現行版の圧力上限を単位付きで答える。",
+          "accepted": [
+            "1.52 MPa"
+          ],
+          "page": 2,
+          "evidence": [
+            "1.52 MPa"
+          ],
+          "anchors": [
+            "1.52"
+          ]
+        },
+        {
+          "id": "old_pressure",
+          "question": "旧版の圧力上限を単位付きで答える。",
+          "accepted": [
+            "1.25 MPa"
+          ],
+          "page": 1,
+          "evidence": [
+            "1.25 MPa"
+          ],
+          "anchors": [
+            "1.25"
+          ]
+        },
+        {
+          "id": "current_offset",
+          "question": "現行版のゼロ点補正を符号・単位付きで答える。",
+          "accepted": [
+            "-0.03 mm"
+          ],
+          "page": 2,
+          "evidence": [
+            "-0.03 mm"
+          ],
+          "anchors": [
+            "-0.03"
+          ]
+        },
+        {
+          "id": "current_date",
+          "question": "現行版の発効日はいつか。",
+          "accepted": [
+            "2026年10月12日"
+          ],
+          "page": 2,
+          "evidence": [
+            "2026年10月12日"
+          ],
+          "anchors": [
+            "2026年10月12日"
+          ]
+        },
+        {
+          "id": "current_approver",
+          "question": "現行版の確定した承認者は誰か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 2,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "syn-columns",
+      "kind": "synthetic",
+      "tags": [
+        "columns",
+        "row_binding",
+        "unknown"
+      ],
+      "source_pages": [
+        1
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "霧原観測所 / 地区別運用表",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "東地区",
+                    "値"
+                  ],
+                  [
+                    "稼働台数",
+                    "18台"
+                  ],
+                  [
+                    "停止台数",
+                    "2台"
+                  ],
+                  [
+                    "温度上限",
+                    "38.5 ℃"
+                  ],
+                  [
+                    "責任者",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  165,
+                  200
+                ],
+                "x": 36,
+                "top": 120
+              },
+              {
+                "rows": [
+                  [
+                    "西地区",
+                    "値"
+                  ],
+                  [
+                    "稼働台数",
+                    "81台"
+                  ],
+                  [
+                    "停止台数",
+                    "0台"
+                  ],
+                  [
+                    "温度上限",
+                    "35.8 ℃"
+                  ],
+                  [
+                    "責任者",
+                    "田中"
+                  ]
+                ],
+                "widths": [
+                  165,
+                  200
+                ],
+                "x": 441,
+                "top": 120
+              }
+            ],
+            "notes": [
+              "配置人数：東地区 4人、西地区 7人。",
+              "台数と配置人数は別の指標である。"
+            ]
+          }
+        ],
+        "raster_only": false
+      },
+      "fields": [
+        {
+          "id": "east_running",
+          "question": "東地区の稼働台数を単位付きで答える。",
+          "accepted": [
+            "18台"
+          ],
+          "page": 1,
+          "evidence": [
+            "18台"
+          ],
+          "anchors": [
+            "18"
+          ]
+        },
+        {
+          "id": "west_running",
+          "question": "西地区の稼働台数を単位付きで答える。",
+          "accepted": [
+            "81台"
+          ],
+          "page": 1,
+          "evidence": [
+            "81台"
+          ],
+          "anchors": [
+            "81"
+          ]
+        },
+        {
+          "id": "west_stopped",
+          "question": "西地区の停止台数を単位付きで答える。",
+          "accepted": [
+            "0台"
+          ],
+          "page": 1,
+          "evidence": [
+            "0台"
+          ],
+          "anchors": [
+            "0台"
+          ]
+        },
+        {
+          "id": "east_temp",
+          "question": "東地区の温度上限を単位付きで答える。",
+          "accepted": [
+            "38.5 ℃",
+            "38.5°C"
+          ],
+          "page": 1,
+          "evidence": [
+            "38.5 ℃"
+          ],
+          "anchors": [
+            "38.5"
+          ]
+        },
+        {
+          "id": "west_staff",
+          "question": "西地区の配置人数を単位付きで答える。",
+          "accepted": [
+            "7人"
+          ],
+          "page": 1,
+          "evidence": [
+            "配置人数：東地区 4人、西地区 7人。"
+          ],
+          "anchors": [
+            "7人"
+          ]
+        },
+        {
+          "id": "east_lead",
+          "question": "東地区の確定した責任者は誰か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "syn-raster",
+      "kind": "synthetic",
+      "tags": [
+        "image_only",
+        "signed_number",
+        "units",
+        "unknown"
+      ],
+      "source_pages": [
+        1
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "凪検査室 / 測定記録（画像保存）",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "測定ID",
+                    "測定値",
+                    "合否",
+                    "再検日"
+                  ],
+                  [
+                    "S-041",
+                    "0.105 mm",
+                    "合格",
+                    "2026年12月3日"
+                  ],
+                  [
+                    "S-014",
+                    "-0.015 mm",
+                    "保留",
+                    "未定"
+                  ],
+                  [
+                    "S-140",
+                    "1.050 mm",
+                    "不合格",
+                    "2026年12月9日"
+                  ]
+                ],
+                "widths": [
+                  150,
+                  210,
+                  150,
+                  260
+                ],
+                "x": 36,
+                "top": 120
+              }
+            ],
+            "notes": [
+              "測定値の符号と小数点位置を維持すること。",
+              "検査担当：星野。再検責任者は未記載。"
+            ]
+          }
+        ],
+        "raster_only": true
+      },
+      "fields": [
+        {
+          "id": "s041_value",
+          "question": "測定ID S-041 の測定値を単位付きで答える。",
+          "accepted": [
+            "0.105 mm"
+          ],
+          "page": 1,
+          "evidence": [
+            "0.105 mm"
+          ],
+          "anchors": [
+            "0.105"
+          ]
+        },
+        {
+          "id": "s014_value",
+          "question": "測定ID S-014 の測定値を符号・単位付きで答える。",
+          "accepted": [
+            "-0.015 mm"
+          ],
+          "page": 1,
+          "evidence": [
+            "-0.015 mm"
+          ],
+          "anchors": [
+            "-0.015"
+          ]
+        },
+        {
+          "id": "s140_status",
+          "question": "測定ID S-140 の合否欄は何か。",
+          "accepted": [
+            "不合格"
+          ],
+          "page": 1,
+          "evidence": [
+            "不合格"
+          ],
+          "anchors": [
+            "不合格"
+          ]
+        },
+        {
+          "id": "s014_date",
+          "question": "S-014 の確定した再検日を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "inspector",
+          "question": "検査担当の氏名を答える。",
+          "accepted": [
+            "星野"
+          ],
+          "page": 1,
+          "evidence": [
+            "検査担当：星野。"
+          ],
+          "anchors": [
+            "星野"
+          ]
+        },
+        {
+          "id": "retest_lead",
+          "question": "再検責任者の氏名は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "再検責任者は未記載。"
+          ],
+          "anchors": [
+            "未記載"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "da-development",
+      "kind": "digital_agency",
+      "tags": [
+        "timeline",
+        "planned_vs_fixed",
+        "unknown"
+      ],
+      "filename": "別添10 アプリケーション開発の進め方（想定）.pdf",
+      "source_sha256": "e7a30e1cb525bead5dc3aa1f2e1c6deefc6de5b156359fc081ce772e83d80486",
+      "source_pages": [
+        1
+      ],
+      "fields": [
+        {
+          "id": "beta_desired",
+          "question": "ベータ版1stリリースを行いたい時期として本文に書かれた年と季節は何か。",
+          "accepted": [
+            "2023年夏"
+          ],
+          "page": 1,
+          "evidence": [
+            "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。（協議の上決定する）"
+          ],
+          "anchors": [
+            "2023年夏"
+          ]
+        },
+        {
+          "id": "beta_fixed",
+          "question": "ベータ版1stリリースの確定した年月日は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。（協議の上決定する）"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "sprint_length",
+          "question": "確定したスプリントの期間を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "スプリントの期間やリリース頻度は未定。（協議の上決定する）"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "formal_period",
+          "question": "本文③に書かれた新正式版リリースの時期を、年を補わず答える。",
+          "accepted": [
+            "3月下旬"
+          ],
+          "page": 1,
+          "evidence": [
+            "３月下旬に(新)正式版のリリースを行う。（具体的な日程は協議の上決定する）"
+          ],
+          "anchors": [
+            "3月下旬"
+          ]
+        },
+        {
+          "id": "formal_exact",
+          "question": "新正式版リリースの確定した具体的な年月日は何か。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "３月下旬に(新)正式版のリリースを行う。（具体的な日程は協議の上決定する）"
+          ],
+          "anchors": [
+            "協議の上決定"
+          ]
+        },
+        {
+          "id": "development_order",
+          "question": "本文②では、何の優先順に開発を進めるか。対象の名称だけ答える。",
+          "accepted": [
+            "プロダクトバックログ"
+          ],
+          "page": 1,
+          "evidence": [
+            "プロダクトバックログの優先順に開発を進め、順次リリースを行う。"
+          ],
+          "anchors": [
+            "プロダクトバックログ"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "da-roles",
+      "kind": "digital_agency",
+      "tags": [
+        "diagram_vs_table",
+        "role_binding",
+        "unknown"
+      ],
+      "filename": "別添12 デジタル庁の体制（想定）.pdf",
+      "source_sha256": "3d08c7da34433881a47543cdecabc194cb7a8414b1d147e42c736f2ee73678e2",
+      "source_pages": [
+        1
+      ],
+      "fields": [
+        {
+          "id": "table_decision",
+          "question": "下半分の表で、本事業の執行責任を持ち決裁を行うポジション名は何か。",
+          "accepted": [
+            "事業責任者"
+          ],
+          "page": 1,
+          "evidence": [
+            "事業責任者 本事業の執行責任を持ち決裁を行う 定期的な状況報告を受け、事業全体に関わる重要な意思決定やリリースの承認を行う"
+          ],
+          "anchors": [
+            "事業責任者",
+            "執行責任"
+          ]
+        },
+        {
+          "id": "diagram_decision",
+          "question": "上半分の図で「執行責任・決裁」の領域に置かれた白い箱の役職名を、そのまま答える。",
+          "accepted": [
+            "プロジェクトマネージャー"
+          ],
+          "page": 1,
+          "evidence": [
+            "プロジェクトマネージャー"
+          ],
+          "anchors": [
+            "プロジェクトマネージャー"
+          ]
+        },
+        {
+          "id": "backlog_role",
+          "question": "表で、プロダクトバックログの優先順位を決定・承認するポジション名は何か。",
+          "accepted": [
+            "PdM／プロダクトマネージャー",
+            "プロダクトマネージャー",
+            "PdM"
+          ],
+          "page": 1,
+          "evidence": [
+            "PdM／プロダクトマネージャー プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+          ],
+          "anchors": [
+            "プロダクトバックログ",
+            "プロダクトマネージャー",
+            "PdM"
+          ]
+        },
+        {
+          "id": "code_review_role",
+          "question": "表で、コードレビュー等でアプリケーション開発業務を支援するポジション名は何か。",
+          "accepted": [
+            "エンジニア"
+          ],
+          "page": 1,
+          "evidence": [
+            "エンジニア 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+          ],
+          "anchors": [
+            "エンジニア",
+            "コードレビュー"
+          ]
+        },
+        {
+          "id": "staff_count",
+          "question": "エンジニアに配置する確定人数を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "各ポジションへの配置人数は未定である。"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        },
+        {
+          "id": "contract_role",
+          "question": "表で、契約や予算関連の管理業務を行うポジション名は何か。",
+          "accepted": [
+            "PjM／プロジェクトマネージャー",
+            "プロジェクトマネージャー",
+            "PjM"
+          ],
+          "page": 1,
+          "evidence": [
+            "PjM／プロジェクトマネージャー 事業全体の計画策定や推進、契約や予算関連の管理業務を行う"
+          ],
+          "anchors": [
+            "プロジェクトマネージャー",
+            "PjM",
+            "契約"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "da-story-policy",
+      "kind": "digital_agency",
+      "tags": [
+        "table",
+        "negative_condition",
+        "unknown"
+      ],
+      "filename": "別添6 要求事項一覧_ストーリー定義.pdf",
+      "source_sha256": "ff9413ba6ac4f8799c687424cbe7c80bd4aad147aa6021e72a697ce6f4e980bc",
+      "source_pages": [
+        1
+      ],
+      "fields": [
+        {
+          "id": "keep_flow",
+          "question": "既存のフローをほぼ維持しつつ主に表現を見直す方針のラベル名は何か。",
+          "accepted": [
+            "新 UI へ移管し提供"
+          ],
+          "page": 1,
+          "evidence": [
+            "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+          ],
+          "anchors": [
+            "新UIへ移管し提供",
+            "既存のフロー"
+          ]
+        },
+        {
+          "id": "link_label",
+          "question": "現マイナポへのリンクをベータ版環境に設置する方針のラベル名は何か。",
+          "accepted": [
+            "現マイナポに残し誘導"
+          ],
+          "page": 1,
+          "evidence": [
+            "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+          ],
+          "anchors": [
+            "現マイナポに残し誘導",
+            "リンク"
+          ]
+        },
+        {
+          "id": "link_screen",
+          "question": "「現マイナポに残し誘導」はベータ版環境で画面を「提供する」「提供しない」のどちらか。",
+          "accepted": [
+            "提供しない"
+          ],
+          "page": 1,
+          "evidence": [
+            "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+          ],
+          "anchors": [
+            "提供しない"
+          ]
+        },
+        {
+          "id": "alpha_label",
+          "question": "アルファ版ですでに実現しているストーリーを扱うラベル名は何か。",
+          "accepted": [
+            "アルファ版を保持拡充"
+          ],
+          "page": 1,
+          "evidence": [
+            "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+          ],
+          "anchors": [
+            "アルファ版を保持拡充",
+            "実現"
+          ]
+        },
+        {
+          "id": "pending_detail",
+          "question": "「要検討」行の詳細として具体的な方針は何か。横線だけならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": null,
+          "evidence": [],
+          "anchors": []
+        },
+        {
+          "id": "research_label",
+          "question": "ニーズやあるべき姿、実績などを調べてから開発方針を決定するラベル名は何か。",
+          "accepted": [
+            "調査"
+          ],
+          "page": 1,
+          "evidence": [
+            "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+          ],
+          "anchors": [
+            "調査"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "da-definitions-image",
+      "kind": "digital_agency",
+      "tags": [
+        "image_only",
+        "table",
+        "diagram",
+        "unknown"
+      ],
+      "filename": "別添9 要求事項一覧_定義.pdf",
+      "source_sha256": "1b0fe85ad145bd5c7e30222ab93cb92bc232aa5a94e2e76dad9721edc7b8eb30",
+      "source_pages": [
+        1
+      ],
+      "fields": [
+        {
+          "id": "initiative_sample_date",
+          "question": "表のInitiative行のSampleにある、全人類土星移住の年月を答える。",
+          "accepted": [
+            "2060年11月"
+          ],
+          "page": 1,
+          "evidence": [
+            "2060年11月の全人類土星移住"
+          ],
+          "anchors": [
+            "2060年11月"
+          ]
+        },
+        {
+          "id": "epic_sample_date",
+          "question": "表のEpic行のSampleにある、シャトル初回打ち上げの年月を答える。",
+          "accepted": [
+            "2050年3月"
+          ],
+          "page": 1,
+          "evidence": [
+            "2050年3月のシャトル初回打ち上げ"
+          ],
+          "anchors": [
+            "2050年3月"
+          ]
+        },
+        {
+          "id": "story_link",
+          "question": "Storyと紐付ける対象を、図の右側の灰色の箱の表記で答える。",
+          "accepted": [
+            "既存マイナポ機能"
+          ],
+          "page": 1,
+          "evidence": [
+            "既存マイナポ機能"
+          ],
+          "anchors": [
+            "既存マイナポ機能"
+          ]
+        },
+        {
+          "id": "objectives_count",
+          "question": "本文でInitiativeが連動すると書かれたObjectiveの点数を数字のみで答える。",
+          "accepted": [
+            "3"
+          ],
+          "page": 1,
+          "evidence": [
+            "InitiativeはObjective3点と連動します。"
+          ],
+          "anchors": [
+            "3点"
+          ]
+        },
+        {
+          "id": "subtasks_sample",
+          "question": "表のSubtasks行のSample欄の内容を答える。空欄ならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": null,
+          "evidence": [],
+          "anchors": []
+        },
+        {
+          "id": "diagram_top",
+          "question": "構成図の最上段にある灰色の箱の英語表記を答える。",
+          "accepted": [
+            "Beta Objectives"
+          ],
+          "page": 1,
+          "evidence": [
+            "Beta Objectives"
+          ],
+          "anchors": [
+            "Beta Objectives"
+          ]
+        }
+      ]
+    }
+  ]
+}

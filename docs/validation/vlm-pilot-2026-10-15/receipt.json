@@ -1,0 +1,5444 @@
+{
+  "schema_version": 1,
+  "run_id": "ae7c5098-b30a-4cab-89da-5200035b0d70",
+  "created_at": "2026-10-14T16:43:43.623954+00:00",
+  "manifest_sha256": "e4ba3d429c037695366ca32aee9642c56e7f058ba5ee8b777d031845c49d9d57",
+  "model": "gpt-4.1-mini-2025-04-14",
+  "repeats": 2,
+  "planned_requests": 48,
+  "max_output_tokens_per_request": 1600,
+  "retry_policy": "none; interrupted/ambiguous requests are not resumed",
+  "results": [
+    {
+      "case_id": "syn-columns",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "8e5dbddebeee6aa9919bffc34275a853d76b60503e474b009263789e8e915b3b",
+      "request_id": "42f94844-a716-4aeb-91d7-95278d0fd2ae",
+      "http_status": 200,
+      "provider_request_id": "req_3e3880eb298442998ba23b2964f0d5da",
+      "response_sha256": "87c0818e382de3ec64b9d3d3ccfa3fa9e74cd2544be64f9e85ed704527d36027",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4281,
+        "completion_tokens": 207,
+        "total_tokens": 4488,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "east_running",
+            "actual": {
+              "value": "18台",
+              "page": 1,
+              "quote": "東地区 稼働台数 18台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_running",
+            "actual": {
+              "value": "81台",
+              "page": 1,
+              "quote": "西地区 稼働台数 81台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_stopped",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "西地区 停止台数 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_temp",
+            "actual": {
+              "value": "38.5 ℃",
+              "page": 1,
+              "quote": "東地区 温度上限 38.5 ℃"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_staff",
+            "actual": {
+              "value": "7人",
+              "page": 1,
+              "quote": "配置人数：東地区 4人、西地区 7人。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_lead",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "東地区 責任者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 7912.33
+    },
+    {
+      "case_id": "syn-columns",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "8e8ee2e5a41733c112ea242a85ce5fc3d2931ed8fc9d048491c9bc042cdb7b49",
+      "request_id": "f56c5eb9-a563-47bf-ac7f-a7d32c8a3b75",
+      "http_status": 200,
+      "provider_request_id": "req_1dcbd1daf1fb4b4b922bd68d88e8285a",
+      "response_sha256": "5788572c4fb6964ab23488c2f34a35b0f161d16f68f98e5acb8c1aabbdbe9da7",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4133,
+        "completion_tokens": 202,
+        "total_tokens": 4335,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "east_running",
+            "actual": {
+              "value": "18台",
+              "page": 1,
+              "quote": "東地区 稼働台数 18台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_running",
+            "actual": {
+              "value": "81台",
+              "page": 1,
+              "quote": "西地区 稼働台数 81台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_stopped",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "西地区 停止台数 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_temp",
+            "actual": {
+              "value": "38.5 °C",
+              "page": 1,
+              "quote": "東地区 温度上限 38.5 °C"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_staff",
+            "actual": {
+              "value": "7人",
+              "page": 1,
+              "quote": "配置人数 西地区 7人"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_lead",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "東地区 責任者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 6661.66
+    },
+    {
+      "case_id": "syn-columns",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "0a69a5aa513e1d6933454b43e760020fc4ea05db66625a9875fa3c90f38fad23",
+      "request_id": "3c142c6e-a414-4bb6-b4c4-d34eea4bd956",
+      "http_status": 200,
+      "provider_request_id": "req_eb9e081f57d744adba9b70471d09d907",
+      "response_sha256": "3d0611efd9bdf215476fe7d5441a1b2cdb510052e0959644178502cd0b3c8bcd",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4412,
+        "completion_tokens": 209,
+        "total_tokens": 4621,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "east_running",
+            "actual": {
+              "value": "18台",
+              "page": 1,
+              "quote": "東地区 稼働台数 18台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_running",
+            "actual": {
+              "value": "81台",
+              "page": 1,
+              "quote": "西地区 稼働台数 81台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_stopped",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "西地区 停止台数 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_temp",
+            "actual": {
+              "value": "38.5 °C",
+              "page": 1,
+              "quote": "東地区 温度上限 38.5 °C"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_staff",
+            "actual": {
+              "value": "7人",
+              "page": 1,
+              "quote": "配置人数:東地区 4人、西地区 7人。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_lead",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "東地区 責任者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 5686.98
+    },
+    {
+      "case_id": "syn-revisions",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "ad2c731822b41169b33073c0de9697255c96a3e567842497d89e47c244804f8f",
+      "request_id": "b43afc64-a62e-4958-9314-e7a42be4fdb6",
+      "http_status": 200,
+      "provider_request_id": "req_ab8be7380d2846faa20cd528ff431cea",
+      "response_sha256": "dfa5bc177bb04a8cb067c7ec3e651ff7e6989b7ab8761367615a8111904a568a",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 8052,
+        "completion_tokens": 209,
+        "total_tokens": 8261,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "current_id",
+            "actual": {
+              "value": "R-180",
+              "page": 2,
+              "quote": "図番 R-180"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_pressure",
+            "actual": {
+              "value": "1.52 MPa",
+              "page": 2,
+              "quote": "圧力上限 1.52 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "old_pressure",
+            "actual": {
+              "value": "1.25 MPa",
+              "page": 1,
+              "quote": "圧力上限 1.25 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_offset",
+            "actual": {
+              "value": "-0.03 mm",
+              "page": 2,
+              "quote": "ゼロ点補正 -0.03 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_date",
+            "actual": {
+              "value": "2026年10月12日",
+              "page": 2,
+              "quote": "発効日 2026年10月12日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_approver",
+            "actual": {
+              "value": "未定",
+              "page": 2,
+              "quote": "承認者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 7379.0
+    },
+    {
+      "case_id": "syn-revisions",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "c86cea31d673ab06dc9bc254bf2b910f70d3b3f299ec03809ce813da86290634",
+      "request_id": "025d5555-f497-44c6-bad5-288402d9a0ed",
+      "http_status": 200,
+      "provider_request_id": "req_63463ca0f39d4da8879b19c252b4a440",
+      "response_sha256": "8c7625b1281acbede0dc071c4a608109417e6145020dc35e72b7c0141460f808",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 11357,
+        "completion_tokens": 209,
+        "total_tokens": 11566,
+        "prompt_tokens_details": {
+          "cached_tokens": 6272,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "current_id",
+            "actual": {
+              "value": "R-180",
+              "page": 2,
+              "quote": "図番 R-180"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_pressure",
+            "actual": {
+              "value": "1.52 MPa",
+              "page": 2,
+              "quote": "圧力上限 1.52 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "old_pressure",
+            "actual": {
+              "value": "1.25 MPa",
+              "page": 1,
+              "quote": "圧力上限 1.25 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_offset",
+            "actual": {
+              "value": "-0.03 mm",
+              "page": 2,
+              "quote": "ゼロ点補正 -0.03 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_date",
+            "actual": {
+              "value": "2026年10月12日",
+              "page": 2,
+              "quote": "発効日 2026年10月12日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_approver",
+            "actual": {
+              "value": "未定",
+              "page": 2,
+              "quote": "承認者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 8619.63
+    },
+    {
+      "case_id": "syn-revisions",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "3c47e5bfa5c53c8ad3272312a1bf6c1b6ebc87b38c45c62133454aa8d095e569",
+      "request_id": "83feb7fc-5462-4f6e-887c-28da0ba843e6",
+      "http_status": 200,
+      "provider_request_id": "req_9a1b0555a84c4ce0b88a71a858a7bc07",
+      "response_sha256": "274e9fa360eded72c98d5dd1910ce5496a0a4787b75d6b6a0c2bf216e5795bc4",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 7831,
+        "completion_tokens": 209,
+        "total_tokens": 8040,
+        "prompt_tokens_details": {
+          "cached_tokens": 6272,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "current_id",
+            "actual": {
+              "value": "R-180",
+              "page": 2,
+              "quote": "図番 R-180"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_pressure",
+            "actual": {
+              "value": "1.52 MPa",
+              "page": 2,
+              "quote": "圧力上限 1.52 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "old_pressure",
+            "actual": {
+              "value": "1.25 MPa",
+              "page": 1,
+              "quote": "圧力上限 1.25 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_offset",
+            "actual": {
+              "value": "-0.03 mm",
+              "page": 2,
+              "quote": "ゼロ点補正 -0.03 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_date",
+            "actual": {
+              "value": "2026年10月12日",
+              "page": 2,
+              "quote": "発効日 2026年10月12日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_approver",
+            "actual": {
+              "value": "未定",
+              "page": 2,
+              "quote": "承認者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 9052.98
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "207a435876fe509ecb4303429e0adf7998b6a6d2b4d6395467e442dfc958b4e6",
+      "request_id": "f9f85e4b-15a0-428c-9d50-c5fb6034dfbf",
+      "http_status": 200,
+      "provider_request_id": "req_65f97d8389ac4daea7acda2724e9478a",
+      "response_sha256": "a1d975b56263cfddb30e784cf58167a21ca12a9c7e2963d75f58dea5d6fc2f9e",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5051,
+        "completion_tokens": 376,
+        "total_tokens": 5427,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者 • 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁 プロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー • プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア • 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー • 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12285.83
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "89f4cb4553f1557693b40197af4c62ca729eaa3c8d7abf80ea75d08c98678973",
+      "request_id": "f0a6aed0-8454-4d04-9f0c-cd2d5bede90a",
+      "http_status": 200,
+      "provider_request_id": "req_7339fee962b841609a53f3c374a372c2",
+      "response_sha256": "fa24c357ec4a76b6d1b890a0993f489adf8741afe6f2c36f692c8d2c86f386c1",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4805,
+        "completion_tokens": 376,
+        "total_tokens": 5181,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者 • 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー • プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア • 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー • 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12981.63
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "9a6a4fb6122386ffe11afe5c12a9a1cfd82583aabb6269db5e9c7f4abbb22acf",
+      "request_id": "432a092d-d9ed-4f73-b932-b49564bd759c",
+      "http_status": 200,
+      "provider_request_id": "req_67a6a9fbb4ad4c7d89c75486851e464b",
+      "response_sha256": "410c3d4c8e7ccfc2797fd066f91293fc3a032fa53965be5352a7d88400320879",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4209,
+        "completion_tokens": 376,
+        "total_tokens": 4585,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者\n・本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー\n・プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア\n・受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー\n・契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 10851.52
+    },
+    {
+      "case_id": "syn-revisions",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "4c01c5cdab14c00ead93479d5b53803a61d85a4f2cc2f27fb0a61ba42c3b8dd5",
+      "request_id": "637d6d2b-d9af-4b1b-803c-012054511cff",
+      "http_status": 200,
+      "provider_request_id": "req_b1b4a35b2bed42bdb9c48a17e35f62f7",
+      "response_sha256": "deba3c96b711fc23a2a19a3bed6f323c6d1d3eaf7d5356d293d20b1430da3a1a",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 7831,
+        "completion_tokens": 209,
+        "total_tokens": 8040,
+        "prompt_tokens_details": {
+          "cached_tokens": 7808,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "current_id",
+            "actual": {
+              "value": "R-180",
+              "page": 2,
+              "quote": "図番 R-180"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_pressure",
+            "actual": {
+              "value": "1.52 MPa",
+              "page": 2,
+              "quote": "圧力上限 1.52 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "old_pressure",
+            "actual": {
+              "value": "1.25 MPa",
+              "page": 1,
+              "quote": "圧力上限 1.25 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_offset",
+            "actual": {
+              "value": "-0.03 mm",
+              "page": 2,
+              "quote": "ゼロ点補正 -0.03 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_date",
+            "actual": {
+              "value": "2026年10月12日",
+              "page": 2,
+              "quote": "発効日 2026年10月12日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_approver",
+            "actual": {
+              "value": "未定",
+              "page": 2,
+              "quote": "承認者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 7035.52
+    },
+    {
+      "case_id": "syn-revisions",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "c21b6b01958b5422deccaff78903ea1b28fc3927ce7cee3c20679f8c9b1dedfc",
+      "request_id": "01262ede-a416-4196-8ab8-ac1b7b310d32",
+      "http_status": 200,
+      "provider_request_id": "req_50a14a8efeb540df8a0c328103b2b20d",
+      "response_sha256": "c9d824cc157237c8552a46dec8bc4933b9e02613a6f05adfcc1e684bc7d5fa14",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 11357,
+        "completion_tokens": 245,
+        "total_tokens": 11602,
+        "prompt_tokens_details": {
+          "cached_tokens": 11264,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "current_id",
+            "actual": {
+              "value": "R-180",
+              "page": 2,
+              "quote": "図番 R-180"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_pressure",
+            "actual": {
+              "value": "1.52 MPa",
+              "page": 2,
+              "quote": "圧力上限 1.52 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "old_pressure",
+            "actual": {
+              "value": "1.25 MPa",
+              "page": 1,
+              "quote": "圧力上限 1.25 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_offset",
+            "actual": {
+              "value": "-0.03 mm",
+              "page": 2,
+              "quote": "ゼロ点補正 -0.03 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_date",
+            "actual": {
+              "value": "2026年10月12日",
+              "page": 2,
+              "quote": "発効日 2026年10月12日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_approver",
+            "actual": {
+              "value": "未定",
+              "page": 2,
+              "quote": "承認者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 7769.62
+    },
+    {
+      "case_id": "syn-revisions",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "ca6289a50ba7d9d7de84f706ad4e343d93fa152807e71de55db34ace8993aa56",
+      "request_id": "4d55b6d4-2436-45a7-ac5e-f82fef8be519",
+      "http_status": 200,
+      "provider_request_id": "req_61211057fa88451dbf0256b7a8dcca23",
+      "response_sha256": "548c70bb8b40623cc51d05b7ae1c15a10b23b6e046048e09df3e7c1726062f39",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 8052,
+        "completion_tokens": 209,
+        "total_tokens": 8261,
+        "prompt_tokens_details": {
+          "cached_tokens": 7936,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "current_id",
+            "actual": {
+              "value": "R-180",
+              "page": 2,
+              "quote": "図番 R-180"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_pressure",
+            "actual": {
+              "value": "1.52 MPa",
+              "page": 2,
+              "quote": "圧力上限 1.52 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "old_pressure",
+            "actual": {
+              "value": "1.25 MPa",
+              "page": 1,
+              "quote": "圧力上限 1.25 MPa"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_offset",
+            "actual": {
+              "value": "-0.03 mm",
+              "page": 2,
+              "quote": "ゼロ点補正 -0.03 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_date",
+            "actual": {
+              "value": "2026年10月12日",
+              "page": 2,
+              "quote": "発効日 2026年10月12日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "current_approver",
+            "actual": {
+              "value": "未定",
+              "page": 2,
+              "quote": "承認者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 10488.06
+    },
+    {
+      "case_id": "da-development",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "8e3653ee25938d25f1c167bd34720eaa336cbc45aef396a3fe47467833e4d729",
+      "request_id": "4507db01-d779-4717-8831-6c779bd004e0",
+      "http_status": 200,
+      "provider_request_id": "req_65f68af128ab4325929989826f7c4b0e",
+      "response_sha256": "6be70619721aedf912266e9682430c17f9314351ebbf93b1f2a08092b5691398",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4173,
+        "completion_tokens": 296,
+        "total_tokens": 4469,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "beta_desired",
+            "actual": {
+              "value": "2023年夏",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "beta_fixed",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "sprint_length",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "スプリントの期間やリリース頻度は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "formal_period",
+            "actual": {
+              "value": "3月下旬",
+              "page": 1,
+              "quote": "3月下旬に(新)正式版のリリースを行う。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "formal_exact",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "具体的な日程は協議の上決定する"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "development_order",
+            "actual": {
+              "value": "プロダクトバックログ",
+              "page": 1,
+              "quote": "プロダクトバックログの優先順に開発を進め"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12084.21
+    },
+    {
+      "case_id": "da-development",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "a06620cf0e7de6c64e6111aca2a2a254e9bc53ab1517b8b6ee526f1e9a1eddbd",
+      "request_id": "ad68418d-1a9c-42ea-a2f9-bc2ab05c21ba",
+      "http_status": 200,
+      "provider_request_id": "req_389ac201ffd94a618135406594880683",
+      "response_sha256": "a9a7b232d4b3719961482f01c5d6e9368a1e1132927e837875ed97e790628b40",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4610,
+        "completion_tokens": 315,
+        "total_tokens": 4925,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "beta_desired",
+            "actual": {
+              "value": "2023年夏",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "beta_fixed",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "sprint_length",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "スプリントの期間やリリース頻度は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "formal_period",
+            "actual": {
+              "value": "3月下旬",
+              "page": 1,
+              "quote": "３月下旬に(新)正式版のリリースを行う。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "formal_exact",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "３月下旬に(新)正式版のリリースを行う。（具体的な日程は協議の上決定する）"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "development_order",
+            "actual": {
+              "value": "プロダクトバックログ",
+              "page": 1,
+              "quote": "プロダクトバックログの優先順に開発を進め"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 10670.96
+    },
+    {
+      "case_id": "da-development",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "d6532f96cbdc8e488f52cd96fa3c97103b26ead3871ea19895509c93352ceaa7",
+      "request_id": "fe335269-d15c-4f7e-b0e5-abae165571ff",
+      "http_status": 200,
+      "provider_request_id": "req_910e38ddf99f46d280c23a0b28c1ca78",
+      "response_sha256": "c839783266dc988cac1ed9e4749114f9bc74a8cb3995e3783dc4d25ebc2848b1",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4736,
+        "completion_tokens": 296,
+        "total_tokens": 5032,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "beta_desired",
+            "actual": {
+              "value": "2023年夏",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "beta_fixed",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "sprint_length",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "スプリントの期間やリリース頻度は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "formal_period",
+            "actual": {
+              "value": "3月下旬",
+              "page": 1,
+              "quote": "3月下旬に(新)正式版のリリースを行う。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "formal_exact",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "具体的な日程は協議の上決定する"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "development_order",
+            "actual": {
+              "value": "プロダクトバックログ",
+              "page": 1,
+              "quote": "プロダクトバックログの優先順に開発を進め"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 9470.15
+    },
+    {
+      "case_id": "da-development",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "4b3318e9e2ee0c0b725ee81d8870a82c255728c9c5b5e54c9ae248a40a9be824",
+      "request_id": "8f5766a5-72ba-469e-b4dd-4d941c9e873b",
+      "http_status": 200,
+      "provider_request_id": "req_4c11856138cf4d23bc8a64544296f564",
+      "response_sha256": "35c3040425d67d2730ed87b3b70bab1573a762b123cc24044fe4bac514136de0",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4736,
+        "completion_tokens": 296,
+        "total_tokens": 5032,
+        "prompt_tokens_details": {
+          "cached_tokens": 4608,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "beta_desired",
+            "actual": {
+              "value": "2023年夏",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "beta_fixed",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "sprint_length",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "スプリントの期間やリリース頻度は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "formal_period",
+            "actual": {
+              "value": "3月下旬",
+              "page": 1,
+              "quote": "3月下旬に(新)正式版のリリースを行う。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "formal_exact",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "具体的な日程は協議の上決定する"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "development_order",
+            "actual": {
+              "value": "プロダクトバックログ",
+              "page": 1,
+              "quote": "プロダクトバックログの優先順に開発を進め"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 8625.11
+    },
+    {
+      "case_id": "da-development",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "551f6b9a6b685ab54bfd72c10a49b6430c983b533652082011d0605ca20ca220",
+      "request_id": "fdb50555-a0d5-499e-8144-f18522c3e126",
+      "http_status": 200,
+      "provider_request_id": "req_fddc3ca237094b5d871b678997a9f4d9",
+      "response_sha256": "da43f4f79b4a9c1dd5418049c9d1bb8dd94044eaa18700c946cecd9b5acb921b",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4173,
+        "completion_tokens": 296,
+        "total_tokens": 4469,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "beta_desired",
+            "actual": {
+              "value": "2023年夏",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "beta_fixed",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "sprint_length",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "スプリントの期間やリリース頻度は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "formal_period",
+            "actual": {
+              "value": "3月下旬",
+              "page": 1,
+              "quote": "3月下旬に(新)正式版のリリースを行う。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "formal_exact",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "具体的な日程は協議の上決定する"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "development_order",
+            "actual": {
+              "value": "プロダクトバックログ",
+              "page": 1,
+              "quote": "プロダクトバックログの優先順に開発を進め"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 11058.67
+    },
+    {
+      "case_id": "da-development",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "5a54107184dd50b8262e4e1793d08ac9544fde849380bdc425ab949a81e09e60",
+      "request_id": "f644c431-a1c6-473c-9f5d-f0c9d1d2f973",
+      "http_status": 200,
+      "provider_request_id": "req_d354a799a9044120a3b15f745ac6b3fc",
+      "response_sha256": "2457c9026eed6874710581321dbdff8dbdbd55addbd632c137357913a1d87cdc",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4610,
+        "completion_tokens": 323,
+        "total_tokens": 4933,
+        "prompt_tokens_details": {
+          "cached_tokens": 4480,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "beta_desired",
+            "actual": {
+              "value": "2023年夏",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "beta_fixed",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "ベータ版1stリリースは2023年夏に行いたいが、時期は未定。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "sprint_length",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "スプリントの期間やリリース頻度は未定。（協議の上決定する）"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "formal_period",
+            "actual": {
+              "value": "3月下旬",
+              "page": 1,
+              "quote": "３月下旬に(新)正式版のリリースを行う。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "formal_exact",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "３月下旬に(新)正式版のリリースを行う。（具体的な日程は協議の上決定する）"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "development_order",
+            "actual": {
+              "value": "プロダクトバックログ",
+              "page": 1,
+              "quote": "プロダクトバックログの優先順に開発を進め"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 11850.34
+    },
+    {
+      "case_id": "syn-budget",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "52b6a8a761621a830e04bc1288a775c21f3dee54ce1cca7765166eb2ae2b7e3d",
+      "request_id": "3e790c76-5ccf-4152-b454-5fea90c49d8a",
+      "http_status": 200,
+      "provider_request_id": "req_ef83681c3d84453cb9f8fa4192fcb24b",
+      "response_sha256": "e73fab7f4f9d2bec633e852bf3f7ad6b6920371d83002c0fea9b4dd7ad738804",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4303,
+        "completion_tokens": 194,
+        "total_tokens": 4497,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "sensor_price",
+            "actual": {
+              "value": "12,500円",
+              "page": 1,
+              "quote": "A-017 センサー 12,500"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_price",
+            "actual": {
+              "value": "125,000円",
+              "page": 1,
+              "quote": "A-071 制御基板 125,000"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "sensor_quantity",
+            "actual": {
+              "value": "12台",
+              "page": 1,
+              "quote": "A-017 センサー １２台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "power_quantity",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "B-004 電源 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_date",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "A-071 制御基板 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "approver",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "承認者：未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 5468.69
+    },
+    {
+      "case_id": "syn-budget",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "d0d07b824777cbda7c22f5ee3377689cac1840e804ffe15d7d509ffe5be40f27",
+      "request_id": "01eb5fe0-bba7-4e24-a3e1-f88e9224c3b2",
+      "http_status": 200,
+      "provider_request_id": "req_5ee540c48e6e4a8aaf016bf228f6fb5d",
+      "response_sha256": "02f685d1c81bed3ed2cfb019ee03763ee00479151b1b87c12f415c056b95951b",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4147,
+        "completion_tokens": 200,
+        "total_tokens": 4347,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "sensor_price",
+            "actual": {
+              "value": "12,500円",
+              "page": 1,
+              "quote": "A-017 センサー 12台 12,500"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_price",
+            "actual": {
+              "value": "125,000円",
+              "page": 1,
+              "quote": "A-071 制御基板 3枚 125,000"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "sensor_quantity",
+            "actual": {
+              "value": "12台",
+              "page": 1,
+              "quote": "A-017 センサー 12台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "power_quantity",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "B-004 電源 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_date",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "A-071 制御基板 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "approver",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "承認者：未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 6216.79
+    },
+    {
+      "case_id": "syn-budget",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "5eb6c1af654c52dc03a1b061f43d17a7799f896c4133ab08ddc956a16a3c1be4",
+      "request_id": "1fdc893f-6d88-4297-82dd-efaf6c5a86e8",
+      "http_status": 200,
+      "provider_request_id": "req_1f47ed87d1e44a8780fc1ed9d93f64c1",
+      "response_sha256": "0ff69a11652535f5994d0cfa072455e3b9bf6e5c1629442bf84c58bfca3ea116",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4432,
+        "completion_tokens": 241,
+        "total_tokens": 4673,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "sensor_price",
+            "actual": {
+              "value": "12,500円",
+              "page": 1,
+              "quote": "A-017 センサー 12台 12,500 2026年11月6日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_price",
+            "actual": {
+              "value": "125,000円",
+              "page": 1,
+              "quote": "A-071 制御基板 3枚 125,000 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "sensor_quantity",
+            "actual": {
+              "value": "12台",
+              "page": 1,
+              "quote": "A-017 センサー 12台 12,500 2026年11月6日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "power_quantity",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "B-004 電源 0台 8,050 2026年11月9日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_date",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "A-071 制御基板 3枚 125,000 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "approver",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "承認者:未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 9542.77
+    },
+    {
+      "case_id": "da-definitions-image",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "a30b95ee9aaf1690dc0047495628e6a991855f2097a84ba31f74b53d3ed94c17",
+      "request_id": "f6c9e77c-59ad-4968-88d4-8f73187f6282",
+      "http_status": 200,
+      "provider_request_id": "req_ab4fb212abc74e668b27497df8cd406b",
+      "response_sha256": "aeaa4a8f4ca58463d8ed76f1da0bd71259bcead7d49e25e414659c43479f6730",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4200,
+        "completion_tokens": 267,
+        "total_tokens": 4467,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "initiative_sample_date",
+            "actual": {
+              "value": "2060年11月",
+              "page": 1,
+              "quote": "Initiative ... 2060年11月の全人類土星移住"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "epic_sample_date",
+            "actual": {
+              "value": "2050年3月",
+              "page": 1,
+              "quote": "Epic ... 2050年3月のシャトル初回打ち上げ"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "story_link",
+            "actual": {
+              "value": "既存マイナポ機能",
+              "page": 1,
+              "quote": "Story ... 既存マイナポ機能と紐付け"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "objectives_count",
+            "actual": {
+              "value": "3",
+              "page": 1,
+              "quote": "InitiativeはObjective3点と連動します"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "subtasks_sample",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": ""
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_top",
+            "actual": {
+              "value": "Beta Objectives",
+              "page": 1,
+              "quote": "構成図の最上段にある灰色の箱 ... Beta Objectives"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 10996.84
+    },
+    {
+      "case_id": "da-definitions-image",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "19937aafbe5ebdff9e180853d5093ea37531554851475e0b7082e093151f723a",
+      "request_id": "65bde14b-2eae-4835-9bb3-21148340d9ce",
+      "http_status": 200,
+      "provider_request_id": "req_d132939e27cc4876a5979d2b85fdcd8e",
+      "response_sha256": "36acedd9656a47cf39f560f4e0e0135eba8a2078a880ac7e80b87835a5223cce",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4281,
+        "completion_tokens": 267,
+        "total_tokens": 4548,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "initiative_sample_date",
+            "actual": {
+              "value": "2060年11月",
+              "page": 1,
+              "quote": "Initiative ... 2060年11月の全人類土星移住"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "epic_sample_date",
+            "actual": {
+              "value": "2050年3月",
+              "page": 1,
+              "quote": "Epic ... 2050年3月のシャトル初回打ち上げ"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "story_link",
+            "actual": {
+              "value": "既存マイナポ機能",
+              "page": 1,
+              "quote": "Story ... 既存マイナポ機能と紐付け"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "objectives_count",
+            "actual": {
+              "value": "3",
+              "page": 1,
+              "quote": "InitiativeはObjective3点と連動します"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "subtasks_sample",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": ""
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_top",
+            "actual": {
+              "value": "Beta Objectives",
+              "page": 1,
+              "quote": "構成図の最上段にある灰色の箱 ... Beta Objectives"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 13987.06
+    },
+    {
+      "case_id": "da-definitions-image",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "7da8b8c8753faf8cfe20bb3a240b6079fc120759517c481fe25404244d67fcbb",
+      "request_id": "09493658-0239-4856-a45c-6d836a6bae75",
+      "http_status": 200,
+      "provider_request_id": "req_59d2b72a18604b75bfd2c555fdcc46ab",
+      "response_sha256": "fc456a8df6cb19782ba3f8f63bacbf76a4b6bdc8b03b831738b7069500447bb0",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4188,
+        "completion_tokens": 253,
+        "total_tokens": 4441,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "initiative_sample_date",
+            "actual": {
+              "value": "2060年11月",
+              "page": 1,
+              "quote": "Initiative ... 2060年11月の全人類土星移住"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "epic_sample_date",
+            "actual": {
+              "value": "2050年3月",
+              "page": 1,
+              "quote": "Epic ... 2050年3月のシャトル初回打ち上げ"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "story_link",
+            "actual": {
+              "value": "既存マイナポ機能",
+              "page": 1,
+              "quote": "Story ... 既存マイナポ機能と紐付け"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "objectives_count",
+            "actual": {
+              "value": "3",
+              "page": 1,
+              "quote": "InitiativeはObjective3点と連動します"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "subtasks_sample",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": ""
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_top",
+            "actual": {
+              "value": "Beta Objectives",
+              "page": 1,
+              "quote": "Beta Objectives"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 18208.2
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "a7838b21594f9f5603f1624dd87855e9f377c370ff8a6fb7175729d6efc72c7f",
+      "request_id": "25f3334e-97db-4a47-a172-4f0bd2885827",
+      "http_status": 200,
+      "provider_request_id": "req_168e4f44420b43329c88303a4ba56f43",
+      "response_sha256": "3bd798c1042e473b2a5ee6bcbbc6559d497a73c63d793d0e56303b666e1d89ec",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4519,
+        "completion_tokens": 297,
+        "total_tokens": 4816,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新 UI へ移管し提供",
+              "page": 1,
+              "quote": "既存のフローをほぼ維持しつつ、主に表現を⾒直し。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "ベータ版環境で画⾯を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版ですでに実現しているストーリー。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "—"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "ニーズやあるべき姿、実績などを調査。そのうえで開発⽅針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 7769.81
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "bd795b26f80da5e1fcaf9065ae6c69faf5bad56ded273a4aa8e91e8a1745a99f",
+      "request_id": "1d0ba6c5-452a-4a5d-bfc7-480f7ca37e4f",
+      "http_status": 200,
+      "provider_request_id": "req_089a5902ca6a45d49eb2085efccca663",
+      "response_sha256": "e42c1d1caf6de5537a892971a50e53d6c58f57fa3b4294075abcc47b06eafb88",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4217,
+        "completion_tokens": 353,
+        "total_tokens": 4570,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新UIへ移管し提供",
+              "page": 1,
+              "quote": "新UIへ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "要検討 ー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12807.28
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "c209622990d8c701e4944f0ea0db7dfe219c36bc4d2d1e07439e58138b600e51",
+      "request_id": "969a6781-005b-4eee-8a42-b43f1097f9e1",
+      "http_status": 200,
+      "provider_request_id": "req_2ab7bc5edad24569b553a2d0504b1fc4",
+      "response_sha256": "af33b84763b5ed332da89cf65d669a76d7615df76d319397a81fe728da4a0692",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5707,
+        "completion_tokens": 387,
+        "total_tokens": 6094,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新 UI へ移管し提供",
+              "page": 1,
+              "quote": "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "要検討 —"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 11867.36
+    },
+    {
+      "case_id": "syn-columns",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "2775682307101ad9110ef5174979f27a55bcd6ff5b5fae665616e37637f5c87d",
+      "request_id": "738f048e-3bfd-439d-892f-5c5fcb74f98f",
+      "http_status": 200,
+      "provider_request_id": "req_c76d69aeb88b44b9b8acbaa7c122995d",
+      "response_sha256": "36dcbeba17e3fb8813943eda4adea2b7997c67637229fb327b5b379ce3da987a",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4412,
+        "completion_tokens": 209,
+        "total_tokens": 4621,
+        "prompt_tokens_details": {
+          "cached_tokens": 4352,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "east_running",
+            "actual": {
+              "value": "18台",
+              "page": 1,
+              "quote": "東地区 稼働台数 18台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_running",
+            "actual": {
+              "value": "81台",
+              "page": 1,
+              "quote": "西地区 稼働台数 81台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_stopped",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "西地区 停止台数 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_temp",
+            "actual": {
+              "value": "38.5 °C",
+              "page": 1,
+              "quote": "東地区 温度上限 38.5 °C"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_staff",
+            "actual": {
+              "value": "7人",
+              "page": 1,
+              "quote": "配置人数:東地区 4人、西地区 7人。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_lead",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "東地区 責任者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 8994.15
+    },
+    {
+      "case_id": "syn-columns",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "7a150f7a85f3e9c15a15a1e03ab725d2c3cfc93338ecf139c59aaa4c5ccf2de9",
+      "request_id": "038dc28e-f18d-457e-a221-87b68df346f3",
+      "http_status": 200,
+      "provider_request_id": "req_09e4b3c98c15481386042f3494d91a2e",
+      "response_sha256": "f21e60c1cff447ff3ca23d0dbc0cf4510def0fb7bd0b4a7e86bda07043642968",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4133,
+        "completion_tokens": 203,
+        "total_tokens": 4336,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "east_running",
+            "actual": {
+              "value": "18台",
+              "page": 1,
+              "quote": "東地区 稼働台数 18台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_running",
+            "actual": {
+              "value": "81台",
+              "page": 1,
+              "quote": "西地区 稼働台数 81台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_stopped",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "西地区 停止台数 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_temp",
+            "actual": {
+              "value": "38.5 °C",
+              "page": 1,
+              "quote": "東地区 温度上限 38.5 °C"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_staff",
+            "actual": {
+              "value": "7人",
+              "page": 1,
+              "quote": "配置人数：西地区 7人"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_lead",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "東地区 責任者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 8707.74
+    },
+    {
+      "case_id": "syn-columns",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "3f9dfeb31c44163e1e5aad6d272a5a2b673afe6bcfe699bca5151df914fd5c28",
+      "request_id": "4503a2ae-0fcb-4de2-9692-52c6bc03630a",
+      "http_status": 200,
+      "provider_request_id": "req_0ddb81ae4cd944608c447b3a3b5741ce",
+      "response_sha256": "4bec284534e108ae19405dfd64bb3d70d84439c245995133bb5b5273396946ff",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4281,
+        "completion_tokens": 207,
+        "total_tokens": 4488,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "east_running",
+            "actual": {
+              "value": "18台",
+              "page": 1,
+              "quote": "東地区 稼働台数 18台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_running",
+            "actual": {
+              "value": "81台",
+              "page": 1,
+              "quote": "西地区 稼働台数 81台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_stopped",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "西地区 停止台数 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_temp",
+            "actual": {
+              "value": "38.5 ℃",
+              "page": 1,
+              "quote": "東地区 温度上限 38.5 ℃"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "west_staff",
+            "actual": {
+              "value": "7人",
+              "page": 1,
+              "quote": "配置人数：東地区 4人、西地区 7人。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "east_lead",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "東地区 責任者 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          }
+        ]
+      },
+      "elapsed_ms": 8048.8
+    },
+    {
+      "case_id": "syn-raster",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "702ca371fb84eee9ced7ee5ae35012475c536ab3e517f6661b9999b3d8ec7891",
+      "request_id": "39bdcf9a-439e-49a7-aa46-b7cb00556364",
+      "http_status": 200,
+      "provider_request_id": "req_6c98795ac21b4143af97aa19d250d0f6",
+      "response_sha256": "1727f705d07593d57903a59ac74aa40e275aaa3b979f206f8aea789a87031bc8",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4232,
+        "completion_tokens": 192,
+        "total_tokens": 4424,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "s041_value",
+            "actual": {
+              "value": "0.105 mm",
+              "page": 1,
+              "quote": "S-041 0.105 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_value",
+            "actual": {
+              "value": "-0.015 mm",
+              "page": 1,
+              "quote": "S-014 -0.015 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s140_status",
+            "actual": {
+              "value": "不合格",
+              "page": 1,
+              "quote": "S-140 不合格"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_date",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "S-014 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "inspector",
+            "actual": {
+              "value": "星野",
+              "page": 1,
+              "quote": "検査担当：星野"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "retest_lead",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "再検責任者は未記載"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 14515.59
+    },
+    {
+      "case_id": "syn-raster",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "81cdc2dd67be64a4e608134b02cf86eeac8c02fd69a51b59b9214ec5839416cc",
+      "request_id": "01618ec8-99dd-43b9-9185-747424e6741b",
+      "http_status": 200,
+      "provider_request_id": "req_8abea89444864f6da90dbc4608e0518a",
+      "response_sha256": "a5e4c08da6b0a6e2230b6660092c25d88c2fe03ebdf5ce78393d7c15c1c5ad90",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4152,
+        "completion_tokens": 192,
+        "total_tokens": 4344,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "s041_value",
+            "actual": {
+              "value": "0.105 mm",
+              "page": 1,
+              "quote": "S-041 0.105 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_value",
+            "actual": {
+              "value": "-0.015 mm",
+              "page": 1,
+              "quote": "S-014 -0.015 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s140_status",
+            "actual": {
+              "value": "不合格",
+              "page": 1,
+              "quote": "S-140 不合格"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_date",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "S-014 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "inspector",
+            "actual": {
+              "value": "星野",
+              "page": 1,
+              "quote": "検査担当：星野"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "retest_lead",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "再検責任者は未記載"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 17782.65
+    },
+    {
+      "case_id": "syn-raster",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "76577b67fbb93ab6a0dc7bd5575d8cf896555546475adb3ec0bfb4eed3a39fd3",
+      "request_id": "e8bc2c29-7d91-4375-b208-76943d9b51b9",
+      "http_status": 200,
+      "provider_request_id": "req_0cdf49fa645b4db297a743d1c2382e31",
+      "response_sha256": "8d84034d5f0a46796b84b5ee2ed4bc38b119c38186f2890fb145b506112c2d5d",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4140,
+        "completion_tokens": 192,
+        "total_tokens": 4332,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "s041_value",
+            "actual": {
+              "value": "0.105 mm",
+              "page": 1,
+              "quote": "S-041 0.105 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_value",
+            "actual": {
+              "value": "-0.015 mm",
+              "page": 1,
+              "quote": "S-014 -0.015 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s140_status",
+            "actual": {
+              "value": "不合格",
+              "page": 1,
+              "quote": "S-140 不合格"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_date",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "S-014 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "inspector",
+            "actual": {
+              "value": "星野",
+              "page": 1,
+              "quote": "検査担当：星野"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "retest_lead",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "再検責任者は未記載"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12113.19
+    },
+    {
+      "case_id": "syn-budget",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "aecb68b3851ad4a8a2a793fa971b69bc2ed83f04ac84f0a532c02e5d4addd665",
+      "request_id": "b443a659-43b3-4a9b-96cb-8a60231db336",
+      "http_status": 200,
+      "provider_request_id": "req_1bd1c5672579408a90189327f91ffd6b",
+      "response_sha256": "32aceeb8b72e077eda27c5886e3ec756ed3600b7438bc8df0b8fb6b4e45d089d",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4147,
+        "completion_tokens": 194,
+        "total_tokens": 4341,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "sensor_price",
+            "actual": {
+              "value": "12,500円",
+              "page": 1,
+              "quote": "A-017 センサー 12,500"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_price",
+            "actual": {
+              "value": "125,000円",
+              "page": 1,
+              "quote": "A-071 制御基板 125,000"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "sensor_quantity",
+            "actual": {
+              "value": "１２台",
+              "page": 1,
+              "quote": "A-017 センサー １２台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "power_quantity",
+            "actual": {
+              "value": "０台",
+              "page": 1,
+              "quote": "B-004 電源 ０台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_date",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "A-071 制御基板 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "approver",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "承認者：未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 8901.83
+    },
+    {
+      "case_id": "syn-budget",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "796f60293fdcf3e56072010f66fa7d5a918612420f8b3279fdfbb0934405842d",
+      "request_id": "47427dd0-6ef5-46b6-ba12-d65e5d04c59c",
+      "http_status": 200,
+      "provider_request_id": "req_d1c040515c804274a2a4610f5e1c349a",
+      "response_sha256": "5b2708cb457a2251ec518292cf100d22632185322c907a5c2c53bbd9c1893e0c",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4303,
+        "completion_tokens": 194,
+        "total_tokens": 4497,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "sensor_price",
+            "actual": {
+              "value": "12,500円",
+              "page": 1,
+              "quote": "A-017 センサー 12,500"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_price",
+            "actual": {
+              "value": "125,000円",
+              "page": 1,
+              "quote": "A-071 制御基板 125,000"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "sensor_quantity",
+            "actual": {
+              "value": "12台",
+              "page": 1,
+              "quote": "A-017 センサー １２台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "power_quantity",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "B-004 電源 0台"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_date",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "A-071 制御基板 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "approver",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "承認者：未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12780.43
+    },
+    {
+      "case_id": "syn-budget",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "c33937a9b223a76e2393d49d7dc37778b6e893b34eeedff0f33ba92f98ef403f",
+      "request_id": "e62c746c-87f4-42f4-a1c6-a78b66655edc",
+      "http_status": 200,
+      "provider_request_id": "req_d7ceb53380d44b1091be367f7963a426",
+      "response_sha256": "2c83b0204dbce6a2d332a45b2acd625847854be57b5c24bdfae1569ecfb91384",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4432,
+        "completion_tokens": 241,
+        "total_tokens": 4673,
+        "prompt_tokens_details": {
+          "cached_tokens": 4352,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "sensor_price",
+            "actual": {
+              "value": "12,500円",
+              "page": 1,
+              "quote": "A-017 センサー 12台 12,500 2026年11月6日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_price",
+            "actual": {
+              "value": "125,000円",
+              "page": 1,
+              "quote": "A-071 制御基板 3枚 125,000 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "sensor_quantity",
+            "actual": {
+              "value": "12台",
+              "page": 1,
+              "quote": "A-017 センサー 12台 12,500 2026年11月6日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "power_quantity",
+            "actual": {
+              "value": "0台",
+              "page": 1,
+              "quote": "B-004 電源 0台 8,050 2026年11月9日"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "board_date",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "A-071 制御基板 3枚 125,000 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "approver",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "承認者:未定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 9773.8
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "203778f72d74e1109b1a29739725ac04966be0ef2d4f3bfaa07c1da4740a824f",
+      "request_id": "d55bf127-dca1-4ff6-82e7-267dd6a20048",
+      "http_status": 200,
+      "provider_request_id": "req_b4f0bb6c2b164d20a3fa27b38a251cd2",
+      "response_sha256": "90205dab9a0dcfa621c3e9b9a5d5cf48836bff37cb566a2c6d716b22edecca61",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4209,
+        "completion_tokens": 376,
+        "total_tokens": 4585,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者\n・本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー\n・プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア\n・受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー\n・契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 20284.63
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision_adapter",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "25beb1c82d2e226bf73c1bb182eb302065683f4cbbcc9de1a837c96786481a72",
+      "request_id": "204dd39b-ab87-45b5-8d94-93a05cc8307f",
+      "http_status": 200,
+      "provider_request_id": "req_76553a8cb16a4eb4adbb8c1ba9927f7a",
+      "response_sha256": "4a5e3a3fec17bcd377690b97a89eaa03f1370e45aeb2ffcd8acb12739f88d3e5",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5051,
+        "completion_tokens": 376,
+        "total_tokens": 5427,
+        "prompt_tokens_details": {
+          "cached_tokens": 4992,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者 • 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁 プロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー • プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア • 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー • 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 21846.76
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision_text",
+      "repeat": 1,
+      "seed": 18,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "2543dc6416422c57ea4bac22f24fe283eca348d4e1858c3cc746139f0fbdadea",
+      "request_id": "c00b071e-6016-4ecf-b436-68bf3cd8e09a",
+      "http_status": 200,
+      "provider_request_id": "req_730dee7ee08143c4a54bcd1c91d8eda8",
+      "response_sha256": "9700a91e0fc02f49f7f7fd7ad363671e1f9bc84ae25f2bcc5757f6842a582842",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4805,
+        "completion_tokens": 380,
+        "total_tokens": 5185,
+        "prompt_tokens_details": {
+          "cached_tokens": 4736,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者\n• 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー\n• プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア\n• 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー\n• 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 20468.01
+    },
+    {
+      "case_id": "da-definitions-image",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "faf0075e378dd123a97c827f7bc4a2200e5ef947d44d7ea089f5a1e511b1d0be",
+      "request_id": "2373a9af-11d8-4eed-ba78-87ed9f0e757d",
+      "http_status": 200,
+      "provider_request_id": "req_2db556637ed44271a6a744ea96883a93",
+      "response_sha256": "310386d5bf0709c1313d52e68771227799247030e6e6df865126941bfdc78dc9",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4188,
+        "completion_tokens": 267,
+        "total_tokens": 4455,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "initiative_sample_date",
+            "actual": {
+              "value": "2060年11月",
+              "page": 1,
+              "quote": "Initiative ... 2060年11月の全人類土星移住"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "epic_sample_date",
+            "actual": {
+              "value": "2050年3月",
+              "page": 1,
+              "quote": "Epic ... 2050年3月のシャトル初回打ち上げ"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "story_link",
+            "actual": {
+              "value": "既存マイナポ機能",
+              "page": 1,
+              "quote": "Story ... 既存マイナポ機能と紐付け"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "objectives_count",
+            "actual": {
+              "value": "3",
+              "page": 1,
+              "quote": "InitiativeはObjective3点と連動します"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "subtasks_sample",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": ""
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_top",
+            "actual": {
+              "value": "Beta Objectives",
+              "page": 1,
+              "quote": "構成図の最上段にある灰色の箱 ... Beta Objectives"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 21610.38
+    },
+    {
+      "case_id": "da-definitions-image",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "0867c153488ca9ee10afd8a681b289e56ec952865fb6f8cb47da1c7bdaf1ba35",
+      "request_id": "07f5fc2f-7eed-480e-8aad-7e59b40bc783",
+      "http_status": 200,
+      "provider_request_id": "req_448f8e53b0fd4358b6bc948304774cd9",
+      "response_sha256": "efeb544ecf1c09350574b1aa488dc4bdb0f107a99d42ac912003d64ef80e39a2",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4281,
+        "completion_tokens": 267,
+        "total_tokens": 4548,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "initiative_sample_date",
+            "actual": {
+              "value": "2060年11月",
+              "page": 1,
+              "quote": "Initiative ... 2060年11月の全人類土星移住"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "epic_sample_date",
+            "actual": {
+              "value": "2050年3月",
+              "page": 1,
+              "quote": "Epic ... 2050年3月のシャトル初回打ち上げ"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "story_link",
+            "actual": {
+              "value": "既存マイナポ機能",
+              "page": 1,
+              "quote": "Story ... 既存マイナポ機能と紐付け"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "objectives_count",
+            "actual": {
+              "value": "3",
+              "page": 1,
+              "quote": "InitiativeはObjective3点と連動します"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "subtasks_sample",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": ""
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_top",
+            "actual": {
+              "value": "Beta Objectives",
+              "page": 1,
+              "quote": "構成図の最上段にある灰色の箱 ... Beta Objectives"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 19532.12
+    },
+    {
+      "case_id": "da-definitions-image",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "c3b83b0db77620d165bcd8df57235f086fd792af085cd68e881cece3f6bca2d6",
+      "request_id": "6d2ec2f8-4eb2-4966-a754-362c31e1996b",
+      "http_status": 200,
+      "provider_request_id": "req_e516c62b3ea94a9dac9af56ad6fc8571",
+      "response_sha256": "1c7e1b6f17855967255877da12d0a88d26ef88999dfad6f15c80e2135b3e00c5",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4200,
+        "completion_tokens": 262,
+        "total_tokens": 4462,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "initiative_sample_date",
+            "actual": {
+              "value": "2060年11月",
+              "page": 1,
+              "quote": "Initiative ... 2060年11月の全人類土星移住"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "epic_sample_date",
+            "actual": {
+              "value": "2050年3月",
+              "page": 1,
+              "quote": "Epic ... 2050年3月のシャトル初回打ち上げ"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "story_link",
+            "actual": {
+              "value": "既存マイナポ機能",
+              "page": 1,
+              "quote": "Story ... 既存マイナポ機能と紐付け"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "objectives_count",
+            "actual": {
+              "value": "3",
+              "page": 1,
+              "quote": "InitiativeはObjective3点と連動します"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "subtasks_sample",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": ""
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "diagram_top",
+            "actual": {
+              "value": "Beta Objectives",
+              "page": 1,
+              "quote": "最上段の灰色の箱に Beta Objectives"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 17864.75
+    },
+    {
+      "case_id": "syn-raster",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "bac21e2e4d8685dd95d77077c7ee831739f75e8c5e53a5ee55ed900e55f357c3",
+      "request_id": "61fa0cc6-e714-48c6-9699-97799c6ef9c3",
+      "http_status": 200,
+      "provider_request_id": "req_10f3549a7787464e8596cd6078f1eb95",
+      "response_sha256": "c2f52ef942cc7a3f6788d5f6609e6740eea48a88112638d491364224c31ec50c",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4152,
+        "completion_tokens": 192,
+        "total_tokens": 4344,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "s041_value",
+            "actual": {
+              "value": "0.105 mm",
+              "page": 1,
+              "quote": "S-041 0.105 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_value",
+            "actual": {
+              "value": "-0.015 mm",
+              "page": 1,
+              "quote": "S-014 -0.015 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s140_status",
+            "actual": {
+              "value": "不合格",
+              "page": 1,
+              "quote": "S-140 不合格"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_date",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "S-014 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "inspector",
+            "actual": {
+              "value": "星野",
+              "page": 1,
+              "quote": "検査担当：星野"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "retest_lead",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "再検責任者は未記載"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12672.53
+    },
+    {
+      "case_id": "syn-raster",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "48b051138bba0ca579a58fa0b76b61aa37576a1d2a9322c8bf02cc6b3d0cd851",
+      "request_id": "e6dfe18e-3ebe-4a56-bb4f-fe53b22f8ee5",
+      "http_status": 200,
+      "provider_request_id": "req_0699d9a0314a4f9e9734e4ec083929df",
+      "response_sha256": "382840d2654f4c6a1bf3f3a3f10af9b66a366683d44be30b561e6c519617a8e6",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4232,
+        "completion_tokens": 192,
+        "total_tokens": 4424,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "s041_value",
+            "actual": {
+              "value": "0.105 mm",
+              "page": 1,
+              "quote": "S-041 0.105 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_value",
+            "actual": {
+              "value": "-0.015 mm",
+              "page": 1,
+              "quote": "S-014 -0.015 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s140_status",
+            "actual": {
+              "value": "不合格",
+              "page": 1,
+              "quote": "S-140 不合格"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_date",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "S-014 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "inspector",
+            "actual": {
+              "value": "星野",
+              "page": 1,
+              "quote": "検査担当：星野"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "retest_lead",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "再検責任者は未記載"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 13831.01
+    },
+    {
+      "case_id": "syn-raster",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "550f1db86a0f13217694f40a117fcda423173f6b31f1a44ca243e8d4ba754252",
+      "request_id": "53b6d1dc-8727-46e4-93c5-96b81e484377",
+      "http_status": 200,
+      "provider_request_id": "req_0553e4cec54347b8b0c7f7a22137edfd",
+      "response_sha256": "0fb9c853b6a4813c7bef9c16364dbcc3cef3bc798384af14f94723932c5167c4",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4140,
+        "completion_tokens": 192,
+        "total_tokens": 4332,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "s041_value",
+            "actual": {
+              "value": "0.105 mm",
+              "page": 1,
+              "quote": "S-041 0.105 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_value",
+            "actual": {
+              "value": "-0.015 mm",
+              "page": 1,
+              "quote": "S-014 -0.015 mm"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s140_status",
+            "actual": {
+              "value": "不合格",
+              "page": 1,
+              "quote": "S-140 不合格"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "s014_date",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "S-014 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": true
+          },
+          {
+            "id": "inspector",
+            "actual": {
+              "value": "星野",
+              "page": 1,
+              "quote": "検査担当：星野"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "retest_lead",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "再検責任者は未記載"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 12752.79
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "b533ae4d95732c6dc55e17bbeb74539d3993bd6b0f148df2a61a97d8ab6ee64f",
+      "request_id": "e583b4f8-e7d5-4af0-92d3-98b66a5b2696",
+      "http_status": 200,
+      "provider_request_id": "req_a7fabe5d466e496394a24461e9a96f43",
+      "response_sha256": "f30b4214e037f9a36b3f4c83d0d5a86913cd2ff00a072738cf46a13624ede205",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4217,
+        "completion_tokens": 321,
+        "total_tokens": 4538,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新UIへ移管し提供",
+              "page": 1,
+              "quote": "新UIへ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "要検討 ―"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 10602.63
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "b915961dde8e9da0c3d9eefd4bd03c7c34914c721b06b69ee3818c60c288674a",
+      "request_id": "a5e3c254-065f-476f-92fa-8cdbfb8e3e92",
+      "http_status": 200,
+      "provider_request_id": "req_6a2327d1ba79473dbafc564d28b8dc3f",
+      "response_sha256": "d2fdef82247113ba227b88ed20cfad06fd001c9b0b46892ce543931d311476c8",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4519,
+        "completion_tokens": 297,
+        "total_tokens": 4816,
+        "prompt_tokens_details": {
+          "cached_tokens": 4480,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新 UI へ移管し提供",
+              "page": 1,
+              "quote": "既存のフローをほぼ維持しつつ、主に表現を⾒直し。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "ベータ版環境で画⾯を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版ですでに実現しているストーリー。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "—"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "ニーズやあるべき姿、実績などを調査。そのうえで開発⽅針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 10685.07
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "46ff276a47635f35267c665e481c1ac7a3abb26516e3c8c7df71347afaaff6a3",
+      "request_id": "36fcf035-95d7-422c-b00f-526648c38726",
+      "http_status": 200,
+      "provider_request_id": "req_2f3128eba6de4b6b83fc7ab83d7b4e47",
+      "response_sha256": "ed047dfc6af45ee4453ea15984720696c79c0b03cda5cbcc36aa26052ea02dc4",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5707,
+        "completion_tokens": 387,
+        "total_tokens": 6094,
+        "prompt_tokens_details": {
+          "cached_tokens": 5632,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新 UI へ移管し提供",
+              "page": 1,
+              "quote": "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "要検討 —"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unsupported_fill": false
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unsupported_fill": false
+          }
+        ]
+      },
+      "elapsed_ms": 10784.99
+    }
+  ],
+  "runner_sha256": "182f1ed1fa36dd1fe66ca22d6ebfbb0c9dceb977f328f89ddd63aaff8464b8ad",
+  "finished_at": "2026-10-14T16:53:06.169433+00:00",
+  "summary": {
+    "arms": {
+      "vision": {
+        "planned_requests": 16,
+        "attempted_requests": 16,
+        "completed_requests": 16,
+        "valid_responses": 16,
+        "field_denominator": 96,
+        "value_correct": 84,
+        "grounded_correct": 26,
+        "unknown_denominator": 24,
+        "unknown_correct": 12,
+        "unsupported_fill": 12,
+        "prompt_tokens_total": 74076,
+        "completion_tokens_total": 4139,
+        "median_request_ms": 10955.095000000001
+      },
+      "vision_text": {
+        "planned_requests": 16,
+        "attempted_requests": 16,
+        "completed_requests": 16,
+        "valid_responses": 16,
+        "field_denominator": 96,
+        "value_correct": 82,
+        "grounded_correct": 26,
+        "unknown_denominator": 24,
+        "unknown_correct": 10,
+        "unsupported_fill": 14,
+        "prompt_tokens_total": 77844,
+        "completion_tokens_total": 4121,
+        "median_request_ms": 10840.955
+      },
+      "vision_adapter": {
+        "planned_requests": 16,
+        "attempted_requests": 16,
+        "completed_requests": 16,
+        "valid_responses": 16,
+        "field_denominator": 96,
+        "value_correct": 82,
+        "grounded_correct": 26,
+        "unknown_denominator": 24,
+        "unknown_correct": 10,
+        "unsupported_fill": 14,
+        "prompt_tokens_total": 88416,
+        "completion_tokens_total": 4390,
+        "median_request_ms": 10279.395
+      }
+    },
+    "paired": {
+      "vision_adapter_vs_vision": {
+        "counts": {
+          "both_correct": 82,
+          "both_wrong": 12,
+          "loss": 2
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unsupported_fill": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unsupported_fill": false
+            }
+          },
+          {
+            "case_id": "da-roles",
+            "repeat": 1,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unsupported_fill": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unsupported_fill": false
+            }
+          }
+        ]
+      },
+      "vision_text_vs_vision": {
+        "counts": {
+          "both_correct": 82,
+          "both_wrong": 12,
+          "loss": 2
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unsupported_fill": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unsupported_fill": false
+            }
+          },
+          {
+            "case_id": "da-roles",
+            "repeat": 1,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unsupported_fill": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unsupported_fill": false
+            }
+          }
+        ]
+      },
+      "vision_adapter_vs_vision_text": {
+        "counts": {
+          "both_correct": 82,
+          "both_wrong": 14
+        },
+        "changes": []
+      }
+    },
+    "claim_ceiling": "Exploratory fixed-corpus observation; no significance, independent human gold, or general superiority claim."
+  }
+}
