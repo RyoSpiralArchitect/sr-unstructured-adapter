@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Distinguish completed, truncated, blocked, tool-call, empty, unknown and mixed LLM responses; retain partial evidence and expose completion counts and warnings.
+- Fail CLI LLM commands on noncomplete text generation, preserve replay outputs on failure, and exclude incomplete responses from adaptive completion rewards.
+- Extend bounded live checks to Gemini, validate streamed finish reasons, and checkpoint every planned mode without overwriting prior receipts.
 - Preserve document source content and order across Office, JSON, HTML, TSV, calendar, PDF and image parsing.
 - Align native/Python text normalization, retain code/case, and label heuristic geometry explicitly.
 - Repair provider metadata, SSE completion/retry handling, asynchronous fallback, tenant configuration and LLM response normalization.

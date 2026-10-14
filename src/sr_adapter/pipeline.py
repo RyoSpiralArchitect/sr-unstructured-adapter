@@ -332,6 +332,7 @@ class PipelineOrchestrator:
                 do_llm = False
 
         escalations = 0
+        completed = 0
         if do_llm:
             result = escalate_low_conf(
                 blocks,
@@ -344,12 +345,14 @@ class PipelineOrchestrator:
                 selection=selection,
                 context_overrides=policy.context,
             )
-            escalations = sum(
-                1
-                for idx in targets
-                if idx < len(result)
-                and result[idx].attrs.get("llm_escalations")
-            )
+            for idx in targets:
+                if idx >= len(result):
+                    continue
+                before = blocks[idx].attrs.get("llm_escalations", [])
+                after = result[idx].attrs.get("llm_escalations", [])
+                if len(after) > len(before):
+                    escalations += 1
+                    completed += after[-1].get("status") == "complete"
             blocks = result
 
         truncated = 0
@@ -369,6 +372,8 @@ class PipelineOrchestrator:
             "metrics_recipe_ms": round(metrics.recipe_ms, 2),
             "metrics_total_ms": round(metrics.spent_ms(), 2),
             "llm_escalations": int(escalations),
+            "llm_completed": int(completed),
+            "llm_incomplete": int(escalations - completed),
             "truncated_blocks": int(truncated),
             "block_count": int(len(blocks)),
             "env_no_llm": bool(no_llm_env),
@@ -393,6 +398,11 @@ class PipelineOrchestrator:
                 for block in blocks if block.attrs.get("parser_warning")
             )),
         )
+        if escalations > completed:
+            document.warnings.append(
+                f"LLM responses for {escalations - completed} block(s) did not complete; "
+                "inspect attrs.llm_escalations for status and finish reasons"
+            )
         try:
             from .profile_auto import record_profile_outcome
 

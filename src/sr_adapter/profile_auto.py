@@ -288,7 +288,9 @@ class AdaptiveProfileSelector:
         name = profile.name
         latency = float(meta.get("metrics_total_ms", 0.0) or 0.0)
         block_count = int(meta.get("block_count", 0) or 0)
-        escalations = int(meta.get("llm_escalations", 0) or 0)
+        # Legacy callers may not supply completion counts. New pipeline results
+        # must not reward truncated, blocked, or otherwise unfinished text.
+        escalations = int(meta.get("llm_completed", meta.get("llm_escalations", 0)) or 0)
         truncated = int(meta.get("truncated_blocks", 0) or 0)
 
         target = max(1.0, float(self.settings.latency_target_ms))

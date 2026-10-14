@@ -113,6 +113,7 @@ class EscalationLogger:
                 "provider": llm_result.provider,
                 "model": llm_result.model,
                 "usage": dict(llm_result.usage),
+                "status": llm_result.status,
             },
             "response_preview": choice_text[:5000],
         }

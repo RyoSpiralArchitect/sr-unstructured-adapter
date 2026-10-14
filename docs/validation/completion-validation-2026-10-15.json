@@ -1,0 +1,46 @@
+{
+  "created_at": "2026-10-14T16:03:22.646406+00:00",
+  "base_revision": "ddea7565287d72be288cbbddf842ebce122ddeb6",
+  "platform": "Darwin",
+  "python_version": "3.13.13",
+  "baseline": {
+    "passed": 629,
+    "skipped": 1
+  },
+  "native_tests": {
+    "command": "pytest --benchmark-disable -rs",
+    "passed": 688,
+    "skipped": 1
+  },
+  "fallback_tests": {
+    "command": "SR_ADAPTER_DISABLE_NATIVE_RUNTIME=1 pytest --benchmark-disable -rs",
+    "passed": 684,
+    "skipped": 5
+  },
+  "ruff": "passed",
+  "build": "sdist_and_wheel_passed",
+  "sdist_smoke_runner_included": true,
+  "source_sha256": {
+    "MANIFEST.in": "75a7dc6dd63b8052acf7bc29efdfee7093f0ac3d8a9c05deaeaf1641de3ba651",
+    "scripts/smoke_llm.py": "cec59d7f92c35a63ed0e8895ea00f190092c05764ffb3e5b5accd81ad3a09b5f",
+    "src/sr_adapter/cli.py": "bd5c45e0ef4f9826cb997cf5e33e11504a0dbeee99f1b3da220c23fb8dbd130d",
+    "src/sr_adapter/delegate.py": "0f77f7fc609e580fc51dcf27ae8c7a169f4a8e930d7abf4551dd61ae66bf52f2",
+    "src/sr_adapter/escalation/logging.py": "2315bfbb55925a380e9955e0d7ef9b7ad9ebc5867821755bd2a040ee7d2add36",
+    "src/sr_adapter/normalizer/llm_normalizer.py": "89b35de9c7f872ecb48af282291e8d8d7cba08919d4c9a978a1e76a726f376ee",
+    "src/sr_adapter/pipeline.py": "caa1c151627f60789547700235ffff9298877a884832e237c29799a74598e922",
+    "src/sr_adapter/profile_auto.py": "6a09628107ed6b84ba0fd473a438e3a6597a4c7810fed68463f64e84549800fa",
+    "src/sr_adapter/schema.py": "af5e0c3850e668233841aa47bd9388f6c3d85ee14c8e2df73c4b6e9210fdded4",
+    "tests/test_cli_llm.py": "50285b6cddc96507e0744250a9cddc8e709e3022e491837dde72ae7fbb2cf9bf",
+    "tests/test_cli_validation.py": "993ea4a9a799962b6e81e501be69fdfd56ed156ac2bcc3deaf89b78e89105f8b",
+    "tests/test_llm_completion.py": "87d72fc9676e30281cfecc56e8a08ddeeb4ec40936b27817bac96b18ecd0d4fd",
+    "tests/test_llm_normalizer.py": "aacea595667790eae6c0f9ff8db9df9856ad0436aea84d1944adda6e3d53ecfe",
+    "tests/test_profile_auto.py": "93281498cb38b7944fef321a8769d741256f77201a5a762905ddf38ef5f5a72c",
+    "tests/test_smoke_llm.py": "98ce2a372be9b5e84c5bfaa0e8a05e4477dc363ba59424d89d571706350d13c5"
+  },
+  "ci_state": "not_part_of_this_local_receipt",
+  "limits": [
+    "Local checks on macOS Python 3.13.13 only",
+    "No model-quality or performance claim",
+    "Live provider receipts kept separately, including the initial Gemini 404"
+  ]
+}
