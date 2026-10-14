@@ -36,9 +36,9 @@ def _state_file_lock(path: Path) -> Iterator[None]:
         if os.name == "nt":
             import msvcrt
 
-            if os.fstat(handle.fileno()).st_size == 0:
-                handle.write(b"\0")
-                handle.flush()
+            # Windows permits locks past EOF. Initializing byte zero before
+            # acquiring the lock races with another owner's mandatory byte
+            # lock, so leave the sidecar empty and lock its first byte directly.
 
             def acquire() -> None:
                 handle.seek(0)
