@@ -111,6 +111,11 @@ The font hash and library versions are recorded. Raster images are the fixed
 inputs of an individual run; regenerating with another renderer/font/version
 produces a new corpus and must be labelled accordingly.
 
+Preparation also works from an unpacked source distribution or archive. Git is
+optional: `source.git_head` is `null` when a revision for this source root is
+unavailable, while source-file hashes and dependency versions are still recorded.
+A surrounding repository's revision is never used to identify an unpacked archive.
+
 ```bash
 python scripts/vlm_benchmark.py prepare \
   --sources /path/to/03_仕様書等 \

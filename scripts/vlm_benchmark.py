@@ -110,8 +110,20 @@ def source_receipt():
     paths += sorted((ROOT / "src/sr_adapter").rglob("*.yaml"))
     paths += sorted((ROOT / "src/sr_adapter/native").glob("*.cpp"))
     paths += [Path(__file__)]
+    git_head = None
+    try:
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel", "HEAD"], cwd=ROOT,
+            text=True, stderr=subprocess.DEVNULL, timeout=5,
+        ).splitlines()
+        # Archives may be unpacked inside an unrelated checkout. Its HEAD does
+        # not identify these sources; the file hashes below remain authoritative.
+        if len(revision) == 2 and Path(revision[0]).resolve() == ROOT.resolve():
+            git_head = revision[1]
+    except (OSError, subprocess.SubprocessError):
+        pass  # Git is optional for source archives and unpacked distributions.
     return {
-        "git_head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+        "git_head": git_head,
         "files": {str(p.relative_to(ROOT)): digest(p.read_bytes()) for p in paths},
         "versions": {name: importlib.metadata.version(name) for name in
                      ("pypdf", "pydantic", "Pillow", "httpx", "reportlab")},

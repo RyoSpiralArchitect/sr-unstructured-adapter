@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 
 import httpx
 import pytest
@@ -12,6 +13,52 @@ import pytest
 spec = importlib.util.spec_from_file_location("vlm_benchmark", Path(__file__).parents[1] / "scripts/vlm_benchmark.py")
 bench = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bench)
+
+
+@pytest.fixture
+def archive_source(tmp_path, monkeypatch):
+    root = tmp_path / "source-archive"
+    files = {
+        "src/sr_adapter/module.py": b"# source\n",
+        "src/sr_adapter/recipes/default.yaml": b"steps: []\n",
+        "src/sr_adapter/native/kernel.cpp": b"// native\n",
+        "scripts/vlm_benchmark.py": b"# runner\n",
+    }
+    for name, content in files.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    monkeypatch.setattr(bench, "ROOT", root)
+    monkeypatch.setattr(bench, "__file__", str(root / "scripts/vlm_benchmark.py"))
+    monkeypatch.setattr(bench.importlib.metadata, "version", lambda name: "fixture-version")
+    return root, {str(Path(name)): bench.digest(content) for name, content in files.items()}
+
+
+@pytest.mark.parametrize("error", [
+    FileNotFoundError("git is not installed"),
+    subprocess.CalledProcessError(128, ["git", "rev-parse"]),
+    subprocess.TimeoutExpired(["git", "rev-parse"], 5),
+])
+def test_source_receipt_without_git_keeps_content_hashes(archive_source, monkeypatch, error):
+    def unavailable(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(bench.subprocess, "check_output", unavailable)
+    receipt = bench.source_receipt()
+    assert receipt["git_head"] is None
+    assert receipt["files"] == archive_source[1]
+    assert receipt["versions"]["pypdf"] == "fixture-version"
+
+
+@pytest.mark.parametrize("parent_checkout", [False, True])
+def test_source_revision_must_belong_to_source_root(archive_source, monkeypatch, parent_checkout):
+    root, hashes = archive_source
+    git_root = root.parent if parent_checkout else root
+    head = "a" * 40
+    monkeypatch.setattr(bench.subprocess, "check_output", lambda *args, **kwargs: f"{git_root}\n{head}\n")
+    receipt = bench.source_receipt()
+    assert receipt["git_head"] == (None if parent_checkout else head)
+    assert receipt["files"] == hashes
 
 
 @pytest.fixture
