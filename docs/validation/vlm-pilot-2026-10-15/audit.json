@@ -1,0 +1,215 @@
+{
+  "raw_response_hashes_verified": 48,
+  "request_payloads_reconstructed_and_verified": 48,
+  "matched_image_question_groups_verified": 16,
+  "gold_spec_unchanged": true,
+  "grading_change": "Only unsupported_fill key renamed to unknown_format_mismatch; all scores and accepted answers unchanged.",
+  "original_runner_sha256": "182f1ed1fa36dd1fe66ca22d6ebfbb0c9dceb977f328f89ddd63aaff8464b8ad",
+  "current_runner_sha256": "af7519ebfb5d36b380ba7d3d4d793f4c3988dd26c5ac51aaf3390000fcdd74e4",
+  "local_tests": {
+    "passed": 718,
+    "skipped": 1,
+    "skip_reason": "Windows-only DLL test on macOS"
+  },
+  "prepared_but_rejected": {
+    "reason": "Unembedded CID font yielded blank glyphs in synthetic rendered pages; rejected before inference.",
+    "api_calls": 0
+  },
+  "summary": {
+    "arms": {
+      "vision": {
+        "planned_requests": 16,
+        "attempted_requests": 16,
+        "completed_requests": 16,
+        "valid_responses": 16,
+        "field_denominator": 96,
+        "value_correct": 84,
+        "grounded_correct": 26,
+        "unknown_denominator": 24,
+        "unknown_correct": 12,
+        "unknown_format_mismatch": 12,
+        "prompt_tokens_total": 74076,
+        "completion_tokens_total": 4139,
+        "median_request_ms": 10955.095000000001
+      },
+      "vision_text": {
+        "planned_requests": 16,
+        "attempted_requests": 16,
+        "completed_requests": 16,
+        "valid_responses": 16,
+        "field_denominator": 96,
+        "value_correct": 82,
+        "grounded_correct": 26,
+        "unknown_denominator": 24,
+        "unknown_correct": 10,
+        "unknown_format_mismatch": 14,
+        "prompt_tokens_total": 77844,
+        "completion_tokens_total": 4121,
+        "median_request_ms": 10840.955
+      },
+      "vision_adapter": {
+        "planned_requests": 16,
+        "attempted_requests": 16,
+        "completed_requests": 16,
+        "valid_responses": 16,
+        "field_denominator": 96,
+        "value_correct": 82,
+        "grounded_correct": 26,
+        "unknown_denominator": 24,
+        "unknown_correct": 10,
+        "unknown_format_mismatch": 14,
+        "prompt_tokens_total": 88416,
+        "completion_tokens_total": 4390,
+        "median_request_ms": 10279.395
+      }
+    },
+    "paired": {
+      "vision_adapter_vs_vision": {
+        "counts": {
+          "both_correct": 82,
+          "both_wrong": 12,
+          "loss": 2
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          },
+          {
+            "case_id": "da-roles",
+            "repeat": 1,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          }
+        ]
+      },
+      "vision_text_vs_vision": {
+        "counts": {
+          "both_correct": 82,
+          "both_wrong": 12,
+          "loss": 2
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          },
+          {
+            "case_id": "da-roles",
+            "repeat": 1,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          }
+        ]
+      },
+      "vision_adapter_vs_vision_text": {
+        "counts": {
+          "both_correct": 82,
+          "both_wrong": 14
+        },
+        "changes": []
+      }
+    },
+    "claim_ceiling": "Exploratory fixed-corpus observation; no significance, independent human gold, or general superiority claim."
+  }
+}

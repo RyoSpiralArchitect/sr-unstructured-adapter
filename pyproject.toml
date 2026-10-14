@@ -21,6 +21,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+evaluation = [
+    "reportlab>=4.0",
+]
 dev = [
     "pytest>=7.4",
     "pytest-benchmark>=4.0",

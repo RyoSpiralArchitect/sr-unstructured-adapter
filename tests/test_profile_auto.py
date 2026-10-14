@@ -261,6 +261,57 @@ def test_lock_timeout_does_not_drop_stats_and_recovers(tmp_path, monkeypatch):
     assert selector._stats["balanced"].trials == 2
 
 
+def test_windows_empty_sidecar_is_not_written_before_lock(tmp_path, monkeypatch):
+    """A competing owner may lock byte zero between fstat and initialization."""
+    import errno
+    import os
+    import sys
+    from types import SimpleNamespace
+    import sr_adapter.profile_auto as module
+
+    operations = []
+    with (tmp_path / "state.json.lock").open("a+b") as real_handle:
+        class GuardedHandle:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+            def fileno(self):
+                return real_handle.fileno()
+
+            def seek(self, offset):
+                real_handle.seek(offset)
+
+            def write(self, data):
+                raise PermissionError(errno.EACCES, "Another process owns byte zero")
+
+        class Sidecar:
+            name = "state.json"
+
+            def with_name(self, name):
+                assert name == "state.json.lock"
+                return self
+
+            def open(self, mode):
+                assert mode == "a+b"
+                return GuardedHandle()
+
+        def locking(fd, operation, count):
+            assert fd == real_handle.fileno() and count == 1
+            operations.append(operation)
+            if len(operations) == 1:
+                raise PermissionError(errno.EACCES, "Contended lock")
+
+        monkeypatch.setattr(module, "os", SimpleNamespace(name="nt", fstat=os.fstat))
+        monkeypatch.setitem(sys.modules, "msvcrt", SimpleNamespace(LK_NBLCK=1, LK_UNLCK=2, locking=locking))
+        with module._state_file_lock(Sidecar()):
+            assert operations == [1, 1]
+        assert operations == [1, 1, 2]
+        assert os.fstat(real_handle.fileno()).st_size == 0
+
+
 def test_windows_reader_sharing_conflict_retries_same_snapshot(tmp_path, monkeypatch):
     import sr_adapter.profile_auto as module
 
