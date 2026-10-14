@@ -82,6 +82,18 @@ def test_openai_completion_status(reason, text, extra, status):
     assert result.choices[0].text == text
 
 
+@pytest.mark.parametrize("provider", ["mistral", "tenant-mistral"])
+@pytest.mark.parametrize("text", ["partial answer", ""])
+def test_mistral_context_limit_is_truncated_and_preserves_evidence(provider, text):
+    raw = {"choices": [{"message": {"content": text}, "finish_reason": "model_length"}]}
+    result = LLMNormalizer().normalize(provider, raw, prompt="test")
+    assert result.status == result.choices[0].status == "truncated"
+    assert not result.is_complete
+    assert result.choices[0].text == text
+    assert result.choices[0].finish_reason == "model_length"
+    assert result.raw is raw
+
+
 @pytest.mark.parametrize("reason,status", [
     ("end_turn", "complete"), ("stop_sequence", "complete"),
     ("max_tokens", "truncated"), ("model_context_window_exceeded", "truncated"),

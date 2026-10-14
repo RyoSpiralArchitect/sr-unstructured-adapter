@@ -65,7 +65,7 @@ def _status(choice: NormalizedChoice) -> CompletionStatus:
         "PUP_LIMITED_DISABLED",
     }:
         return "blocked"
-    if reason in {"length", "max_tokens", "MAX_TOKENS", "model_context_window_exceeded"}:
+    if reason in {"length", "model_length", "max_tokens", "MAX_TOKENS", "model_context_window_exceeded"}:
         return "truncated"
     if reason in {"tool_calls", "function_call", "tool_use"} or any(
         choice.metadata.get(key) for key in ("tool_calls", "function_call")
