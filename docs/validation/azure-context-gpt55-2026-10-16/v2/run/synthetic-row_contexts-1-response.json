@@ -1,0 +1,143 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 4096,
+  "text": {
+    "format": {
+      "type": "json_object"
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_02ce2c5fc52ffc2e016ad1eef033f88190a5ac9ffcb1476d0b",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792143088,
+  "completed_at": 1792143092,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "reasoning",
+      "id": "rs_02ce2c5fc52ffc2e016ad1eef15708819098dd2ec7929215f2",
+      "response_id": "resp_02ce2c5fc52ffc2e016ad1eef033f88190a5ac9ffcb1476d0b",
+      "encrypted_content": "gAAAAABq0e70zsQdE1YQ_WnLmief69BCx_u7MT42PqlCwOUlabko8kymaLkCcIlUBjBwdJpl-fOxLpBi4KYmA8sDG58J_KxasLRIQHxzaaXSkYuRS2wO0cLFG_ALwscMQHRXZI87tdOyJaJnSAlOR74dyrAcU81T3x-1PhaRy6XBUmgeoT_gRqYYIqOf5H12kdILkSDFes9fIAGv_S9bg8SsOb66jKYeZVcqDm8K3GGUoqkvRCVHBBWuvqz3Jm0qosfcQpmm5a1r_huPdpUrlguCrKfeDhH4Ij2n98NpFu88DcEyMru7hzZDyXcSdinmQb43pm4AZRSGNXW4AbV0qQ_Im83ka93XuMk3LTYeTif_jnX-KI2U7rWtXWOxeDiqsz24dFhGZ6IHDxqJFAJ0D0Rr80_spwkqgJl7RjNqDY9k_PUsMSAqhkIQiwPjB1LX8RXd_IEVwcvKFYkLLb40rr97Nw2q-yDa5peez_AH5BgWgdwHByWhtaooMKWgpM-GtHYpvMDf9_vL5vm_QDqnWIrEzQWpBb0IH_5YuQkOFJay5L0lMbULoWuiQMGhCZj-i-Dwx4wVzORG1dutYvKHlb8BrQLc2DKdqzadFCosgzOW_2vUw4htYKnCtgm-RYCaxjJl0SZwLWBTdGOApgH34qLp8LRVgD9RRebEqQxztWpeQTcWRnJho5aZJQvboXQcb7B1GSo2R0N1aIXF_QlhgpvUZMVdPN35wxyRsRsDHj--Ty6ctDYp676pJ2TRPOiZ3coOif9iKlA9rXGcnO-0WELqVaecapGC51XSoeNGKG39dLHj0jUiVUcBr_yRwY0U8MH7rzksj__2LvHik1FQ1gTxKAM_79S5tXhDihED_4OtPfTiat288LFLIg0jjpjzRy3fAdSh1W4B3HNLCbq6fggzsXvW78D-t7LpIDWuXVvcbj6fNi7ja3NMUSKC4B29hxi-Hmqm5mQWtI4b1NvCuuCDEJ_LlraaU81Ju-2-y0o_bXt8P8XUjGeqskUFumTdYpsHnT_mIzUzKsw0MLZJ42pal2FBU2hmQjeXi8fvQoDw__hT_0NWYj2jAqPhpyQhEDXdiFKxkgZYHJ0t_KHsXjDO288vJvRMU986de3WDZwXce9n9iwdwO5X0laHhZfgict5LrZLztTkgAjLc6gE8aH_r_K98OkCmsXmRofR5YOlKXu4a0YwaWxTEpS9jbBV6Vf5uuWFyczl5Jb79FROFDfaq8H8ii7lYkC1CPQUboj0zmVhbE0PEyfUOpvByR0IfQhyRz-0F4B9QDOkNqL52YU1qLDMaVVEl4JUoq05DjxjCIWEvVOsJ91dZOBfI-uHq8kyPXD2alyiP3x23Ou46RyeeAyqRQ2v-jggMJBvBjq0gY2y68QRETw_-Hz0xnbJN2ytdl9HTgBP78eovSUfn-ohBdrlENT_FVqYmdyKUSzexYsizKHZUVwsWqN8o4TIca7gjtktqwjp_QJgira88F5oekRJ6O6d4Eemd-1Qt_UBhHHjE8jHq0-XZUgChR-001JQb7VcehYC6LGflNmW3fU9f3CTZu_E5e7armxbP986HVyZ-mC7e4m66LV03XHfo5wlPVYG_--7ZJXZhdHp5VvhB73JRaa5sQ==",
+      "summary": [],
+      "content": []
+    },
+    {
+      "type": "message",
+      "id": "msg_02ce2c5fc52ffc2e016ad1eef223748190a235947cc9d1e3ec",
+      "response_id": "resp_02ce2c5fc52ffc2e016ad1eef033f88190a5ac9ffcb1476d0b",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"answers\":[{\"id\":\"primary\",\"status\":\"observed\",\"value\":\"東部室\",\"evidence_ids\":[\"urn:sr:relation:e3f05df2c238cea532f43d9df30486f1626b59a7baa2ef7371f62c5007b1a3fb\"]},{\"id\":\"secondary\",\"status\":\"observed\",\"value\":\"西部室\",\"evidence_ids\":[\"urn:sr:relation:df61f1685bbaaf7b98b0487f230d60937da58f8466a948cea34f7d06c98a35f1\"]},{\"id\":\"other-row\",\"status\":\"observed\",\"value\":\"西部室\",\"evidence_ids\":[\"urn:sr:relation:6de7f47548535e16c70cf198b0f30eecc9b27d943775bd91f115cfc0bba880f4\"]},{\"id\":\"known-budget\",\"status\":\"observed\",\"value\":\"240\",\"evidence_ids\":[\"urn:sr:property:fd1641f2d1fd4190c1d1a244ff2002434392c70acbedde38cea12b00f07814d7\"]},{\"id\":\"unknown-budget\",\"status\":\"unknown\",\"value\":null,\"evidence_ids\":[\"urn:sr:property:111dd44ee28aca532509e3a42aac08f50c438f79f45aae315b28649703aac2c2\"]},{\"id\":\"reverse\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]},{\"id\":\"identity\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]},{\"id\":\"absent\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 9193,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 463,
+    "output_tokens_details": {
+      "reasoning_tokens": 77
+    },
+    "total_tokens": 9656
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 23658,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 1344,
+        "check_offset": 0
+      }
+    }
+  ]
+}

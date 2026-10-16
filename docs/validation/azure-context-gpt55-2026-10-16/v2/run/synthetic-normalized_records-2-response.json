@@ -1,0 +1,143 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 4096,
+  "text": {
+    "format": {
+      "type": "json_object"
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_0cd25608e7f4b0c3016ad1ef18faac819595f72dce3963f7e3",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792143129,
+  "completed_at": 1792143133,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "reasoning",
+      "id": "rs_0cd25608e7f4b0c3016ad1ef1a6364819585accdd05123c3aa",
+      "response_id": "resp_0cd25608e7f4b0c3016ad1ef18faac819595f72dce3963f7e3",
+      "encrypted_content": "gAAAAABq0e8d8jT1gnPFlhUS8_syOsI0xbN7K7ya7bQZhHfDPmihQaON6QNNmzS5ipE1Lyjvx1rjx1YCjYG9dmbTA38Qh60Y996zC-hjKoIV-m3g7Zf0T2-WpJpCpShSZIHcGm0g-CtCSm3NlieoQrySLcEOcfvCmdxI3HhZBK3bOLiozb8_-G7ToTVjhzKFRSwrtGUOrznk3LSI9dLe3zE0qJ84DS74Wqb0r8bGatBdgcY5oMANOp5yMXzF0QbtFFMjchdU9XMAEq4xRv4ZnUKLYovDugTIbWQo9fuHdrkUwb221RAXgcsYVBmSVfI_1O0DZKwbbQ88VPpGgpU9LLnWjEgYHpQHtq7CTL3N_jrelqn7wpoQNgLQx4-tONnk-22KZO-C7iyWSE1_gcR92_UAxtq5RHiKJZnnImGxgrIobxxcvD6NnG1rjzC9wgYAPNOhkddVtV8aCnHhxzn1L0tDTv07waT42GMMay2GYaJloClDIUEx0AffuMnAmFUsXkqkSrRR808VqKiYMbAPyEBITkOt3RxYbulFgAn3TYkQyemjsGLCRynQVFarhHs8nUv414qyBeXUknDxliE5RUngzW9t-gBrCqYkhJ_10cbqeZQyTwIuWMo5T1OXVBvmw6A1uN9BgyC5CfEjKnNe-nUmpDc_iFoGG9sIjv0M2252KCNFpQqf82x3aBILtopmwy6wjLse21t75qpNhIO4e_xuLa3tqjRxkgwMDeI2-wUnzNzXI-a53YAKmVp78aQSkpv7dPbS9aiF8g480XN_BDG-pOSXVqFFNqwSHcCEDL_LuMrBZk7QCwux0cmEUS8f2eko1LR6DWZDd4ZmGwyezaWsueWWNBVNFEnKWq7lpfh_OKPEF0A1kqhP8AbET_Oi58OVQwF7PiBEbUm9H0WydGUG1Rsw0e04iBM3ZgZBwLMAPuisLgiq2J-t2hw9sV8W5YZjkuLEmcD8ypm3hMVr1Vrq3tywIgRFMWEkJjF7mETgxaUDadobLTZLUwP0G2rUQX81GhSX8xXYysqSz-XPXQsmrJCfC_A0AI-fhJP9_MP_GUCgcPQ4Id-VSbjAImwWdLI1BcB_UJ7zcAdeLwsirK7xSnhz2KMhqXemW320z8tz99GlrfrujkxCX2xcIdUCxYAoT83PmgmkIWNdKMtx4V5kpnWiY4GLsI9C1SuL95sXngvpqzBSzNKZ4txdZQXeNUSVmL6autM41WVPttjAIRYf3cyot3LhuRxEK_EWR7VerZwAUguQwUd0STuRFcEoJEJlVDvOyV_yX3_XqHt6qNLy6hXt0QXzt3SooQK4mnUx2s1gYqkpmNxexqmC997b9Ji6TpA_elSDmVo4GdrkKJ_50VjP77y7msO378zpyNTNntTPKD_sFpCe4xKawMiHuJXt8YVuE3mFu5kSIkSFyXCxgohcCmv61qOoezio2QP-gA0P7__uMdx5_OOXkxXr3IwGTraZpQd2KIK8Jyl3KyyNMKpMmrGj2md3j1azilgKgoSEWzbPJy49zQS_uSVBq9IkX-asueJ0K43pDhDL88rLwgGYmcrH3G5eFuTV3bXNSfF6QmbnWfSPONJrHD4E1do6qUz9Ec8g",
+      "summary": [],
+      "content": []
+    },
+    {
+      "type": "message",
+      "id": "msg_0cd25608e7f4b0c3016ad1ef1b34648195a6ce02047c8d0fd2",
+      "response_id": "resp_0cd25608e7f4b0c3016ad1ef18faac819595f72dce3963f7e3",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"answers\":[{\"id\":\"primary\",\"status\":\"observed\",\"value\":\"東部室\",\"evidence_ids\":[\"urn:sr:relation:e3f05df2c238cea532f43d9df30486f1626b59a7baa2ef7371f62c5007b1a3fb\"]},{\"id\":\"secondary\",\"status\":\"observed\",\"value\":\"西部室\",\"evidence_ids\":[\"urn:sr:relation:df61f1685bbaaf7b98b0487f230d60937da58f8466a948cea34f7d06c98a35f1\"]},{\"id\":\"other-row\",\"status\":\"observed\",\"value\":\"西部室\",\"evidence_ids\":[\"urn:sr:relation:6de7f47548535e16c70cf198b0f30eecc9b27d943775bd91f115cfc0bba880f4\"]},{\"id\":\"known-budget\",\"status\":\"observed\",\"value\":\"240\",\"evidence_ids\":[\"urn:sr:property:fd1641f2d1fd4190c1d1a244ff2002434392c70acbedde38cea12b00f07814d7\"]},{\"id\":\"unknown-budget\",\"status\":\"unknown\",\"value\":null,\"evidence_ids\":[\"urn:sr:property:111dd44ee28aca532509e3a42aac08f50c438f79f45aae315b28649703aac2c2\"]},{\"id\":\"reverse\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]},{\"id\":\"identity\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]},{\"id\":\"absent\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 11457,
+    "input_tokens_details": {
+      "cached_tokens": 11008,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 449,
+    "output_tokens_details": {
+      "reasoning_tokens": 63
+    },
+    "total_tokens": 11906
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 28143,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 1327,
+        "check_offset": 0
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 """Relation context semantics and an offline Foundry handoff, with real source bundles."""
 
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
@@ -74,6 +75,8 @@ def test_foundry_export_has_search_fields_native_mcp_and_snapshot_filter(source_
     report = export_foundry([source_bundle], output, target=foundry_target)
     manifest, files = verify_foundry(output)
     assert report == manifest and report['card_count'] == 3
+    assert report['schema_version'] == 2
+    assert json.loads(files['project-connection.json'])['properties']['isSharedToAll'] is False
     index = json.loads(files['search-index.json'])
     fields = {f['name']: f for f in index['fields']}
     assert fields['id']['key'] and fields['content']['searchable']
@@ -91,6 +94,30 @@ def test_foundry_export_has_search_fields_native_mcp_and_snapshot_filter(source_
     assert json.loads(files['retrieval-request.json'])['knowledgeSourceParams'][0]['includeReferenceSourceData']
     with pytest.raises(FileExistsError):
         export_foundry([source_bundle], output, target=foundry_target)
+
+
+def test_recorded_v1_handoff_remains_verifiable():
+    folder = Path(__file__).resolve().parents[1] / 'docs/validation/foundry-context-2026-10-16/handoff'
+    manifest, files = verify_foundry(folder)
+    assert manifest['schema_version'] == 1 and manifest['card_count'] == 8
+    assert json.loads(files['project-connection.json'])['properties']['isSharedToAll'] is True
+
+
+def test_project_connection_readback_uses_service_persisted_scope(configured_export, foundry_target, tmp_path):
+    service = AzureFixture()
+    original_handle = service.handle
+
+    def azure_project_response(request):
+        response = original_handle(request)
+        if '/connections/' in str(request.url) and response.status_code in (200, 201):
+            body = response.json()
+            body['properties']['isSharedToAll'] = False
+            return httpx.Response(response.status_code, json=body)
+        return response
+
+    service.handle = azure_project_response
+    result = publish_fixture(configured_export, foundry_target, tmp_path / 'receipt.json', service)
+    assert result['status'] == 'configured'
 
 
 def test_unconfigured_export_never_claims_a_deployment(source_bundle, tmp_path):

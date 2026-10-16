@@ -140,6 +140,11 @@ ADLS is an object-storage destination. Uploading these files does not by itself
 create a Fabric Lakehouse, Synapse schema, or Delta table. Those services can ingest
 the verified Parquet records through their configured storage access.
 
+For an existing schema-enabled Fabric lakehouse, use the dedicated
+[Fabric snapshot publisher](fabric-lakehouse.md). It exports normalized entity,
+relation, observation, and evidence tables, loads them through the schema-scoped
+Fabric API, and verifies the Delta rows while retaining immutable source bundles.
+
 ## Databricks SQL / Delta
 
 ```bash

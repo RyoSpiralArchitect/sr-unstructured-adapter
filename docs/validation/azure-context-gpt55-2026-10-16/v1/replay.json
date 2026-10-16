@@ -1,0 +1,35 @@
+{
+  "spec_sha256": "45108d72574046fece3448199eb36895d3adaa3948842672439da12cca6afa5b",
+  "status": "incomplete",
+  "planned_requests": 8,
+  "completed_requests": 0,
+  "response_models": [],
+  "arms": {
+    "normalized_records": {
+      "planned_answers": 24,
+      "completed_requests": 0,
+      "answer_match": 0,
+      "evidence_match": 0,
+      "strict": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0,
+      "cached_input_tokens": 0,
+      "reasoning_tokens": 0
+    },
+    "row_contexts": {
+      "planned_answers": 24,
+      "completed_requests": 0,
+      "answer_match": 0,
+      "evidence_match": 0,
+      "strict": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "total_tokens": 0,
+      "cached_input_tokens": 0,
+      "reasoning_tokens": 0
+    }
+  },
+  "winner": null,
+  "comparison": "incomplete"
+}

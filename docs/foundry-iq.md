@@ -152,8 +152,11 @@ independently. If the agent receives only a snippet, missing evidence stays
 missing. Search-index citations may link to the knowledge-base endpoint rather
 than the source PDF; this bridge does not invent public document URLs.
 
-The generated connection is shared within the project and uses the project's
-identity. Original file ACLs and end-user identity filters are not imported. Use
+The generated connection uses the project's managed identity and project RBAC.
+Export format v2 sets `isSharedToAll: false`, matching the value persisted by
+Foundry project connections; this field is not the document-permission boundary.
+Previously recorded v1 exports remain verifiable without rewriting their bytes.
+Original file ACLs and end-user identity filters are not imported. Use
 a corpus authorized for that project's readers. A shared multi-tenant corpus
 needs a separate document-permission design.
 

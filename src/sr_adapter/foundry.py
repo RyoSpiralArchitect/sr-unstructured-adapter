@@ -155,7 +155,8 @@ def relation_cards(package: KnowledgePackage) -> list[dict]:
     return cards
 
 
-def _render(packages: list[KnowledgePackage], prefix: str, target: FoundryTarget | None) -> tuple[dict, dict[str, bytes]]:
+def _render(packages: list[KnowledgePackage], prefix: str, target: FoundryTarget | None,
+            *, schema_version: int = 2) -> tuple[dict, dict[str, bytes]]:
     if not re.fullmatch(r"[a-z][a-z0-9-]{1,30}[a-z0-9]", prefix):
         raise ValueError("Use a 3-32 character lowercase resource prefix")
     packages = sorted((_checked_package(p) for p in packages), key=lambda p: p.id)
@@ -200,7 +201,9 @@ def _render(packages: list[KnowledgePackage], prefix: str, target: FoundryTarget
             "project_connection_id": target.project_connection_name if target else "{{PROJECT_CONNECTION_NAME}}"}]}}
     connection = {"name": target.project_connection_name if target else "{{PROJECT_CONNECTION_NAME}}",
         "properties": {"authType": "ProjectManagedIdentity", "category": "RemoteTool", "target": mcp_url,
-        "isSharedToAll": True, "audience": "https://search.azure.com/", "metadata": {"ApiType": "Azure"}}}
+        # Project connections persist false for this workspace-sharing field.
+        # Retain v1 reproduction for previously exported audit artifacts.
+        "isSharedToAll": schema_version == 1, "audience": "https://search.azure.com/", "metadata": {"ApiType": "Azure"}}}
     operations = [{"name": key, "method": "PUT", "url": f"{search_endpoint}/{route}/{value['name']}?api-version={SEARCH_API_VERSION}",
                    "body_file": filename} for key, route, value, filename in [
         ("index", "indexes", index, "search-index.json"),
@@ -231,7 +234,7 @@ def _render(packages: list[KnowledgePackage], prefix: str, target: FoundryTarget
     payloads["search-documents.jsonl"] = b"".join(canonical_json(doc) + b"\n" for doc in documents)
     for package in packages:
         payloads["sources/" + package.id.rsplit(":", 1)[-1] + ".json"] = canonical_json(package.model_dump(mode="json"))
-    manifest = {"schema_version": 1, "status": "complete", "snapshot_id": snapshot, "prefix": prefix,
+    manifest = {"schema_version": schema_version, "status": "complete", "snapshot_id": snapshot, "prefix": prefix,
         "resource_names": names, "package_ids": [p.id for p in packages], "card_count": len(cards),
         "warnings": [warning for p in packages for warning in p.warnings],
         "search_api_version": SEARCH_API_VERSION, "cloud_validation": "not_performed_by_export",
@@ -256,7 +259,7 @@ def verify_foundry(folder: str | Path) -> tuple[dict, dict[str, bytes]]:
     """Verify both bytes and regenerated semantics before any integration consumes them."""
     folder = Path(folder).resolve()
     manifest = json.loads((folder / "manifest.json").read_bytes())
-    if manifest.get("schema_version") != 1 or manifest.get("status") != "complete":
+    if type(manifest.get("schema_version")) is not int or manifest["schema_version"] not in (1, 2) or manifest.get("status") != "complete":
         raise ValueError("Incomplete or unsupported Foundry export")
     payloads = {}
     for name, expected in manifest["files"].items():
@@ -270,7 +273,8 @@ def verify_foundry(folder: str | Path) -> tuple[dict, dict[str, bytes]]:
     packages = [KnowledgePackage.model_validate_json(payloads["sources/" + key.rsplit(":", 1)[-1] + ".json"])
                 for key in manifest["package_ids"]]
     target = json.loads(payloads["target.json"])
-    expected_manifest, expected_payloads = _render(packages, manifest["prefix"], FoundryTarget.model_validate(target) if target else None)
+    expected_manifest, expected_payloads = _render(packages, manifest["prefix"],
+        FoundryTarget.model_validate(target) if target else None, schema_version=manifest["schema_version"])
     if manifest != expected_manifest or payloads != expected_payloads:
         raise ValueError("Foundry export does not reproduce from its source packages and target")
     return manifest, payloads

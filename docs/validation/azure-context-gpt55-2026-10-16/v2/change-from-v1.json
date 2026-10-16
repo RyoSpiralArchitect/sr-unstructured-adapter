@@ -1,0 +1,19 @@
+{
+  "reason": "HTTP400 invalid_value input[1] requires an explicit input item discriminator",
+  "changes": [
+    "input[*].type=message",
+    "input[*].content=[{type:input_text,text:<unchanged prompt>} ]"
+  ],
+  "unchanged": [
+    "system text",
+    "context bytes",
+    "questions",
+    "gold",
+    "model",
+    "reasoning effort",
+    "output budget",
+    "counterbalanced order"
+  ],
+  "previous_spec_sha256": "45108d72574046fece3448199eb36895d3adaa3948842672439da12cca6afa5b",
+  "spec_sha256": "d1e2eabce379495044770dbd51007f80231be6dc8b78f8251dfbeb00c037879b"
+}

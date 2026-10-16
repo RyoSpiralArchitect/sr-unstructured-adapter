@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-16",
+  "kind": "bounded_live_integration_smoke_not_quality_benchmark",
+  "model": "gpt-5.5",
+  "agent_kind": "prompt",
+  "agent_version": "1",
+  "response_status": "completed",
+  "reasoning": {
+    "effort": "medium",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "usage": {
+    "input_tokens": 17382,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 871,
+    "output_tokens_details": {
+      "reasoning_tokens": 449
+    },
+    "total_tokens": 18253
+  },
+  "foundry_export_snapshot_id": "ddc256daff35b6c02fd28e5df191c8a36b261e14e9d3dcf9d7314f1dcf0c755f",
+  "card_count": 8,
+  "publication_status": "configured",
+  "verified_answers": {
+    "朝凪/主担当": "東部室",
+    "朝凪/副担当": "西部室",
+    "星凪/予算": "unknown"
+  },
+  "raw_response_sha256": "c6babc5d43ab48c1cdb28a505c5b49ce25996509cde99f8ad1496f3de8bed30c",
+  "publication_receipt_sha256": "e8158ca3ca95fec83efe96d1d9ed67853dce5453c4f6fba23ee52e60f3da5d1c",
+  "negative_observations": [
+    "2026-04-01 MCP API version returned 400 on the selected service; 2026-08-01-preview succeeded.",
+    "Request-time reasoning override with an agent reference returned 400; reasoning configured in the versioned agent definition succeeded.",
+    "ARM connection readback persisted isSharedToAll=false; v2 exports model the actual project scope."
+  ],
+  "limits": [
+    "Three checked facts are a smoke test, not an accuracy estimate.",
+    "Native MCP reads Azure AI Search, not the Fabric tables.",
+    "Raw service receipts stay private because they contain deployment metadata."
+  ]
+}

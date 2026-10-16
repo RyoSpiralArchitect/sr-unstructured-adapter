@@ -25,6 +25,7 @@ tables = ["pdfplumber>=0.11,<0.12"]
 lakehouse = ["pyarrow>=18"]
 azure = ["azure-storage-file-datalake>=12.16,<13", "azure-identity>=1.17,<2"]
 foundry = ["azure-identity>=1.17,<2"]
+fabric = ["azure-identity>=1.17,<2", "pyarrow>=18"]
 evaluation = [
     "reportlab>=4.0",
     "pdfplumber>=0.11,<0.12",

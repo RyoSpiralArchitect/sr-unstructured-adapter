@@ -47,6 +47,17 @@ def add_parser(subparsers):
     publish.add_argument("--target", type=Path, required=True)
     publish.add_argument("--receipt", type=Path, required=True)
     publish.add_argument("--execute", action="store_true")
+    fabric = commands.add_parser("fabric", help="Export verified normalized Parquet and a Fabric load plan (no cloud writes)")
+    fabric.add_argument("bundles", nargs="+", type=Path)
+    fabric.add_argument("--out", required=True, type=Path)
+    fabric.add_argument("--target", required=True, type=Path)
+    for command in ("fabric-publish", "fabric-status"):
+        fabric_action = commands.add_parser(command, help="Publish or inspect an explicit Fabric snapshot receipt")
+        fabric_action.add_argument("bundle", type=Path)
+        fabric_action.add_argument("--target", required=True, type=Path)
+        fabric_action.add_argument("--receipt", required=True, type=Path)
+        if command == "fabric-publish":
+            fabric_action.add_argument("--execute", action="store_true")
 
 
 def handle(args):
@@ -85,6 +96,19 @@ def handle(args):
             if not args.execute:
                 raise ValueError('Publication requires --execute; inspect the export deployment-plan.json first')
             result = publish_foundry(args.bundle, target=FoundryTarget.model_validate_json(args.target.read_bytes()), receipt=args.receipt)
+        elif args.knowledge_command == "fabric":
+            from .fabric import FabricTarget, export_fabric
+            result = export_fabric(args.bundles, args.out, target=FabricTarget.model_validate_json(args.target.read_bytes()))
+        elif args.knowledge_command in {"fabric-publish", "fabric-status"}:
+            from .fabric import FabricTarget
+            from .fabric_runtime import fabric_status, publish_fabric
+            target = FabricTarget.model_validate_json(args.target.read_bytes())
+            if args.knowledge_command == "fabric-publish":
+                if not args.execute:
+                    raise ValueError("Publication requires --execute; inspect deployment-plan.json first")
+                result = publish_fabric(args.bundle, target=target, receipt=args.receipt)
+            else:
+                result = fabric_status(args.bundle, target=target, receipt=args.receipt)
         else:
             if not args.host:
                 raise ValueError("A workspace host is required")
