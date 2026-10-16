@@ -69,7 +69,9 @@ def handle(args):
             if not args.host:
                 raise ValueError("A workspace host is required")
             result = databricks_status(args.receipt, host=args.host, token=os.getenv("DATABRICKS_TOKEN", ""))
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        # JSON escapes preserve Unicode data even on legacy Windows consoles.
+        # Bundle files remain UTF-8; reporting must not fail after a successful write.
+        print(json.dumps(result, ensure_ascii=True, indent=2))
         return 0 if result.get("status") in {None, "complete", "committed"} else 1
     except Exception as exc:
         # Provider messages/URLs can contain credentials or source text.

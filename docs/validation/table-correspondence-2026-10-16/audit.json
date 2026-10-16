@@ -318,7 +318,7 @@
     "claim_ceiling": "Exploratory fixed-corpus observation; no significance, independent human gold, or general superiority claim."
   },
   "local_tests": {
-    "passed": 757,
+    "passed": 758,
     "skipped": 1,
     "warnings": 3,
     "skip_reason": "Windows-only DLL test on macOS"
@@ -327,5 +327,9 @@
     "fp_9737f6fbc4": 31,
     "fp_9d061f56e9": 1
   },
-  "fingerprint_limitation": "The fixed requested/returned model ID had two backend fingerprints; backend state was not fully constant."
+  "fingerprint_limitation": "The fixed requested/returned model ID had two backend fingerprints; backend state was not fully constant.",
+  "ci_initial_failure": {
+    "run_url": "https://github.com/RyoSpiralArchitect/sr-unstructured-adapter/actions/runs/38843849796",
+    "cause": "Test mapping writer omitted UTF-8 on Windows; fixed explicit encoding and added a CP1252 console regression for the real CLI plan output."
+  }
 }

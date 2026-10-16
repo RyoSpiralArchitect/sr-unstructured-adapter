@@ -34,6 +34,10 @@ second example, `data/knowledge/digital-agency-roles.json`, represents positions
 and their exact role-description cells; it does not split prose into inferred
 responsibilities or people.
 
+Mapping and bundle files use UTF-8. CLI result JSON escapes non-ASCII characters
+so it remains valid on legacy Windows consoles; decoding JSON restores the same
+Unicode values without information loss.
+
 The Python API exposes `extract_pdf_tables`, `extract_knowledge`, `OntologyMapping`,
 and `KnowledgePackage`. `sr_adapter.tables.table_blocks` also converts extracted
 tables to ordinary adapter Blocks for downstream callers. JSON schemas are

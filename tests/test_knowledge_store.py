@@ -1,5 +1,6 @@
 """Storage round trips, failure receipts, and cloud protocol contracts (offline)."""
 
+import io
 import json
 import sqlite3
 from types import SimpleNamespace
@@ -193,9 +194,22 @@ def test_status_does_not_send_credentials_to_a_changed_receipt_host(bundle, tmp_
 def test_cli_extract_to_sqlite_and_default_databricks_plan(pdf_factory, mapping, rows, tmp_path, capsys):
     pdf = pdf_factory(rows)
     spec = tmp_path / 'mapping.json'
-    spec.write_text(mapping.model_dump_json())
+    spec.write_text(mapping.model_dump_json(), encoding="utf-8")
     bundle = tmp_path / 'cli-bundle'
     assert main(['knowledge','extract',str(pdf),'--mapping',str(spec),'--out',str(bundle),'--parquet']) == 0
     assert main(['knowledge','sqlite',str(bundle),'--database',str(tmp_path / 'demo.sqlite3')]) == 0
     assert main(['knowledge','databricks',str(bundle),'--table','cat.schema.records','--warehouse-id','abc']) == 0
     assert 'required_table_ddl' in capsys.readouterr().out
+
+
+def test_japanese_json_survives_a_non_utf8_console(bundle, monkeypatch):
+    buffer = io.BytesIO()
+    console = io.TextIOWrapper(buffer, encoding="cp1252")
+    args = ['knowledge', 'databricks', str(bundle), '--table', 'cat.schema.records', '--warehouse-id', 'abc']
+    with monkeypatch.context() as patch:
+        patch.setattr('sys.stdout', console)
+        result = main(args)
+        console.flush()
+    assert result == 0
+    output = json.loads(buffer.getvalue().decode('cp1252'))
+    assert '未定' in output['request']['parameters'][1]['value']
