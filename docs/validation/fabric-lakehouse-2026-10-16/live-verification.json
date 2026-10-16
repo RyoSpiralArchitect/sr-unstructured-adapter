@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-16T09:17:28.150473+00:00",
+  "snapshot_id": "c47481c7ddad99e9d1896458d9688a190d8ae659ecae84ca78d9e913e8a148aa",
+  "status": "live_delta_verified",
+  "source_examples": [
+    "synthetic",
+    "roles"
+  ],
+  "cloud_files_verified": 21,
+  "tables": [
+    {
+      "kind": "records",
+      "operation_status": "Succeeded",
+      "row_count": 67,
+      "rows_sha256": "a3b9ad58b4afb03aa35a09434ed9e82e33ba6da8510b1f3f9e2d31b8807e39ba",
+      "verification": {
+        "active_parquet_files": 1,
+        "delta_version": 0,
+        "row_count": 67,
+        "rows_sha256": "a3b9ad58b4afb03aa35a09434ed9e82e33ba6da8510b1f3f9e2d31b8807e39ba"
+      }
+    },
+    {
+      "kind": "entities",
+      "operation_status": "Succeeded",
+      "row_count": 19,
+      "rows_sha256": "cb68c343b41176b555fcb539138604f730587003090ecda795fd454ebd0fe541",
+      "verification": {
+        "active_parquet_files": 1,
+        "delta_version": 0,
+        "row_count": 19,
+        "rows_sha256": "cb68c343b41176b555fcb539138604f730587003090ecda795fd454ebd0fe541"
+      }
+    },
+    {
+      "kind": "relations",
+      "operation_status": "Succeeded",
+      "row_count": 11,
+      "rows_sha256": "39001cdaf3455155916b0180dba2f358dac4c8d55a8dea5ed098429cdb261c9b",
+      "verification": {
+        "active_parquet_files": 1,
+        "delta_version": 0,
+        "row_count": 11,
+        "rows_sha256": "39001cdaf3455155916b0180dba2f358dac4c8d55a8dea5ed098429cdb261c9b"
+      }
+    },
+    {
+      "kind": "observations",
+      "operation_status": "Succeeded",
+      "row_count": 3,
+      "rows_sha256": "38e89d6e4cf71dd750b4f78bf93edf9e76a111911ce77b6dfb83cfdb0c2f61ff",
+      "verification": {
+        "active_parquet_files": 1,
+        "delta_version": 0,
+        "row_count": 3,
+        "rows_sha256": "38e89d6e4cf71dd750b4f78bf93edf9e76a111911ce77b6dfb83cfdb0c2f61ff"
+      }
+    },
+    {
+      "kind": "evidence",
+      "operation_status": "Succeeded",
+      "row_count": 30,
+      "rows_sha256": "fe5f9a7e0c9a165310dc984b8fdf0c52dd44d5caaefcd2d3ac4516bf96e670ff",
+      "verification": {
+        "active_parquet_files": 1,
+        "delta_version": 0,
+        "row_count": 30,
+        "rows_sha256": "fe5f9a7e0c9a165310dc984b8fdf0c52dd44d5caaefcd2d3ac4516bf96e670ff"
+      }
+    },
+    {
+      "kind": "evidence_links",
+      "operation_status": "Succeeded",
+      "row_count": 94,
+      "rows_sha256": "c73c772c2bbc31ead32eaea053a4afac4a1186744bafac71b6b7f2f40a5da056",
+      "verification": {
+        "active_parquet_files": 1,
+        "delta_version": 0,
+        "row_count": 94,
+        "rows_sha256": "c73c772c2bbc31ead32eaea053a4afac4a1186744bafac71b6b7f2f40a5da056"
+      }
+    }
+  ],
+  "claim_boundaries": {
+    "sql_endpoint_query": "not_run",
+    "foundry_retrieval_from_fabric": "not_run",
+    "single_writer_snapshot": true,
+    "source_pdf_upload": false
+  },
+  "validation": "Each source file compared byte-for-byte; each Delta table read from its complete version-0 log and active Parquet files."
+}

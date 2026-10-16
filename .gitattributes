@@ -1,0 +1,2 @@
+# Validation artifacts contain recorded byte hashes; never rewrite their bytes.
+docs/validation/** -text

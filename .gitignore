@@ -15,6 +15,7 @@ dist/
 perf_report.txt
 native_status.json
 artifacts/vlm/
+artifacts/knowledge/
 bench_report.json
 bench_report.md
 sr_adapter_jobs.sqlite3

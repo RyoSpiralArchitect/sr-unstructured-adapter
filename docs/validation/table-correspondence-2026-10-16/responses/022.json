@@ -1,0 +1,36 @@
+{
+  "id": "chatcmpl-EZSJT0fzZdmRLsBBDrauzyHxklJrH",
+  "object": "chat.completion",
+  "created": 1792119023,
+  "model": "gpt-4.1-mini-2025-04-14",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"keep_flow\": {\n    \"value\": \"新 UI へ移管し提供\",\n    \"page\": 1,\n    \"quote\": \"新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。\"\n  },\n  \"link_label\": {\n    \"value\": \"現マイナポに残し誘導\",\n    \"page\": 1,\n    \"quote\": \"現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。\"\n  },\n  \"link_screen\": {\n    \"value\": \"提供しない\",\n    \"page\": 1,\n    \"quote\": \"現マイナポに残し誘導 ベータ版環境で画面を提供しない。\"\n  },\n  \"alpha_label\": {\n    \"value\": \"アルファ版を保持拡充\",\n    \"page\": 1,\n    \"quote\": \"アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。\"\n  },\n  \"pending_detail\": {\n    \"value\": \"—\",\n    \"page\": 1,\n    \"quote\": \"要検討 —\"\n  },\n  \"research_label\": {\n    \"value\": \"調査\",\n    \"page\": 1,\n    \"quote\": \"調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。\"\n  }\n}",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 5707,
+    "completion_tokens": 387,
+    "total_tokens": 6094,
+    "prompt_tokens_details": {
+      "cached_tokens": 1792,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_9737f6fbc4"
+}

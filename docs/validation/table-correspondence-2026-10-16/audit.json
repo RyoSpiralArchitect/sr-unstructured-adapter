@@ -1,0 +1,335 @@
+{
+  "raw_response_hashes_verified": 32,
+  "request_payloads_reconstructed_and_verified": 32,
+  "matched_image_question_groups_verified": 8,
+  "gold_spec_unchanged": true,
+  "preparation_commit": "57dfbe2cb8c6b7cc1039bb7a740cc11027aa9842",
+  "committed_preparation_source_hashes_verified": 68,
+  "frozen_table_inputs_reproduced_after_byte_snapshot_fix": 8,
+  "runner_sha256": "3ec501d6afd30a2b7e471ef3af6497b23e8daa8ab7d5ee8b1eaa412b5c32841e",
+  "current_runner_sha256": "3ec501d6afd30a2b7e471ef3af6497b23e8daa8ab7d5ee8b1eaa412b5c32841e",
+  "runner_snapshot_reconstructed_from_committed_source": true,
+  "current_regrade_matches_saved_summary": true,
+  "previous_48_request_pilot_replay_unchanged": true,
+  "planned": 32,
+  "attempted": 32,
+  "completed": 32,
+  "valid_responses": 32,
+  "unknown_answer_values": {
+    "未定": 26,
+    "UNKNOWN": 2,
+    "—": 4
+  },
+  "prepared_but_rejected": {
+    "reason": "Source changed during early development; regenerated and visually reviewed before freeze.",
+    "api_calls": 0
+  },
+  "summary": {
+    "arms": {
+      "vision": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 53,
+        "grounded_correct": 6,
+        "unknown_denominator": 8,
+        "unknown_correct": 1,
+        "unknown_format_mismatch": 7,
+        "prompt_tokens_total": 33836,
+        "completion_tokens_total": 2366,
+        "median_request_ms": 9544.43,
+        "by_task": {
+          "real_document": {
+            "correct": 11,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      },
+      "vision_text": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 52,
+        "grounded_correct": 5,
+        "unknown_denominator": 8,
+        "unknown_correct": 0,
+        "unknown_format_mismatch": 8,
+        "prompt_tokens_total": 35436,
+        "completion_tokens_total": 2443,
+        "median_request_ms": 9570.779999999999,
+        "by_task": {
+          "real_document": {
+            "correct": 10,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      },
+      "vision_adapter": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 52,
+        "grounded_correct": 5,
+        "unknown_denominator": 8,
+        "unknown_correct": 0,
+        "unknown_format_mismatch": 8,
+        "prompt_tokens_total": 37635,
+        "completion_tokens_total": 2472,
+        "median_request_ms": 10822.87,
+        "by_task": {
+          "real_document": {
+            "correct": 10,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      },
+      "vision_tables": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 53,
+        "grounded_correct": 6,
+        "unknown_denominator": 8,
+        "unknown_correct": 1,
+        "unknown_format_mismatch": 7,
+        "prompt_tokens_total": 48647,
+        "completion_tokens_total": 2350,
+        "median_request_ms": 10288.875,
+        "by_task": {
+          "real_document": {
+            "correct": 11,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      }
+    },
+    "paired": {
+      "vision_adapter_vs_vision": {
+        "counts": {
+          "both_correct": 52,
+          "loss": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          }
+        ]
+      },
+      "vision_text_vs_vision": {
+        "counts": {
+          "both_correct": 52,
+          "loss": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          }
+        ]
+      },
+      "vision_adapter_vs_vision_text": {
+        "counts": {
+          "both_correct": 52,
+          "both_wrong": 8
+        },
+        "changes": []
+      },
+      "vision_tables_vs_vision": {
+        "counts": {
+          "both_correct": 53,
+          "both_wrong": 7
+        },
+        "changes": []
+      },
+      "vision_tables_vs_vision_text": {
+        "counts": {
+          "both_correct": 52,
+          "gain": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "gain",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            }
+          }
+        ]
+      },
+      "vision_tables_vs_vision_adapter": {
+        "counts": {
+          "both_correct": 52,
+          "gain": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "gain",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            }
+          }
+        ]
+      }
+    },
+    "claim_ceiling": "Exploratory fixed-corpus observation; no significance, independent human gold, or general superiority claim."
+  },
+  "local_tests": {
+    "passed": 758,
+    "skipped": 1,
+    "warnings": 3,
+    "skip_reason": "Windows-only DLL test on macOS"
+  },
+  "system_fingerprints": {
+    "fp_9737f6fbc4": 31,
+    "fp_9d061f56e9": 1
+  },
+  "fingerprint_limitation": "The fixed requested/returned model ID had two backend fingerprints; backend state was not fully constant.",
+  "ci_initial_failure": {
+    "run_url": "https://github.com/RyoSpiralArchitect/sr-unstructured-adapter/actions/runs/38843849796",
+    "cause": "Test mapping writer omitted UTF-8 on Windows; fixed explicit encoding and added a CP1252 console regression for the real CLI plan output."
+  }
+}

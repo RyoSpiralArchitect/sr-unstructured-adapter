@@ -1,3 +1,29 @@
+include .gitattributes
 include scripts/smoke_llm.py
 include scripts/vlm_benchmark.py
 include data/vlm_benchmark/pilot-v1.json
+include scripts/build_table_probe.py
+include data/vlm_benchmark/table-correspondence-v1.json
+include data/knowledge/project-ownership.json
+include data/knowledge/digital-agency-roles.json
+recursive-include tests *.py
+include configs/settings.yaml
+include docs/table-knowledge-lakehouse.md
+include docs/table-knowledge-2026-10-16.md
+include data/knowledge/foundry-target.example.json
+include docs/foundry-iq.md
+include docs/foundry-context-2026-10-16.md
+include scripts/probe_relation_context.py
+include scripts/probe_azure_relation_context.py
+recursive-include docs/validation/foundry-context-2026-10-16/v2/frozen *
+include docs/azure-context-gpt55-2026-10-16.md
+recursive-include docs/validation/azure-context-gpt55-2026-10-16 *
+global-exclude *.pyc
+recursive-include docs/validation/foundry-context-2026-10-16/handoff *
+include data/knowledge/fabric-target.example.json
+include docs/fabric-lakehouse.md
+include docs/fabric-lakehouse-2026-10-16.md
+include docs/validation/fabric-lakehouse-2026-10-16/live-verification.json
+recursive-include docs/validation/table-correspondence-2026-10-16/knowledge-examples *
+include docs/foundry-live-2026-10-16.md
+include docs/validation/foundry-live-2026-10-16/live-verification.json

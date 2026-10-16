@@ -280,3 +280,43 @@ def test_frozen_pilot_has_reviewable_annotations_and_source_hashes():
             else:
                 assert field["page"] in case["source_pages"]
                 assert field["anchors"] and field["evidence"]
+
+
+def test_four_arm_table_input_keeps_images_questions_and_gold_separate(corpus):
+    root, case, _ = corpus
+    bench.write_json(root / "tables.json", {"tables": [{"cells": [{"text": "12,500円", "row": 1, "column": 2}]}]})
+    case["tables"] = bench.file_record(root / "tables.json", root)
+    case["fields"][0]["accepted"] = ["HIDDEN_GOLD_TABLE_CONTROL"]
+    payloads = [bench.build_payload(case, root, arm) for arm in bench.TABLE_ARMS]
+    assert all(payload["messages"][1]["content"][:-1] == payloads[0]["messages"][1]["content"][:-1] for payload in payloads)
+    assert "HIDDEN_GOLD_TABLE_CONTROL" not in str(payloads)
+    assert '"column":2' in payloads[-1]["messages"][1]["content"][-1]["text"]
+
+
+def test_four_arm_schedule_balances_positions_and_keeps_full_denominators(corpus):
+    cases = [{**corpus[1], "id": f"case-{i}"} for i in range(8)]
+    rows = bench.schedule(cases, 1, bench.TABLE_ARMS)
+    assert len(rows) == 32
+    for position in range(4):
+        assert all(sum(row["arm"] == arm for row in rows[position::4]) == 2 for arm in bench.TABLE_ARMS)
+    manifest = {"arms": list(bench.TABLE_ARMS), "cases": cases}
+    for case in cases:
+        case["fields"] = copy.deepcopy(case["fields"])
+        case["fields"][0]["task"] = "recognition"
+    summary = bench.summarize(manifest, rows)
+    assert summary["arms"]["vision_tables"]["field_denominator"] == 24
+    assert summary["arms"]["vision_tables"]["by_task"]["recognition"] == {"denominator": 8, "correct": 0}
+    assert summary["paired"]["vision_tables_vs_vision"]["counts"] == {"unavailable": 24}
+
+
+def test_counterfactual_table_gold_changes_only_where_correspondence_changes():
+    spec = json.loads((Path(__file__).parents[1] / "data/vlm_benchmark/table-correspondence-v1.json").read_text("utf-8"))
+    cases = {case["id"]: case for case in spec["cases"]}
+    assert len(cases) == 8 and sum(len(case["fields"]) for case in cases.values()) == 60
+    for family in ("column-order", "row-order"):
+        assert [field["accepted"] for field in cases[family + "-base"]["fields"]] == [
+            field["accepted"] for field in cases[family + "-changed"]["fields"]]
+    base = cases["header-binding-base"]
+    changed = cases["header-binding-changed"]
+    assert base["document"]["pages"][0]["tables"][0]["rows"][1:] == changed["document"]["pages"][0]["tables"][0]["rows"][1:]
+    assert sum(a["accepted"] != b["accepted"] for a, b in zip(base["fields"], changed["fields"])) == 4

@@ -1,0 +1,46 @@
+{
+  "status": "verified",
+  "only_difference": "explicit message/input_text transport envelope",
+  "requests": [
+    {
+      "id": "synthetic-normalized_records-1",
+      "same_text": true,
+      "text_sha256": "af83429980bb1449fa105b647ea75488e837fb8a8dbc3e498edfedb7e3f636b5"
+    },
+    {
+      "id": "synthetic-row_contexts-1",
+      "same_text": true,
+      "text_sha256": "9a477eecf1335ca51601732973f50fd6aa7fb1d41cbd55b226e02e356a551a97"
+    },
+    {
+      "id": "roles-normalized_records-1",
+      "same_text": true,
+      "text_sha256": "1c0cb75a4f3c41d543c11a293fa16f1989cb790c6fa3a951443abe8b9f9e7016"
+    },
+    {
+      "id": "roles-row_contexts-1",
+      "same_text": true,
+      "text_sha256": "855b469e3bdcbdbb69669f7c4a2daab1967c55c5f0a0f87d598c6202693b6423"
+    },
+    {
+      "id": "roles-row_contexts-2",
+      "same_text": true,
+      "text_sha256": "855b469e3bdcbdbb69669f7c4a2daab1967c55c5f0a0f87d598c6202693b6423"
+    },
+    {
+      "id": "roles-normalized_records-2",
+      "same_text": true,
+      "text_sha256": "1c0cb75a4f3c41d543c11a293fa16f1989cb790c6fa3a951443abe8b9f9e7016"
+    },
+    {
+      "id": "synthetic-row_contexts-2",
+      "same_text": true,
+      "text_sha256": "9a477eecf1335ca51601732973f50fd6aa7fb1d41cbd55b226e02e356a551a97"
+    },
+    {
+      "id": "synthetic-normalized_records-2",
+      "same_text": true,
+      "text_sha256": "af83429980bb1449fa105b647ea75488e837fb8a8dbc3e498edfedb7e3f636b5"
+    }
+  ]
+}

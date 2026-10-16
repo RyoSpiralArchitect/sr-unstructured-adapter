@@ -21,14 +21,25 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+tables = ["pdfplumber>=0.11,<0.12"]
+lakehouse = ["pyarrow>=18"]
+azure = ["azure-storage-file-datalake>=12.16,<13", "azure-identity>=1.17,<2"]
+foundry = ["azure-identity>=1.17,<2"]
+fabric = ["azure-identity>=1.17,<2", "pyarrow>=18"]
 evaluation = [
     "reportlab>=4.0",
+    "pdfplumber>=0.11,<0.12",
 ]
 dev = [
     "pytest>=7.4",
     "pytest-benchmark>=4.0",
     "pyperf>=2.6",
     "pytest-mock>=3.12",
+    "reportlab>=4.0",
+    "pdfplumber>=0.11,<0.12",
+    "pyarrow>=18",
+    "rdflib>=7",
+    "azure-storage-file-datalake>=12.16,<13",
 ]
 api = [
     "fastapi>=0.110",

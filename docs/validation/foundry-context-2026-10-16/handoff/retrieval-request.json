@@ -1,0 +1,1 @@
+{"includeActivity":true,"intents":[{"search":"<your relation question>","type":"semantic"}],"knowledgeSourceParams":[{"includeReferenceSourceData":true,"includeReferences":true,"kind":"searchIndex","knowledgeSourceName":"sr-relations-ddc256daff35b6c0-source"}],"maxOutputSize":6000}

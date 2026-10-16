@@ -1,0 +1,135 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 4096,
+  "text": {
+    "format": {
+      "type": "json_object"
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_0cae76fcea9c93a3016ad1eee99944819683e0eb29c3a8396b",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792143081,
+  "completed_at": 1792143085,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_0cae76fcea9c93a3016ad1eeeae4e08196b09ef30b89d01c1b",
+      "response_id": "resp_0cae76fcea9c93a3016ad1eee99944819683e0eb29c3a8396b",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"answers\":[{\"id\":\"primary\",\"status\":\"observed\",\"value\":\"東部室\",\"evidence_ids\":[\"urn:sr:relation:e3f05df2c238cea532f43d9df30486f1626b59a7baa2ef7371f62c5007b1a3fb\"]},{\"id\":\"secondary\",\"status\":\"observed\",\"value\":\"西部室\",\"evidence_ids\":[\"urn:sr:relation:df61f1685bbaaf7b98b0487f230d60937da58f8466a948cea34f7d06c98a35f1\"]},{\"id\":\"other-row\",\"status\":\"observed\",\"value\":\"西部室\",\"evidence_ids\":[\"urn:sr:relation:6de7f47548535e16c70cf198b0f30eecc9b27d943775bd91f115cfc0bba880f4\"]},{\"id\":\"known-budget\",\"status\":\"observed\",\"value\":\"240\",\"evidence_ids\":[\"urn:sr:property:fd1641f2d1fd4190c1d1a244ff2002434392c70acbedde38cea12b00f07814d7\"]},{\"id\":\"unknown-budget\",\"status\":\"unknown\",\"value\":null,\"evidence_ids\":[\"urn:sr:property:111dd44ee28aca532509e3a42aac08f50c438f79f45aae315b28649703aac2c2\"]},{\"id\":\"reverse\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]},{\"id\":\"identity\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]},{\"id\":\"absent\",\"status\":\"not_established\",\"value\":null,\"evidence_ids\":[]}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 11457,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 384,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 11841
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 28143,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 1007,
+        "check_offset": 0
+      }
+    }
+  ]
+}

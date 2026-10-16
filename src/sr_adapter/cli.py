@@ -278,7 +278,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     schema_parser = subparsers.add_parser("schema", help="Export JSON schema for models")
     schema_parser.add_argument(
         "model",
-        choices=("document", "block"),
+        choices=("document", "block", "knowledge", "ontology-mapping", "table-document"),
         help="Which model schema to export",
     )
     schema_parser.add_argument(
@@ -293,6 +293,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Indentation level for JSON output",
     )
 
+    from .knowledge_cli import add_parser as add_knowledge_parser
+    add_knowledge_parser(subparsers)
     return parser.parse_args(argv)
 
 
@@ -335,6 +337,9 @@ def _load_path_entries(paths: list[str], paths_file: Path | None) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
+    if args.command == "knowledge":
+        from .knowledge_cli import handle
+        return handle(args)
     if args.command == "convert":
         try:
             entries = _load_path_entries(args.paths, args.paths_file)
@@ -751,6 +756,10 @@ def _handle_schema(args: argparse.Namespace) -> int:
         target = Document
     elif model == "block":
         target = Block
+    elif model in {"knowledge", "ontology-mapping", "table-document"}:
+        from .knowledge import KnowledgePackage, OntologyMapping
+        from .tables import TableDocument
+        target = {"knowledge": KnowledgePackage, "ontology-mapping": OntologyMapping, "table-document": TableDocument}[model]
     else:
         raise ValueError(f"Unhandled schema model: {model}")
 

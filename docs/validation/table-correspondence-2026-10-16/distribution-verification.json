@@ -1,0 +1,60 @@
+{
+  "wheel": {
+    "verified_import_location": true,
+    "schemas": 3,
+    "parquet_jsonld_jsonl_verified": true,
+    "sqlite_records": 67,
+    "sqlite_entities": 19,
+    "sqlite_relations": 11,
+    "repeat_inserted": 0,
+    "databricks_plan_only": true,
+    "cloud_requests": 0,
+    "cases": [
+      {
+        "case_id": "column-order-base",
+        "package_id": "urn:sr:package:2eae3892a992a9727acb84c8899d519b4ad74cfc00c848425f06a0b9def06f4a",
+        "records": 37
+      },
+      {
+        "case_id": "da-roles",
+        "package_id": "urn:sr:package:6434e740022f8bc2b69f10ed6e54012d11ecd21a70acba254156995c25d7dfb4",
+        "records": 30
+      }
+    ]
+  },
+  "sdist": {
+    "verified_import_location": true,
+    "schemas": 3,
+    "parquet_jsonld_jsonl_verified": true,
+    "sqlite_records": 67,
+    "sqlite_entities": 19,
+    "sqlite_relations": 11,
+    "repeat_inserted": 0,
+    "databricks_plan_only": true,
+    "cloud_requests": 0,
+    "cases": [
+      {
+        "case_id": "column-order-base",
+        "package_id": "urn:sr:package:2eae3892a992a9727acb84c8899d519b4ad74cfc00c848425f06a0b9def06f4a",
+        "records": 37
+      },
+      {
+        "case_id": "da-roles",
+        "package_id": "urn:sr:package:6434e740022f8bc2b69f10ed6e54012d11ecd21a70acba254156995c25d7dfb4",
+        "records": 30
+      }
+    ]
+  },
+  "distributions": {
+    "sr_unstructured_adapter-0.2.6.tar.gz": "7feeb7dda74435566dcd10570b95f605bd6680f84861561fd4db86da7e4d908e",
+    "sr_unstructured_adapter-0.2.6-py3-none-any.whl": "65346e5124b9c6bc2fd8558cf15c47e2717d95c2bde7dea6e65f8a62bcf37cff"
+  },
+  "source_files": {
+    "src/sr_adapter/tables.py": "afa9fb1b84d6c437bf6bc28d4b868941c3a9d628f386838344befc67385653b2",
+    "src/sr_adapter/knowledge.py": "17608273e1f32675a9008b72bb2d47bcfd0fe0379e72d8779b92da5c63f43f60",
+    "src/sr_adapter/knowledge_store.py": "c773c8e4b4aaf6f6e74b1f6b5ec6cb175a9a345a41ef1a48d46bb8e6d491b04c",
+    "src/sr_adapter/knowledge_cli.py": "f9706b37d2a12922949c42c54e4e33ce5294a3dc827bf47f9442c867401a254b",
+    "src/sr_adapter/cli.py": "39d3c22097413f34684d750d24e21582f7a9711f13c9c7885728a9b0e387f35a",
+    "src/sr_adapter/__init__.py": "95486915ad0eef4519f6fdb31f57dcdc5833e03a56c80dc4a938dcfb1893705c"
+  }
+}
