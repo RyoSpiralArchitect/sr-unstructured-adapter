@@ -278,7 +278,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     schema_parser = subparsers.add_parser("schema", help="Export JSON schema for models")
     schema_parser.add_argument(
         "model",
-        choices=("document", "block"),
+        choices=("document", "block", "knowledge", "ontology-mapping", "table-document"),
         help="Which model schema to export",
     )
     schema_parser.add_argument(
@@ -756,6 +756,10 @@ def _handle_schema(args: argparse.Namespace) -> int:
         target = Document
     elif model == "block":
         target = Block
+    elif model in {"knowledge", "ontology-mapping", "table-document"}:
+        from .knowledge import KnowledgePackage, OntologyMapping
+        from .tables import TableDocument
+        target = {"knowledge": KnowledgePackage, "ontology-mapping": OntologyMapping, "table-document": TableDocument}[model]
     else:
         raise ValueError(f"Unhandled schema model: {model}")
 

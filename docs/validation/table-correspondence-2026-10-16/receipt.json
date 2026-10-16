@@ -1,0 +1,4372 @@
+{
+  "schema_version": 1,
+  "run_id": "62ac52e7-511b-4a44-87d9-752fccf73ddb",
+  "created_at": "2026-10-16T02:46:41.066410+00:00",
+  "manifest_sha256": "eaec4e296e0bef5a3f8d5754180238ca82a616f13b213e6b2ea095ade2b19d45",
+  "model": "gpt-4.1-mini-2025-04-14",
+  "repeats": 1,
+  "planned_requests": 32,
+  "max_output_tokens_per_request": 1600,
+  "retry_policy": "none; interrupted/ambiguous requests are not resumed",
+  "results": [
+    {
+      "case_id": "da-roles",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "89f4cb4553f1557693b40197af4c62ca729eaa3c8d7abf80ea75d08c98678973",
+      "request_id": "dcb9253e-40b1-49d6-b7e1-fc4a28104683",
+      "http_status": 200,
+      "provider_request_id": "req_4403d72c4a5c4bd2add19c0409b4a7f2",
+      "response_sha256": "1db62f32814ea429212e5863625bf66faf998253314cb919dacaf78c4a17b5dc",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4805,
+        "completion_tokens": 397,
+        "total_tokens": 5202,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者 • 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁 実行・推進 デジタル庁の推進体制（想定） プロジェクト マネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー • プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア • 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー • 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 15448.3
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "9a6a4fb6122386ffe11afe5c12a9a1cfd82583aabb6269db5e9c7f4abbb22acf",
+      "request_id": "e74f11b1-883e-4476-b450-88ce46e08cec",
+      "http_status": 200,
+      "provider_request_id": "req_8f2f1863e43e42d78d8df4bc79fe7510",
+      "response_sha256": "2c74b93a670379455f9f6b82d927a61cba012db422e18e24de25c4674541d858",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4209,
+        "completion_tokens": 376,
+        "total_tokens": 4585,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者\n・本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー\n・プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア\n・受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー\n・契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 13383.69
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "10f82e2f0f87add77e46626b26b96c129cb3eb61049db130db3373f81eeac3ae",
+      "request_id": "95907669-70d2-4b6d-b08e-f3413eeb95c4",
+      "http_status": 200,
+      "provider_request_id": "req_6f851012306e48c8bc81dc47177f80df",
+      "response_sha256": "4dc1c6b457b5be2c96c3f122cdfa4e097ffea02d5c06ef6781460dbcfed95174",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 6131,
+        "completion_tokens": 379,
+        "total_tokens": 6510,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者\n• 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー\n• プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア\n• 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "UNKNOWN",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": true,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー\n• 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 12788.7
+    },
+    {
+      "case_id": "da-roles",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "207a435876fe509ecb4303429e0adf7998b6a6d2b4d6395467e442dfc958b4e6",
+      "request_id": "8cb81611-a8f8-42bf-a88f-dc46ae34a0fd",
+      "http_status": 200,
+      "provider_request_id": "req_5f53739081364b6b911e5784312c91a8",
+      "response_sha256": "6066ccb0a286ff4b2fa4abee1acc558626c124b8cbb00ecc6b04af172255709d",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5051,
+        "completion_tokens": 380,
+        "total_tokens": 5431,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "table_decision",
+            "actual": {
+              "value": "事業責任者",
+              "page": 1,
+              "quote": "事業責任者\n• 本事業の執行責任を持ち決裁を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "diagram_decision",
+            "actual": {
+              "value": "プロジェクトマネージャー",
+              "page": 1,
+              "quote": "執行責任・決裁\nプロジェクトマネージャー"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "backlog_role",
+            "actual": {
+              "value": "PdM／プロダクトマネージャー",
+              "page": 1,
+              "quote": "PdM／プロダクトマネージャー\n• プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "code_review_role",
+            "actual": {
+              "value": "エンジニア",
+              "page": 1,
+              "quote": "エンジニア\n• 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "staff_count",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "各ポジションへの配置人数は未定である。"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          },
+          {
+            "id": "contract_role",
+            "actual": {
+              "value": "PjM／プロジェクトマネージャー",
+              "page": 1,
+              "quote": "PjM／プロジェクトマネージャー\n• 契約や予算関連の管理業務を行う"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 12934.38
+    },
+    {
+      "case_id": "header-binding-base",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "833aede76fc4a74e8e56b729d5965f86104b8ba62f3b8c8340eb8e90ddfd26fb",
+      "request_id": "73be6020-8c96-4917-a27a-7106242b1f17",
+      "http_status": 200,
+      "provider_request_id": "req_5bd7cdaa96564a68bdcb05344952a326",
+      "response_sha256": "8271881fbacdf9fb38affb017b721b1d30a84bd34b81d03a809c6e495a24cdd1",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4485,
+        "completion_tokens": 291,
+        "total_tokens": 4776,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件「白樺」 主担当 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「青葉」 主担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「白樺」 副担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件「青葉」 副担当 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件「白樺」 予算(万円) 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「若竹」 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 7971.45
+    },
+    {
+      "case_id": "header-binding-base",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "0501f44d88652f2bc0c17015f0c79fcc715fe70661b40a667d375c36c86a13c8",
+      "request_id": "8f18027d-c63b-4f98-be6c-210f14e2d08c",
+      "http_status": 200,
+      "provider_request_id": "req_df3c3ce6d1de481cb518b2c536f20e29",
+      "response_sha256": "06b9061030964a4ff22a54844536570fca40e47e1106f205e1e6992cf5dbc690",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 6012,
+        "completion_tokens": 279,
+        "total_tokens": 6291,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件 白樺 主担当 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件 青葉 主担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件 白樺 副担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件 青葉 副担当 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件 白樺 予算(万円) 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 若竹 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 6913.0
+    },
+    {
+      "case_id": "header-binding-base",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "85819557b4b0942697b850e9d8a831e763138d13a36badca08143e36fa4c3b67",
+      "request_id": "c4d92507-0568-4632-a8b0-19e4d1a10e0a",
+      "http_status": 200,
+      "provider_request_id": "req_53b90467c67f464882743260aa931135",
+      "response_sha256": "91a1d89374c9787de042b767724412abd6dcd5adc0699c360d48679b1c9315f1",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4237,
+        "completion_tokens": 279,
+        "total_tokens": 4516,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件 白樺 主担当 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件 青葉 主担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件 白樺 副担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件 青葉 副担当 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件 白樺 予算(万円) 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 若竹 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8288.94
+    },
+    {
+      "case_id": "header-binding-base",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "e96a398d74c320e7b1282dba92262be994fbe99adb8508acf54b40050b26a74b",
+      "request_id": "2740f059-5b70-447b-beb3-bdcdcbf8dad7",
+      "http_status": 200,
+      "provider_request_id": "req_8f50f2916df24c8aa13bc9cbda307b1c",
+      "response_sha256": "643b293841e1fc0c83f6d47952094004ff5adcd9884c0c57b523fbb9a008acc8",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4358,
+        "completion_tokens": 301,
+        "total_tokens": 4659,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件「白樺」の「主担当」は 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「青葉」の「主担当」は 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「白樺」の「副担当」は 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件「青葉」の「副担当」は 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件「白樺」の「予算(万円)」は 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「若竹」の「予算(万円)」は 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8047.23
+    },
+    {
+      "case_id": "row-order-base",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "20246aebb3429a41141fdcad0f639d814a20eb97d7cdebcce80bd9a7a10c3756",
+      "request_id": "8b69b642-f61f-45ba-812e-12083f603d68",
+      "http_status": 200,
+      "provider_request_id": "req_1b6fd58681bc4c45b23d169c35d18495",
+      "response_sha256": "69dc9a1fe82e9beaf4149b97f3d1c4e54101e087732f19fc8b5074ea7a1a2961",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5994,
+        "completion_tokens": 260,
+        "total_tokens": 6254,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 165 290 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 165 290 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8353.01
+    },
+    {
+      "case_id": "row-order-base",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "65cd1d588367d7139b36a92bbf855be68be3597d65d505d778c93d321a1fb6a8",
+      "request_id": "d0062a2a-a220-46fe-971d-7ce79352a335",
+      "http_status": 200,
+      "provider_request_id": "req_a01ec0bbe08e4c9f89d44d7387e526ee",
+      "response_sha256": "9ca6fb3738573a9c9fd2c23dcfeff98409271ba6d1859a5e3733c687e269484c",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4464,
+        "completion_tokens": 270,
+        "total_tokens": 4734,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 港 165 丘 290 森 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 港 165 丘 290 森 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8396.59
+    },
+    {
+      "case_id": "row-order-base",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "b215812efc589b4aff752dd5fb6658be1dce5d273f92b41a2157f4e7a976b507",
+      "request_id": "ea507ee6-51fb-4d07-a319-ef7f81f8ab15",
+      "http_status": 200,
+      "provider_request_id": "req_dbe0f36116a841659c4438233653c772",
+      "response_sha256": "f013fe13bb520166a6b3aa6ba43fcce010880248de9256edb0cefb10331ab027",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4337,
+        "completion_tokens": 270,
+        "total_tokens": 4607,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 港 165 丘 290 森 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 港 165 丘 290 森 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8739.98
+    },
+    {
+      "case_id": "row-order-base",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "5ceed5eb6a6ecddfe5fdf63c35880197739f0eb8eedcb1d3e0041457cb690eac",
+      "request_id": "05f22b5f-7229-4b36-aeb9-f83ecb438d27",
+      "http_status": 200,
+      "provider_request_id": "req_25894119068e46559c468d4ad09a9457",
+      "response_sha256": "8a573a57ddeac6c7607aadd9fd57433701d546870576c2de216203615f9a2b88",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4228,
+        "completion_tokens": 260,
+        "total_tokens": 4488,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 165 290 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 165 290 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8942.74
+    },
+    {
+      "case_id": "column-order-base",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "0f11fc62e6ab6131365daa73849a71e6f5bf026481834e49d247a996f9805779",
+      "request_id": "ad5a20d9-0210-40d5-9ab8-3b39c66669d7",
+      "http_status": 200,
+      "provider_request_id": "req_749770395b464854af786154a1f1d216",
+      "response_sha256": "a6013d01ea65aac45651add53374198c53cb69ecf7e48d58c3e8531c2b59b5fc",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4240,
+        "completion_tokens": 278,
+        "total_tokens": 4518,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件 朝凪 主担当 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 夕凪 主担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 朝凪 副担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件 夕凪 副担当 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件 朝凪 予算(万円) 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 星凪 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8245.75
+    },
+    {
+      "case_id": "column-order-base",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "4c6f66613680a5bf198f7ceb696912b41a995e33d1d081abeba37d013777e090",
+      "request_id": "4294c9f7-573a-4673-93e6-d2de120fee3b",
+      "http_status": 200,
+      "provider_request_id": "req_5583475499184c718eecc59cc6af1988",
+      "response_sha256": "ffb2f5b45fcac3476517e073a2f4e468ebb4d36d72a5492f5297336d9767a7f5",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4361,
+        "completion_tokens": 298,
+        "total_tokens": 4659,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件「朝凪」の「主担当」は 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件「夕凪」の「主担当」は 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件「朝凪」の「副担当」は 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件「夕凪」の「副担当」は 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件「朝凪」の「予算(万円)」は 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「星凪」の「予算(万円)」は 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 9314.72
+    },
+    {
+      "case_id": "column-order-base",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "c1d7c64c84e00887f6148cdd8b77fe272ba5ac2a20803a8178e6f8648a5dd975",
+      "request_id": "454e608e-e9f6-4063-962d-cff57776fc4c",
+      "http_status": 200,
+      "provider_request_id": "req_ca013791dc714c3c8b8f5df41e8a092a",
+      "response_sha256": "773714d4a702a6b9a03378bbc145bce7d7223d5cf682696a130fe2cce4526f6a",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4488,
+        "completion_tokens": 298,
+        "total_tokens": 4786,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件「朝凪」の「主担当」は 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件「夕凪」の「主担当」は 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件「朝凪」の「副担当」は 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件「夕凪」の「副担当」は 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件「朝凪」の「予算(万円)」は 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「星凪」の「予算(万円)」は 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8607.13
+    },
+    {
+      "case_id": "column-order-base",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "6fa231e6228e1ebeb0cf82e5733b51af594bc3ad08d3e1ded819f4bc38901aa8",
+      "request_id": "ca90c291-f815-4ccc-ae38-3134ee8da4f1",
+      "http_status": 200,
+      "provider_request_id": "req_5f4e880cf49e401f85dfdf9ce50942b7",
+      "response_sha256": "6297225f6adaf187d2dfee53014029db740b3797a666dcbc7eef5240f7434199",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 6028,
+        "completion_tokens": 278,
+        "total_tokens": 6306,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件 朝凪 主担当 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 夕凪 主担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 朝凪 副担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件 夕凪 副担当 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件 朝凪 予算(万円) 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 星凪 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10862.03
+    },
+    {
+      "case_id": "row-order-changed",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "4d1c5939245f088ca017ca59710f944c299e6a62309a0a7a799d5a613e2008cc",
+      "request_id": "01502ed6-e09f-44aa-83f7-c01e10b66fdd",
+      "http_status": 200,
+      "provider_request_id": "req_bd2ecd39c57747baa5419ca003a0caf2",
+      "response_sha256": "2a0dcc3b26163bdeb95268155668b16c43932ec1221684478667d06c695664da",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9d061f56e9",
+      "usage": {
+        "prompt_tokens": 4465,
+        "completion_tokens": 269,
+        "total_tokens": 4734,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 290"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件「港」の「主担当」 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件「丘」の「主担当」 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件「港」の「副担当」 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件「丘」の「副担当」 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件「港」の「予算(万円)」 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「森」の「予算(万円)」 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10659.2
+    },
+    {
+      "case_id": "row-order-changed",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "7928a61ea48d47f8980551961354a102c23da58e050f1e585782e331fd8023de",
+      "request_id": "9dadf42c-936a-4a01-b90b-9ada04616baa",
+      "http_status": 200,
+      "provider_request_id": "req_65a3026ee1c7472aaf4b2d15b9299866",
+      "response_sha256": "4c14790a72d783264257b9acbc4e73444b97d1319c62c8a68477a8b578305123",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4337,
+        "completion_tokens": 197,
+        "total_tokens": 4534,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 港 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 丘 290"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 7609.06
+    },
+    {
+      "case_id": "row-order-changed",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "114f0f1f5de5f9cd522b4bb557e4346a19df520f3e6fb180ce725a0fac4ac7b7",
+      "request_id": "3926d653-a74f-4c51-8ded-d186bfc4dcbd",
+      "http_status": 200,
+      "provider_request_id": "req_515a19d5f3cd42a690e20ae8220afa63",
+      "response_sha256": "242d305ae5226a2d1d50c64f0db86bfcf0354664cfbdab34471b77b56e7f7596",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4228,
+        "completion_tokens": 252,
+        "total_tokens": 4480,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 290"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10146.12
+    },
+    {
+      "case_id": "row-order-changed",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "a503e4497c827781b1641c549340b8b1f942b2241e7c329551c0ec819470c623",
+      "request_id": "8d0e68b6-4ce3-49f2-bc56-be552e67ac8d",
+      "http_status": 200,
+      "provider_request_id": "req_b8a60937e1cf4f148b0f9206b0a7c4b7",
+      "response_sha256": "6d57b12377a4739971fd8ba4b53efb13fbb107605e4fa2d2bb64886113e921c1",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5995,
+        "completion_tokens": 212,
+        "total_tokens": 6207,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "290",
+              "page": 1,
+              "quote": "予算(万円) 290"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "海班",
+              "page": 1,
+              "quote": "案件 港 主担当 海班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 丘 主担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "山班",
+              "page": 1,
+              "quote": "案件 港 副担当 山班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "川班",
+              "page": 1,
+              "quote": "案件 丘 副担当 川班"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "165",
+              "page": 1,
+              "quote": "案件 港 予算(万円) 165"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 森 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 7190.3
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "b533ae4d95732c6dc55e17bbeb74539d3993bd6b0f148df2a61a97d8ab6ee64f",
+      "request_id": "e2782b1d-5e3d-4171-a89d-bc5f85865acf",
+      "http_status": 200,
+      "provider_request_id": "req_e99068015f474949967b571dbc37bc1a",
+      "response_sha256": "76663d3577e9f11386250d25475093b896af24b9f29bc1ee95d22a58aa91a6d1",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4217,
+        "completion_tokens": 352,
+        "total_tokens": 4569,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新UIへ移管し提供",
+              "page": 1,
+              "quote": "新UIへ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "—",
+              "page": 1,
+              "quote": "要検討 —"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 11559.81
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "7db139f499d51edd89d61c2b4c743a2cd1e6ac6bd1a85c73164d60f4d8b75761",
+      "request_id": "71d91f27-a8fb-4e30-87f7-94f71ce50210",
+      "http_status": 200,
+      "provider_request_id": "req_4de15ef06239432a824b8493c27f170f",
+      "response_sha256": "343eb2c3207079c0469c6d468d02240a44e815044d230587c2c6e38862a6357f",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 6469,
+        "completion_tokens": 385,
+        "total_tokens": 6854,
+        "prompt_tokens_details": {
+          "cached_tokens": 2688,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新UIへ移管し提供",
+              "page": 1,
+              "quote": "新UIへ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "—",
+              "page": 1,
+              "quote": "要検討 —"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 10091.93
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "46ff276a47635f35267c665e481c1ac7a3abb26516e3c8c7df71347afaaff6a3",
+      "request_id": "522708db-df72-4a92-9ad9-1629d716a31b",
+      "http_status": 200,
+      "provider_request_id": "req_728135c6707c409190ae39d52f90c91c",
+      "response_sha256": "b3b5c674cbde0d51d884cbea0ac0fc40ad83073d63aba79748bf76462d961d4a",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5707,
+        "completion_tokens": 387,
+        "total_tokens": 6094,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新 UI へ移管し提供",
+              "page": 1,
+              "quote": "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画面を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "—",
+              "page": 1,
+              "quote": "要検討 —"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 10986.54
+    },
+    {
+      "case_id": "da-story-policy",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "b915961dde8e9da0c3d9eefd4bd03c7c34914c721b06b69ee3818c60c288674a",
+      "request_id": "64ad1642-83b0-4cb4-bec1-135a692ded18",
+      "http_status": 200,
+      "provider_request_id": "req_2ac5d89bbb944affbf463e2761d5280c",
+      "response_sha256": "504b04dd93f2407cce1a5ba06562ebe33e3672a2c5b924635458b1b31b04d1e0",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4519,
+        "completion_tokens": 403,
+        "total_tokens": 4922,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "keep_flow",
+            "actual": {
+              "value": "新 UI へ移管し提供",
+              "page": 1,
+              "quote": "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を⾒直し。画⾯はベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_label",
+            "actual": {
+              "value": "現マイナポに残し誘導",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画⾯を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "link_screen",
+            "actual": {
+              "value": "提供しない",
+              "page": 1,
+              "quote": "現マイナポに残し誘導 ベータ版環境で画⾯を提供しない。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "alpha_label",
+            "actual": {
+              "value": "アルファ版を保持拡充",
+              "page": 1,
+              "quote": "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画⾯は、多少⾒直しを⾏い、ベータ版環境で構築。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "pending_detail",
+            "actual": {
+              "value": "—",
+              "page": 1,
+              "quote": "要検討 —"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          },
+          {
+            "id": "research_label",
+            "actual": {
+              "value": "調査",
+              "page": 1,
+              "quote": "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発⽅針を決定。"
+            },
+            "value_correct": true,
+            "grounded_correct": true,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          }
+        ]
+      },
+      "elapsed_ms": 13413.03
+    },
+    {
+      "case_id": "column-order-changed",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "197f7db16f3db7d9a4ddc4b5c13b9371fca3d0dcd99fc8d37a4477b951762581",
+      "request_id": "2b450ac6-2329-44d7-9dc1-96ee0f80cc60",
+      "http_status": 200,
+      "provider_request_id": "req_e6416f9d7b244500a3d2d6c64a77edc2",
+      "response_sha256": "70c75d5a8e2c492ab90e2b38ec347efa808d2b37e332ac8c3a22ac29f6f49371",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4361,
+        "completion_tokens": 278,
+        "total_tokens": 4639,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件 朝凪 主担当 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 夕凪 主担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 朝凪 副担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件 夕凪 副担当 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件 朝凪 予算(万円) 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 星凪 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10170.99
+    },
+    {
+      "case_id": "column-order-changed",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "fcc41c5554ac1f758b25458cefe3d347b5b1983d3c982714bc3da4af6af1ab46",
+      "request_id": "02f61cfa-b2c5-4558-b44d-de2a14e14905",
+      "http_status": 200,
+      "provider_request_id": "req_92573f6f0512418f93d933ced98f209b",
+      "response_sha256": "7211406a3b6f2b2f165baf82b3f1163930c6a57acc5ffc32ee23897dbf1b5156",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4489,
+        "completion_tokens": 278,
+        "total_tokens": 4767,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件 朝凪 主担当 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 夕凪 主担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 朝凪 副担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件 夕凪 副担当 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件 朝凪 予算(万円) 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 星凪 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 12574.11
+    },
+    {
+      "case_id": "column-order-changed",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "737ef9a99eebe44a873cfbc68feb92fd224228aec814ef47ed416f9faecb0e58",
+      "request_id": "7518717b-d64e-4eda-9de5-cbe493f56941",
+      "http_status": 200,
+      "provider_request_id": "req_9fbaa1ce9f1749aab775d6cc5465fa07",
+      "response_sha256": "809a0241a64b863d94791982d66b1d2fdb1a956911da3a4ea04fc1665f7ec184",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 5995,
+        "completion_tokens": 278,
+        "total_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件 朝凪 主担当 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 夕凪 主担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 朝凪 副担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件 夕凪 副担当 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件 朝凪 予算(万円) 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 星凪 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10485.82
+    },
+    {
+      "case_id": "column-order-changed",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "e4c77909eb9f708d2557dbdc2b9845c48cc61092e9ceb2e8ba72b9adedbce291",
+      "request_id": "e97f0905-f961-47f9-a4ef-43a7d1829575",
+      "http_status": 200,
+      "provider_request_id": "req_23bb7c0fc1904221993f9fd876402ca9",
+      "response_sha256": "a87caee3854050645a3ce02e5a040789bfd342300750ef458e26db77064c9ef2",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4240,
+        "completion_tokens": 278,
+        "total_tokens": 4518,
+        "prompt_tokens_details": {
+          "cached_tokens": 4224,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "240",
+              "page": 1,
+              "quote": "予算(万円) 125 240 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "東部室",
+              "page": 1,
+              "quote": "案件 朝凪 主担当 東部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 夕凪 主担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "西部室",
+              "page": 1,
+              "quote": "案件 朝凪 副担当 西部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "南部室",
+              "page": 1,
+              "quote": "案件 夕凪 副担当 南部室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "125",
+              "page": 1,
+              "quote": "案件 朝凪 予算(万円) 125"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 星凪 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10503.73
+    },
+    {
+      "case_id": "header-binding-changed",
+      "arm": "vision_tables",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "f3dafe81e206ec0a7bf5b1624015a5822fe9d3f78521ce6a6425ee63a79bd795",
+      "request_id": "d438c816-602e-4776-9c18-be0580b4cbfb",
+      "http_status": 200,
+      "provider_request_id": "req_2301cc63aa814d998ac02451441a3231",
+      "response_sha256": "9588b3d54b131139849d04b7d5db23ac7b38392bc418a02392774b7eef6e2eb4",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 6023,
+        "completion_tokens": 279,
+        "total_tokens": 6302,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件 白樺 主担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件 青葉 主担当 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件 白樺 副担当 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件 青葉 副担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件 白樺 予算(万円) 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件 若竹 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 10594.85
+    },
+    {
+      "case_id": "header-binding-changed",
+      "arm": "vision",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "54886513ccdc587f54aa02a5ec34140ddaac559d9196b1db0e6ef0f0777c4c70",
+      "request_id": "0d04a2bf-dee7-4666-9d2c-cb11d2de3df0",
+      "http_status": 200,
+      "provider_request_id": "req_7a57ed17350845aba25ed6b61a404dd4",
+      "response_sha256": "4e144554d8981860e053f1aac51bf2529d628cbf6ea0c0a1c02f1a6e0675fe41",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4237,
+        "completion_tokens": 291,
+        "total_tokens": 4528,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「白樺」 主担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件「青葉」 主担当 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件「白樺」 副担当 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「青葉」 副担当 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件「白樺」 予算(万円) 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「若竹」 予算(万円) 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 8135.65
+    },
+    {
+      "case_id": "header-binding-changed",
+      "arm": "vision_text",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "980aa2d36412821e90da4e33c9274b5ea0155a1a92cd17d7e017bb4c18503906",
+      "request_id": "496de71a-6aa1-4aba-ac50-81632d9e5019",
+      "http_status": 200,
+      "provider_request_id": "req_9e208bbf1875410aa569572bf5a53d37",
+      "response_sha256": "9a8630500a39a4a5230849e7d3882df12f4a2c94a6c3f30e774a44ba7478a9d4",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4358,
+        "completion_tokens": 299,
+        "total_tokens": 4657,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「白樺」の「主担当」 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件「青葉」の「主担当」 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件「白樺」の「副担当」 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「青葉」の「副担当」 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件「白樺」の「予算(万円)」 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「若竹」の「予算(万円)」 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 9826.84
+    },
+    {
+      "case_id": "header-binding-changed",
+      "arm": "vision_adapter",
+      "repeat": 0,
+      "seed": 17,
+      "status": "completed",
+      "attempted": true,
+      "request_sha256": "08b168dd347e1a6e292b469fae2743442bcd3a97c8ca63505790705f3cd3047d",
+      "request_id": "129c67a0-f3e4-4351-80be-91f845a61997",
+      "http_status": 200,
+      "provider_request_id": "req_5d4482c3836a4bbf9221921877cd8eb7",
+      "response_sha256": "340d18b0a78f5fb5487d708a58e6b633e496e129924da9c22f63f8cde515f7c7",
+      "response_model": "gpt-4.1-mini-2025-04-14",
+      "system_fingerprint": "fp_9737f6fbc4",
+      "usage": {
+        "prompt_tokens": 4486,
+        "completion_tokens": 299,
+        "total_tokens": 4785,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "grade": {
+        "valid": true,
+        "completion_status": "complete",
+        "fields": [
+          {
+            "id": "smallest",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "largest",
+            "actual": {
+              "value": "480",
+              "page": 1,
+              "quote": "予算(万円) 315 480 未定"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_0",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「白樺」の「主担当」 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_1",
+            "actual": {
+              "value": "運用室",
+              "page": 1,
+              "quote": "案件「青葉」の「主担当」 運用室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_2",
+            "actual": {
+              "value": "企画室",
+              "page": 1,
+              "quote": "案件「白樺」の「副担当」 企画室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_3",
+            "actual": {
+              "value": "審査室",
+              "page": 1,
+              "quote": "案件「青葉」の「副担当」 審査室"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_4",
+            "actual": {
+              "value": "315",
+              "page": 1,
+              "quote": "案件「白樺」の「予算(万円)」 315"
+            },
+            "value_correct": true,
+            "grounded_correct": false,
+            "expected_unknown": false,
+            "unknown_format_mismatch": false
+          },
+          {
+            "id": "binding_5",
+            "actual": {
+              "value": "未定",
+              "page": 1,
+              "quote": "案件「若竹」の「予算(万円)」 未定"
+            },
+            "value_correct": false,
+            "grounded_correct": false,
+            "expected_unknown": true,
+            "unknown_format_mismatch": true
+          }
+        ]
+      },
+      "elapsed_ms": 11903.99
+    }
+  ],
+  "runner_sha256": "3ec501d6afd30a2b7e471ef3af6497b23e8daa8ab7d5ee8b1eaa412b5c32841e",
+  "finished_at": "2026-10-16T02:52:04.396211+00:00",
+  "summary": {
+    "arms": {
+      "vision": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 53,
+        "grounded_correct": 6,
+        "unknown_denominator": 8,
+        "unknown_correct": 1,
+        "unknown_format_mismatch": 7,
+        "prompt_tokens_total": 33836,
+        "completion_tokens_total": 2366,
+        "median_request_ms": 9544.43,
+        "by_task": {
+          "real_document": {
+            "correct": 11,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      },
+      "vision_text": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 52,
+        "grounded_correct": 5,
+        "unknown_denominator": 8,
+        "unknown_correct": 0,
+        "unknown_format_mismatch": 8,
+        "prompt_tokens_total": 35436,
+        "completion_tokens_total": 2443,
+        "median_request_ms": 9570.779999999999,
+        "by_task": {
+          "real_document": {
+            "correct": 10,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      },
+      "vision_adapter": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 52,
+        "grounded_correct": 5,
+        "unknown_denominator": 8,
+        "unknown_correct": 0,
+        "unknown_format_mismatch": 8,
+        "prompt_tokens_total": 37635,
+        "completion_tokens_total": 2472,
+        "median_request_ms": 10822.87,
+        "by_task": {
+          "real_document": {
+            "correct": 10,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      },
+      "vision_tables": {
+        "planned_requests": 8,
+        "attempted_requests": 8,
+        "completed_requests": 8,
+        "valid_responses": 8,
+        "field_denominator": 60,
+        "value_correct": 53,
+        "grounded_correct": 6,
+        "unknown_denominator": 8,
+        "unknown_correct": 1,
+        "unknown_format_mismatch": 7,
+        "prompt_tokens_total": 48647,
+        "completion_tokens_total": 2350,
+        "median_request_ms": 10288.875,
+        "by_task": {
+          "real_document": {
+            "correct": 11,
+            "denominator": 12
+          },
+          "value_recognition": {
+            "correct": 12,
+            "denominator": 12
+          },
+          "association": {
+            "correct": 30,
+            "denominator": 36
+          }
+        }
+      }
+    },
+    "paired": {
+      "vision_adapter_vs_vision": {
+        "counts": {
+          "both_correct": 52,
+          "loss": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          }
+        ]
+      },
+      "vision_text_vs_vision": {
+        "counts": {
+          "both_correct": 52,
+          "loss": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "loss",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            }
+          }
+        ]
+      },
+      "vision_adapter_vs_vision_text": {
+        "counts": {
+          "both_correct": 52,
+          "both_wrong": 8
+        },
+        "changes": []
+      },
+      "vision_tables_vs_vision": {
+        "counts": {
+          "both_correct": 53,
+          "both_wrong": 7
+        },
+        "changes": []
+      },
+      "vision_tables_vs_vision_text": {
+        "counts": {
+          "both_correct": 52,
+          "gain": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "gain",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            }
+          }
+        ]
+      },
+      "vision_tables_vs_vision_adapter": {
+        "counts": {
+          "both_correct": 52,
+          "gain": 1,
+          "both_wrong": 7
+        },
+        "changes": [
+          {
+            "case_id": "da-roles",
+            "repeat": 0,
+            "field": "staff_count",
+            "change": "gain",
+            "treatment": {
+              "id": "staff_count",
+              "actual": {
+                "value": "UNKNOWN",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": true,
+              "grounded_correct": true,
+              "expected_unknown": true,
+              "unknown_format_mismatch": false
+            },
+            "baseline": {
+              "id": "staff_count",
+              "actual": {
+                "value": "未定",
+                "page": 1,
+                "quote": "各ポジションへの配置人数は未定である。"
+              },
+              "value_correct": false,
+              "grounded_correct": false,
+              "expected_unknown": true,
+              "unknown_format_mismatch": true
+            }
+          }
+        ]
+      }
+    },
+    "claim_ceiling": "Exploratory fixed-corpus observation; no significance, independent human gold, or general superiority claim."
+  }
+}

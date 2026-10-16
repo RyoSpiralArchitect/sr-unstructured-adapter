@@ -212,7 +212,7 @@ def ontology_jsonld(mapping: OntologyMapping) -> dict:
     ns = mapping.namespace
     classes = {rule.key: ns + rule.class_id for rule in mapping.entities}
     nodes = [{"@id": ns, "@type": OWL + "Ontology"}]
-    nodes += [{"@id": ns + key, "@type": OWL + "Class", RDFS + "label": label} for key, label in mapping.classes.items()]
+    nodes += [{"@id": ns + key, "@type": OWL + "Class", RDFS + "label": mapping.classes[key]} for key in sorted(mapping.classes)]
     for rule in mapping.relations:
         nodes.append({"@id": ns + rule.predicate, "@type": OWL + "ObjectProperty",
                       RDFS + "domain": {"@id": classes[rule.subject]}, RDFS + "range": {"@id": classes[rule.object]}})

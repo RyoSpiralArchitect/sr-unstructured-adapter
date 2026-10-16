@@ -1,0 +1,9 @@
+{
+  "namespace": "https://example.org/sr-role-description/",
+  "classes": {"Position": "ポジション", "RoleDescription": "資料中の役割記述"},
+  "entities": [
+    {"key": "position", "column": "ポジション", "class_id": "Position"},
+    {"key": "description", "column": "本事業における役割", "class_id": "RoleDescription"}
+  ],
+  "relations": [{"predicate": "hasRoleDescription", "subject": "position", "object": "description"}]
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import closing
 import os
 from pathlib import Path
 import re
@@ -34,6 +35,9 @@ def atomic_json(path: Path, value):
 
 
 def export_bundle(package: KnowledgePackage, destination: str | Path, *, parquet: bool = False) -> dict:
+    package = KnowledgePackage.model_validate(package.model_dump(mode="json"))
+    if package != extract_knowledge(package.source, package.mapping):
+        raise ValueError("Package does not reproduce from its source cells and mapping")
     records = package_records(package)
     if parquet:
         try:
@@ -99,7 +103,7 @@ def verify_bundle(folder: str | Path) -> tuple[dict, dict[str, bytes], list[dict
 def write_sqlite(bundle: str | Path, database: str | Path) -> dict:
     manifest, _, records = verify_bundle(bundle)
     # All records are committed together, with exact content checks on repeats.
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute("BEGIN IMMEDIATE")
         connection.execute("CREATE TABLE IF NOT EXISTS sr_knowledge_records ("
             "package_id TEXT NOT NULL, kind TEXT NOT NULL, record_id TEXT NOT NULL, payload_json TEXT NOT NULL, "

@@ -1,0 +1,150 @@
+{
+  "status": "verified_local",
+  "cloud_writes_attempted": 0,
+  "cases": [
+    {
+      "case_id": "column-order-base",
+      "package_id": "urn:sr:package:2eae3892a992a9727acb84c8899d519b4ad74cfc00c848425f06a0b9def06f4a",
+      "records": 37,
+      "entities": 9,
+      "relations": 6,
+      "observations": 3,
+      "manifest": {
+        "files": {
+          "graph.jsonld": {
+            "bytes": 23181,
+            "sha256": "9a819f8de3d745ce041512c8908d22a90ff0afb01d2a07afd954ef65295cfdaa"
+          },
+          "ontology.jsonld": {
+            "bytes": 1276,
+            "sha256": "3ed5eb9bcbbfc0583373a12064fda5f0a04e05ad32f3b36e01174dc7b2b3e905"
+          },
+          "package.json": {
+            "bytes": 13532,
+            "sha256": "a9e0070677bf67c266d89444af1ec0e3f9e3990ecf33d0f36a32160c129b967f"
+          },
+          "records.jsonl": {
+            "bytes": 24092,
+            "sha256": "b283dce5b791b09d098208ca6d9936c34f0bf1324bd22ce987a736c593c8c8a0"
+          },
+          "records.parquet": {
+            "bytes": 9833,
+            "sha256": "f49a6327a243b42eca2c6ede9ccec4c57ffff7a9675c0926bcefc1f2ec84fa62"
+          }
+        },
+        "package_id": "urn:sr:package:2eae3892a992a9727acb84c8899d519b4ad74cfc00c848425f06a0b9def06f4a",
+        "record_count": 37,
+        "schema_version": 1,
+        "status": "complete"
+      }
+    },
+    {
+      "case_id": "da-roles",
+      "package_id": "urn:sr:package:6434e740022f8bc2b69f10ed6e54012d11ecd21a70acba254156995c25d7dfb4",
+      "records": 30,
+      "entities": 10,
+      "relations": 5,
+      "observations": 0,
+      "manifest": {
+        "files": {
+          "graph.jsonld": {
+            "bytes": 21008,
+            "sha256": "0b756f1eeaf22676cbc7638c0fec118e757b7f740cfad1638eea8cb19afa47de"
+          },
+          "ontology.jsonld": {
+            "bytes": 804,
+            "sha256": "11707d377fd8d1601541d96ce5545727f04f154f730653cd5ebe8f9ae91de727"
+          },
+          "package.json": {
+            "bytes": 13960,
+            "sha256": "2d6b19d4d47f51104fd4e0dfb7537b62095dbd117fd636e60401befb9250dc23"
+          },
+          "records.jsonl": {
+            "bytes": 22349,
+            "sha256": "340473a7916410300c3fbfc13b3bbfde7fe5e317f070cc431987cebac631a265"
+          },
+          "records.parquet": {
+            "bytes": 9740,
+            "sha256": "15ea6eb619d6cbdfa9dd0141559d5a5cbd91ae082918e04c96b80d0cf750e91f"
+          }
+        },
+        "package_id": "urn:sr:package:6434e740022f8bc2b69f10ed6e54012d11ecd21a70acba254156995c25d7dfb4",
+        "record_count": 30,
+        "schema_version": 1,
+        "status": "complete"
+      }
+    }
+  ],
+  "sqlite_record_counts": {
+    "cell": 28,
+    "document": 2,
+    "entity": 19,
+    "observation": 3,
+    "ontology": 2,
+    "relation": 11,
+    "table": 2
+  },
+  "repeat": {
+    "status": "committed",
+    "package_id": "urn:sr:package:2eae3892a992a9727acb84c8899d519b4ad74cfc00c848425f06a0b9def06f4a",
+    "records": 37,
+    "inserted": 0
+  },
+  "queried_relations": [
+    [
+      "PdM／プロダクトマネージャー",
+      "https://example.org/sr-role-description/hasRoleDescription",
+      "• プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+    ],
+    [
+      "PjM／プロジェクトマネージャー",
+      "https://example.org/sr-role-description/hasRoleDescription",
+      "• 事業全体の計画策定や推進、契約や予算関連の管理業務を行う\n• ステークホルダー（関連自治体/省庁・他システム運用事業者・庁内関係者等）との調整を行う\n• 各開発事業者を支援する（計画のレビューや承認、進捗状況のモニタリング、他事業者との調整支援等）\n• 開発業務における当庁メンバーの業務を受託者と調整し進行管理する"
+    ],
+    [
+      "エンジニア",
+      "https://example.org/sr-role-description/hasRoleDescription",
+      "• 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）\n• 受託者のシステム環境構築業務を支援する（設計レビュー、マイナポータル運用保守事業者との調整支援等）"
+    ],
+    [
+      "デザイナー",
+      "https://example.org/sr-role-description/hasRoleDescription",
+      "• リサーチや仮説検証を行い、サービスデザイン、UXデザイン、コミュニケーションデザイン等を実施する\n• 受託者が作成したデザイン成果物のレビューや監修を行う"
+    ],
+    [
+      "事業責任者",
+      "https://example.org/sr-role-description/hasRoleDescription",
+      "• 本事業の執行責任を持ち決裁を行う\n• 定期的な状況報告を受け、事業全体に関わる重要な意思決定やリリースの承認を行う"
+    ],
+    [
+      "夕凪",
+      "https://example.org/sr-demo/managedBy",
+      "西部室"
+    ],
+    [
+      "夕凪",
+      "https://example.org/sr-demo/supportedBy",
+      "南部室"
+    ],
+    [
+      "星凪",
+      "https://example.org/sr-demo/managedBy",
+      "南部室"
+    ],
+    [
+      "星凪",
+      "https://example.org/sr-demo/supportedBy",
+      "東部室"
+    ],
+    [
+      "朝凪",
+      "https://example.org/sr-demo/managedBy",
+      "東部室"
+    ],
+    [
+      "朝凪",
+      "https://example.org/sr-demo/supportedBy",
+      "西部室"
+    ]
+  ]
+}

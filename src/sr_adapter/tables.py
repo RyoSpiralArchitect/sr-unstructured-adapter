@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.metadata
+from io import BytesIO
 import json
 from pathlib import Path
 from typing import Literal
@@ -88,11 +89,12 @@ def extract_pdf_tables(path: str | Path, *, max_pages: int = 100, max_cells: int
     except ImportError as exc:
         raise RuntimeError("PDF tables require sr-unstructured-adapter[tables]") from exc
     source = Path(path)
-    checksum = hashlib.sha256(source.read_bytes()).hexdigest()
+    source_bytes = source.read_bytes()
+    checksum = hashlib.sha256(source_bytes).hexdigest()
     tables = []
     warnings = []
     count = 0
-    with pdfplumber.open(source) as pdf:
+    with pdfplumber.open(BytesIO(source_bytes)) as pdf:
         if len(pdf.pages) > max_pages:
             raise ValueError("PDF exceeds max_pages; no partial table result returned")
         for page_number, page in enumerate(pdf.pages, 1):

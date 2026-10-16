@@ -3,6 +3,12 @@
 
 Turn chaotic documents into structured payloads with a pipeline that speaks both native kernels and LLMs.
 
+The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
+preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
+and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks Delta
+records. Cloud connectors have offline protocol tests; deployment-specific cloud
+authentication and writes require validation in the destination environment.
+
 ## Why this adapter?
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes with streaming output where the parser supports it. Memory use still depends on the document library and format.
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up.

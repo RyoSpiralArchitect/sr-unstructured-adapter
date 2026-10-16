@@ -55,7 +55,8 @@ jobs:
           import os
           from pathlib import Path
           from tempfile import TemporaryDirectory
-          from sr_adapter import Block
+          from sr_adapter import Block, OntologyMapping, extract_pdf_tables, extract_knowledge
+          from sr_adapter.knowledge_store import export_bundle, write_sqlite
           from sr_adapter.pipeline import convert
           from sr_adapter.recipe import load_recipe
           from sr_adapter.drivers.manager import TenantManager
@@ -70,5 +71,24 @@ jobs:
               source.write_text("wheel ready", encoding="utf-8")
               document = convert(source, "default", llm_ok=False)
               assert any(block.text == "wheel ready" for block in document.blocks)
+              from reportlab.pdfgen import canvas
+              from reportlab.platypus import Table, TableStyle
+              pdf = Path(directory) / "table.pdf"
+              writer = canvas.Canvas(str(pdf))
+              table = Table([["Project", "Owner"], ["Alpha", "Ops"]])
+              table.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 1, "black")]))
+              table.wrap(500, 500)
+              table.drawOn(writer, 30, 500)
+              writer.save()
+              mapping = OntologyMapping(namespace="urn:test:", classes={"Team": "Team", "Project": "Project"},
+                  entities=[{"key": "project", "column": "Project", "class_id": "Project"},
+                            {"key": "owner", "column": "Owner", "class_id": "Team"}],
+                  relations=[{"predicate": "ownedBy", "subject": "project", "object": "owner"}])
+              package = extract_knowledge(extract_pdf_tables(pdf), mapping)
+              assert len(package.entities) == 2 and len(package.relations) == 1
+              bundle, database = Path(directory) / "bundle", Path(directory) / "knowledge.sqlite3"
+              export_bundle(package, bundle, parquet=True)
+              assert write_sqlite(bundle, database)["inserted"] > 0
+              assert write_sqlite(bundle, database)["inserted"] == 0
           print(Block(text="wheel ready"))
           PY

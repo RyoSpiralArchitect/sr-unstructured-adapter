@@ -20,6 +20,10 @@ __all__ = [
     "Document",
     "Span",
     "convert",
+    "extract_pdf_tables",
+    "extract_knowledge",
+    "OntologyMapping",
+    "KnowledgePackage",
     "batch_convert",
     "apply_recipe",
     "apply_recipe_block",
@@ -46,6 +50,10 @@ _LAZY_ATTRS: Dict[str, Tuple[str, str]] = {
     "Document": (".schema", "Document"),
     "Span": (".schema", "Span"),
     "convert": (".pipeline", "convert"),
+    "extract_pdf_tables": (".tables", "extract_pdf_tables"),
+    "extract_knowledge": (".knowledge", "extract_knowledge"),
+    "OntologyMapping": (".knowledge", "OntologyMapping"),
+    "KnowledgePackage": (".knowledge", "KnowledgePackage"),
     "batch_convert": (".pipeline", "batch_convert"),
     "apply_recipe": (".recipe", "apply_recipe"),
     "apply_recipe_block": (".recipe", "apply_recipe_block"),
@@ -65,6 +73,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-time only for type checkers
     from .adapter import build_payload, stream_payloads, to_unified_payload
     from .embedding import BlockEmbedder, EmbeddingIndex
     from .kernel_autotune import KernelAutoTuner
+    from .knowledge import KnowledgePackage, OntologyMapping, extract_knowledge
     from .messages import to_llm_messages
     from .models import Payload
     from .pipeline import batch_convert, convert
@@ -72,6 +81,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-time only for type checkers
     from .recipe import apply_recipe, apply_recipe_block, load_recipe
     from .recipe_autogen import RecipeExample, RecipeSuggestion, RecipeSuggester
     from .schema import Block, Document, Span
+    from .tables import extract_pdf_tables
 
 
 def __getattr__(name: str) -> Any:
