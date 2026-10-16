@@ -244,6 +244,12 @@ def _render(packages: list[KnowledgePackage], prefix: str, target: FoundryTarget
 
 def export_foundry(bundles: list[str | Path], destination: str | Path, *, prefix: str = "sr-relations",
                    target: FoundryTarget | None = None) -> dict:
+    kinds = [json.loads((Path(bundle) / "manifest.json").read_bytes()).get("kind") for bundle in bundles]
+    if "narrative_relations" in kinds:
+        if any(kind != "narrative_relations" for kind in kinds):
+            raise ValueError("Narrative and table knowledge bundles cannot be mixed in one Foundry export")
+        from .narrative_foundry import export_narrative_foundry
+        return export_narrative_foundry(bundles, destination, prefix=prefix, target=target)
     packages = [KnowledgePackage.model_validate_json(verify_bundle(bundle)[1]["package.json"]) for bundle in bundles]
     manifest, payloads = _render(packages, prefix, target)
     folder = Path(destination)
@@ -259,6 +265,9 @@ def verify_foundry(folder: str | Path) -> tuple[dict, dict[str, bytes]]:
     """Verify both bytes and regenerated semantics before any integration consumes them."""
     folder = Path(folder).resolve()
     manifest = json.loads((folder / "manifest.json").read_bytes())
+    if type(manifest.get("schema_version")) is int and manifest["schema_version"] == 3:
+        from .narrative_foundry import verify_narrative_foundry
+        return verify_narrative_foundry(folder)
     if type(manifest.get("schema_version")) is not int or manifest["schema_version"] not in (1, 2) or manifest.get("status") != "complete":
         raise ValueError("Incomplete or unsupported Foundry export")
     payloads = {}

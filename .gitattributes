@@ -1,2 +1,5 @@
 # Validation artifacts contain recorded byte hashes; never rewrite their bytes.
 docs/validation/** -text
+
+# Synthetic format variants and their frozen source hashes must survive checkout.
+data/knowledge/narrative-mock/** -text

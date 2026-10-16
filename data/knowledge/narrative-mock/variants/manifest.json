@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "source_document": "memo-a.md",
+  "source_sha256": "0b96203e1e7266028652cc9111eb2cc6aaf6211c471ddad232e8563ac6aef1cf",
+  "assertion_count": 8,
+  "gold_read": false,
+  "independent_document_count": 0,
+  "metadata_preserved": "Document title and identity/precedence scope are included in every format.",
+  "generator_sha256": "02561ed2229adafe727ca554288ed87217b8bca3d9b7d5e910225c8c7e06a88b",
+  "libraries": {
+    "Pillow": "10.4.0",
+    "python-pptx": "1.0.2"
+  },
+  "font": {
+    "file_name": "ヒラギノ角ゴシック W3.ttc",
+    "sha256": "833776a6fd68e2c71c0c52fd8041195bd3d0a336cdb278170b7ad71c7e1b3475",
+    "face_index": 0,
+    "font_file_redistributed": false
+  },
+  "rendering": {
+    "width": 1800,
+    "height": 1100,
+    "font_size_pixels": 32,
+    "line_height_pixels": 48,
+    "font_family": [
+      "Hiragino Sans",
+      "W3"
+    ]
+  },
+  "formats": {
+    "csv": {
+      "file": "memo-a.csv",
+      "sha256": "485603bbc73fe8e29a74f1916272933caa479760a5072555921321c1472199bb",
+      "bytes": 1149,
+      "assertion_locations": [
+        {
+          "source_line": 11,
+          "row_number": 9,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "朝凪の主担当は東部室である。"
+        },
+        {
+          "source_line": 12,
+          "row_number": 10,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "朝凪の支援担当は西部室である。"
+        },
+        {
+          "source_line": 13,
+          "row_number": 11,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "朝凪の承認担当は審査室である。"
+        },
+        {
+          "source_line": 14,
+          "row_number": 12,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "朝凪の予算額は1200000円である。"
+        },
+        {
+          "source_line": 16,
+          "row_number": 13,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "星凪の主担当は南部室である。"
+        },
+        {
+          "source_line": 17,
+          "row_number": 14,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "星凪の支援担当は東部室ではない。"
+        },
+        {
+          "source_line": 18,
+          "row_number": 15,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "星凪の予算額は未定であり、金額は定まっていない。"
+        },
+        {
+          "source_line": 20,
+          "row_number": 16,
+          "column_number": 2,
+          "column_name": "記述",
+          "text": "灯台の主担当は受付運用室である。"
+        }
+      ]
+    },
+    "pptx": {
+      "file": "memo-a.pptx",
+      "sha256": "d22fb24560a116c105061f73bc02471c1dc340f661e478f9fc01739b7b8f8274",
+      "bytes": 29077,
+      "assertion_locations": [
+        {
+          "source_line": 11,
+          "slide_number": 1,
+          "shape_index": 2,
+          "shape_name": "assertion-01",
+          "text": "朝凪の主担当は東部室である。"
+        },
+        {
+          "source_line": 12,
+          "slide_number": 1,
+          "shape_index": 3,
+          "shape_name": "assertion-02",
+          "text": "朝凪の支援担当は西部室である。"
+        },
+        {
+          "source_line": 13,
+          "slide_number": 1,
+          "shape_index": 4,
+          "shape_name": "assertion-03",
+          "text": "朝凪の承認担当は審査室である。"
+        },
+        {
+          "source_line": 14,
+          "slide_number": 1,
+          "shape_index": 5,
+          "shape_name": "assertion-04",
+          "text": "朝凪の予算額は1200000円である。"
+        },
+        {
+          "source_line": 16,
+          "slide_number": 1,
+          "shape_index": 6,
+          "shape_name": "assertion-05",
+          "text": "星凪の主担当は南部室である。"
+        },
+        {
+          "source_line": 17,
+          "slide_number": 1,
+          "shape_index": 7,
+          "shape_name": "assertion-06",
+          "text": "星凪の支援担当は東部室ではない。"
+        },
+        {
+          "source_line": 18,
+          "slide_number": 1,
+          "shape_index": 8,
+          "shape_name": "assertion-07",
+          "text": "星凪の予算額は未定であり、金額は定まっていない。"
+        },
+        {
+          "source_line": 20,
+          "slide_number": 1,
+          "shape_index": 9,
+          "shape_name": "assertion-08",
+          "text": "灯台の主担当は受付運用室である。"
+        }
+      ]
+    },
+    "png": {
+      "file": "memo-a.png",
+      "sha256": "ad01e5ac20f1dc0db7ef7f5143aec2f6b746c5a3582606bdc1ee7e7cfb51ddcd",
+      "bytes": 230979,
+      "assertion_locations": [
+        {
+          "source_line": 11,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            550,
+            1730,
+            598
+          ],
+          "text": "朝凪の主担当は東部室である。"
+        },
+        {
+          "source_line": 12,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            598,
+            1730,
+            646
+          ],
+          "text": "朝凪の支援担当は西部室である。"
+        },
+        {
+          "source_line": 13,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            646,
+            1730,
+            694
+          ],
+          "text": "朝凪の承認担当は審査室である。"
+        },
+        {
+          "source_line": 14,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            694,
+            1730,
+            742
+          ],
+          "text": "朝凪の予算額は1200000円である。"
+        },
+        {
+          "source_line": 16,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            790,
+            1730,
+            838
+          ],
+          "text": "星凪の主担当は南部室である。"
+        },
+        {
+          "source_line": 17,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            838,
+            1730,
+            886
+          ],
+          "text": "星凪の支援担当は東部室ではない。"
+        },
+        {
+          "source_line": 18,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            886,
+            1730,
+            934
+          ],
+          "text": "星凪の予算額は未定であり、金額は定まっていない。"
+        },
+        {
+          "source_line": 20,
+          "page_number": 1,
+          "bbox_pixels": [
+            70,
+            982,
+            1730,
+            1030
+          ],
+          "text": "灯台の主担当は受付運用室である。"
+        }
+      ]
+    }
+  }
+}
