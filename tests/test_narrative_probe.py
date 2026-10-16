@@ -404,11 +404,58 @@ def test_replay_rejects_rehashed_run_request_and_raw_score_drift(frozen, tmp_pat
 
 def test_recorded_gpt55_audit_and_comparison_replay_without_network():
     artifacts = Path(__file__).resolve().parents[1] / "docs/validation/narrative-foundry-2026-10-17"
-    audit = probe.replay_audit(artifacts / "audit")
+    with pytest.raises(ValueError, match="frozen provenance"):
+        probe.replay_audit(artifacts / "audit")
+    audit = probe.replay_audit(artifacts / "audit", allow_code_drift=True)
+    provenance = audit.pop("replay_provenance")
+    assert {c["file"] for c in provenance["changes"]} == {"runner.py", "sr_adapter/narrative.py"}
+    assert provenance["model_requests"] == 0 and provenance["frozen_files_unchanged"] is True
     assert audit == json.loads((artifacts / "audit/report.json").read_bytes())
     comparison = artifacts / "comparison"
-    replay = probe.replay(comparison / "frozen", comparison / "run")
+    with pytest.raises(ValueError, match="frozen provenance"):
+        probe.replay(comparison / "frozen", comparison / "run")
+    replay = probe.replay(comparison / "frozen", comparison / "run", allow_code_drift=True)
+    assert replay.pop("replay_provenance") == provenance
     assert replay == json.loads((comparison / "summary.json").read_bytes())
     assert replay["completed_requests"] == replay["planned_requests"] == 8
     assert replay["response_models"] == ["gpt-5.5"]
     assert replay["winner"] is None
+
+
+def test_explicit_code_drift_replay_cannot_bypass_frozen_bytes_or_enable_inference(frozen, tmp_path, monkeypatch):
+    out = tmp_path / "run"
+    probe.run(frozen, out, endpoint=ENDPOINT, execute=True, credential=credentials(), transport=httpx.MockTransport(success))
+    paths = probe._provenance_files()
+    changed_runner = tmp_path / "changed-runner.py"
+    changed_runner.write_bytes(paths["runner.py"].read_bytes() + b"\n# changed implementation\n")
+    paths["runner.py"] = changed_runner
+    monkeypatch.setattr(probe, "_provenance_files", lambda: paths)
+    with pytest.raises(ValueError, match="frozen provenance"):
+        probe.run(frozen, tmp_path / "new-run", endpoint=ENDPOINT, execute=True,
+                  credential=credentials(), transport=httpx.MockTransport(lambda _r: pytest.fail("No inference")))
+    assert not (tmp_path / "new-run").exists()
+    result = probe.replay(frozen, out, allow_code_drift=True)
+    assert [c["file"] for c in result["replay_provenance"]["changes"]] == ["runner.py"]
+    assert result["completed_requests"] == 8
+    copied = tmp_path / "tampered"
+    shutil.copytree(frozen, copied)
+    p = copied / "gold/memo-a.md"
+    p.write_bytes(p.read_bytes() + b"\ntampered source\n")
+    with pytest.raises(ValueError, match="hash mismatch"):
+        probe.replay(copied, out, allow_code_drift=True)
+
+
+def test_explicit_drift_permission_still_rejects_rehashed_request_changes(frozen, tmp_path):
+    out = tmp_path / "run"
+    probe.run(frozen, out, endpoint=ENDPOINT, execute=True, credential=credentials(), transport=httpx.MockTransport(success))
+    copied = tmp_path / "frozen"
+    shutil.copytree(frozen, copied)
+    spec = json.loads((copied / "spec.json").read_bytes())
+    name = "requests/" + spec["order"][0]["id"] + ".json"
+    body = json.loads((copied / name).read_bytes())
+    body["input"][1]["content"][0]["text"] += " extra instructions"
+    probe._write(copied / name, body)
+    spec["files"][name] = sha256((copied / name).read_bytes())
+    probe._write(copied / "spec.json", spec)
+    with pytest.raises(ValueError, match="source-only reconstruction"):
+        probe.replay(copied, out, allow_code_drift=True)

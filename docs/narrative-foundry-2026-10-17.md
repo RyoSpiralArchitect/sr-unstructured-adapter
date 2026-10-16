@@ -128,17 +128,33 @@ From the repository root, with dependencies installed:
 
 ```sh
 python scripts/probe_narrative_relations.py replay-audit \
-  --audit docs/validation/narrative-foundry-2026-10-17/audit
+  --audit docs/validation/narrative-foundry-2026-10-17/audit --allow-code-drift
 python scripts/probe_narrative_relations.py replay \
   --frozen docs/validation/narrative-foundry-2026-10-17/comparison/frozen \
-  --run docs/validation/narrative-foundry-2026-10-17/comparison/run
+  --run docs/validation/narrative-foundry-2026-10-17/comparison/run --allow-code-drift
 ```
 
 Audit and comparison replay need no credentials or model requests. Frozen files,
 source-code hashes, dependency versions, requests, raw responses and scoring
 receipts are included. Checksums establish internal consistency, not signatures
-or proof of model origin. Use the recorded provenance if the implementation changes.
+or proof of model origin. Strict replay rejects a changed implementation by default.
+`--allow-code-drift` is an explicit **offline replay only** option: it uses current
+code, lists every changed source hash and environment, and still checks all frozen
+file hashes, reconstructed requests, source bundles and saved scores. It neither
+executes the archived Python files nor permits new inference with a changed plan.
+To run the original implementation itself, use repository commit `c38136d`.
 See the [usage and format boundaries](narrative-relations-foundry.md) for new runs.
+
+Review identified an escaped-cell bug: a CSV entity such as `Acme "East"` was
+present in the original value but not literally in its JSON-escaped unit text.
+The correction grounds labels in each cited cell's raw header/value, while still
+requiring the complete unit quote and preserving positional evidence. Twelve
+regression cases cover CSV/TSV quotes, backslashes, tabs, quoted headers, multiline values,
+JSON-only metadata and uncited rows; eleven failed before the correction.
+The original experiment artifacts remain unchanged. The
+[review replay receipt](validation/narrative-foundry-2026-10-17/review-replay.json)
+records the explicit implementation differences and identical recomputed results;
+no additional model calls were made for this correction.
 
 Extraction and controlled-comparison raw model bodies are public synthetic
 artifacts. Native MCP raw responses, endpoint configuration and publication

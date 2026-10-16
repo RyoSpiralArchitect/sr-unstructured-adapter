@@ -205,7 +205,17 @@ def _file_hashes(root):
             for p in sorted(root.rglob("*")) if p.is_file()}
 
 
-def _verify_frozen(root, kind):
+def _provenance_changes(spec):
+    changes = []
+    for name, path in _provenance_files().items():
+        recorded = spec["files"].get("provenance/" + name)
+        current = sha256(path.read_bytes())
+        if recorded != current:
+            changes.append({"file": name, "recorded_sha256": recorded, "current_sha256": current})
+    return changes
+
+
+def _verify_frozen(root, kind, *, allow_code_drift=False):
     root = Path(root)
     spec = json.loads((root / "spec.json").read_bytes())
     if spec.get("schema_version") != 1 or spec.get("kind") != kind:
@@ -217,11 +227,15 @@ def _verify_frozen(root, kind):
     for name, digest in spec["files"].items():
         if sha256(_child(root, name).read_bytes()) != digest:
             raise ValueError("Frozen file hash mismatch")
-    for name, path in _provenance_files().items():
-        frozen_name = "provenance/" + name
-        if spec["files"].get(frozen_name) != sha256(path.read_bytes()):
-            raise ValueError("Scorer or verifier differs from frozen provenance")
+    if _provenance_changes(spec) and not allow_code_drift:
+        raise ValueError("Scorer or verifier differs from frozen provenance")
     return spec
+
+
+def _replay_provenance(spec):
+    return {"mode": "current_code_with_explicit_drift_permission",
+            "changes": _provenance_changes(spec), "environment": _environment(),
+            "frozen_files_unchanged": True, "frozen_code_executed": False, "model_requests": 0}
 
 
 def _metrics(actual, expected):
@@ -307,15 +321,17 @@ def audit(gold_path, bundles, destination):
     return report
 
 
-def replay_audit(folder):
+def replay_audit(folder, *, allow_code_drift=False):
     root = Path(folder)
-    spec = _verify_frozen(root, "narrative_audit")
+    spec = _verify_frozen(root, "narrative_audit", allow_code_drift=allow_code_drift)
     report = _audit_report(root, spec)
     receipt = json.loads((root / "receipt.json").read_bytes())
     if (report != json.loads((root / "report.json").read_bytes())
             or receipt["spec_sha256"] != report["spec_sha256"]
             or receipt["report_sha256"] != sha256((root / "report.json").read_bytes())):
         raise ValueError("Audit report differs from replay")
+    if allow_code_drift:
+        report["replay_provenance"] = _replay_provenance(spec)
     return report
 
 
@@ -432,8 +448,8 @@ def prepare_comparison(gold_path, bundles, destination, *, endpoint, png_bundle=
     return spec
 
 
-def _comparison_spec(root):
-    spec = _verify_frozen(root, "narrative_comparison")
+def _comparison_spec(root, *, allow_code_drift=False):
+    spec = _verify_frozen(root, "narrative_comparison", allow_code_drift=allow_code_drift)
     expected_cases = [("md", [f"Q{i:02d}" for i in range(1, 13)])]
     if len(spec["cases"]) == 2:
         expected_cases.append(("png", PNG_QUESTIONS))
@@ -590,9 +606,9 @@ def run(frozen, destination, *, endpoint, execute=False, credential=None, transp
     return receipt
 
 
-def replay(frozen, run_folder):
+def replay(frozen, run_folder, *, allow_code_drift=False):
     root, out = Path(frozen), Path(run_folder)
-    spec = _comparison_spec(root)
+    spec = _comparison_spec(root, allow_code_drift=allow_code_drift)
     receipt = json.loads((out / "receipt.json").read_bytes())
     if (receipt["spec_sha256"] != sha256((root / "spec.json").read_bytes())
             or [{k: r[k] for k in ("id", "case", "arm", "repeat")} for r in receipt["requests"]] != spec["order"]):
@@ -641,6 +657,8 @@ def replay(frozen, run_folder):
     result["winner"] = None
     result["strict_delta_relations_minus_original"] = {case: arms[ARMS[1]]["strict_correct"] - arms[ARMS[0]]["strict_correct"]
         for case, arms in result["cases"].items()} if complete else None
+    if allow_code_drift:
+        result["replay_provenance"] = _replay_provenance(spec)
     return result
 
 
@@ -664,6 +682,8 @@ def main():
             command.add_argument("--png-bundle")
     command = commands.add_parser("replay-audit")
     command.add_argument("--audit", required=True)
+    command.add_argument("--allow-code-drift", action="store_true",
+                         help="Offline only: revalidate with current code and report every recorded source-hash difference")
     command = commands.add_parser("run")
     command.add_argument("--frozen", required=True)
     command.add_argument("--output", required=True)
@@ -673,6 +693,8 @@ def main():
     command.add_argument("--frozen", required=True)
     command.add_argument("--run", required=True)
     command.add_argument("--output")
+    command.add_argument("--allow-code-drift", action="store_true",
+                         help="Offline only: revalidate with current code and report every recorded source-hash difference")
     args = parser.parse_args()
     if args.command == "audit":
         result = audit(args.gold, args.bundle, args.output)
@@ -681,11 +703,11 @@ def main():
             parser.error("Comparison document mappings must be unique")
         result = prepare_comparison(args.gold, dict(args.bundle), args.output, endpoint=args.endpoint, png_bundle=args.png_bundle)
     elif args.command == "replay-audit":
-        result = replay_audit(args.audit)
+        result = replay_audit(args.audit, allow_code_drift=args.allow_code_drift)
     elif args.command == "run":
         result = run(args.frozen, args.output, endpoint=args.endpoint, execute=args.execute)
     else:
-        result = replay(args.frozen, args.run)
+        result = replay(args.frozen, args.run, allow_code_drift=args.allow_code_drift)
         if args.output:
             output = Path(args.output)
             with output.open("x", encoding="utf-8") as stream:

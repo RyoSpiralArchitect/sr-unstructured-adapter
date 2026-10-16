@@ -169,7 +169,15 @@ def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntolo
             evidence.append({**quote.model_dump(), "locator": unit["locator"], "grounding": unit["grounding"]})
         if len({e["unit_id"] for e in evidence}) != len(evidence):
             raise ValueError("Duplicate evidence unit")
-        texts = [e["quote"] for e in evidence]
+        texts = []
+        for item in evidence:
+            if item["locator"]["kind"] == "csv":
+                # The full quote is JSON for positional cells. Ground labels in
+                # the original cell strings, not JSON escapes or metadata keys.
+                texts.extend(cell[field] for cell in item["locator"]["cells"]
+                             for field in ("header", "value"))
+            else:
+                texts.append(item["quote"])
         if any(not any(label in text for text in texts) for label in [candidate.subject, candidate.object] if label is not None):
             raise ValueError("Entity/value labels must occur literally in their quoted evidence")
         key = canonical_json(candidate.model_dump(mode="json"))

@@ -11,7 +11,8 @@ This path does not require Fabric or Databricks.
 This is candidate extraction, not automatic truth or ontology certification.
 `source_text_verified` means that a quotation exactly reproduces a source unit
 extracted from the saved original bytes. The subject/object must appear literally
-in the evidence, but this cannot detect every semantic error, including reversal,
+in the evidence (the raw header/value strings for CSV/TSV cells, before JSON
+escaping), but this cannot detect every semantic error, including reversal,
 misread negation or a wrong predicate. Assess those separately against reviewed
 source material. `model_transcription_unverified` means the text came from a
 model reading an image; matching that transcript does not validate the pixels.

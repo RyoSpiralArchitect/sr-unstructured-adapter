@@ -59,6 +59,44 @@ def test_nonpositive_status_is_preserved(ontology, status, object, text):
     assert narrative_cards(files)[0]["assertion_status"] == status
 
 
+@pytest.mark.parametrize("suffix,delimiter", [("csv", ","), ("tsv", "\t")])
+@pytest.mark.parametrize("subject,owner,subject_in_header", [
+    ('Acme "East"', 'Ops\\West', False),
+    ('Acme\nEast', 'Ops\r\nWest', False),
+    ('Acme\tEast', 'Ops "West"', False),
+    ('Acme "East"', 'Ops\nWest', True),
+])
+def test_csv_literal_labels_survive_escaping_and_bundle_replay(ontology, tmp_path, suffix, delimiter,
+                                                             subject, owner, subject_in_header):
+    table = io.StringIO(newline="")
+    writer = csv.writer(table, delimiter=delimiter, lineterminator="\r\n")
+    writer.writerow([subject if subject_in_header else "Project", "Owner"])
+    writer.writerow(["active" if subject_in_header else subject, owner])
+    data = table.getvalue().encode("utf-8")
+    unit = read_source(data, "source." + suffix)["units"][0]
+    row = {"subject": subject, "predicate": "managedBy", "object": owner, "status": "asserted",
+           "evidence": [{"unit_id": unit["id"], "quote": unit["text"]}]}
+    manifest, files = render_narrative(data=data, source_name="source." + suffix, ontology=ontology,
+                                      model="gpt-5.5", response=response([row]))
+    save_narrative(tmp_path / "bundle", manifest, files)
+    assert verify_narrative(tmp_path / "bundle") == (manifest, files)
+    exported = next(csv.DictReader(io.StringIO(files["relations.csv"].decode("utf-8"), newline="")))
+    assert (exported["subject"], exported["object"]) == (subject, owner)
+    evidence = json.loads(exported["evidence_json"])[0]
+    assert evidence["quote"] == unit["text"] and evidence["locator"] == unit["locator"]
+
+
+@pytest.mark.parametrize("subject", ['Acme \\"East\\"', 'cells', '"column":1', 'Other'])
+def test_csv_serialization_and_uncited_rows_are_not_literal_label_evidence(ontology, subject):
+    data = b'Project,Owner\n"Acme ""East""",Ops\nOther,Elsewhere\n'
+    unit = read_source(data, "source.csv")["units"][0]
+    row = {"subject": subject, "predicate": "managedBy", "object": "Ops", "status": "asserted",
+           "evidence": [{"unit_id": unit["id"], "quote": unit["text"]}]}
+    with pytest.raises(ValueError, match="literally"):
+        render_narrative(data=data, source_name="source.csv", ontology=ontology,
+                         model="gpt-5.5", response=response([row]))
+
+
 @pytest.mark.parametrize("patch", [
     {"predicate": "invented"}, {"subject": "C"}, {"object": "C"}, {"object": None},
     {"status": "unknown"}, {"status": "ambiguous"}, {"subject": " A "},

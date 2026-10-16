@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "kind": "post_review_offline_replay",
+  "original_commit": "c38136d4bfb94060851cb34950072d31d55efc53",
+  "review_url": "https://github.com/RyoSpiralArchitect/sr-unstructured-adapter/pull/87#discussion_r4298199805",
+  "fix": "Ground CSV/TSV labels in the cited original header/value strings; retain full quoted units and locators. JSON serialization syntax and uncited rows are not label evidence.",
+  "provenance": {
+    "mode": "current_code_with_explicit_drift_permission",
+    "changes": [
+      {
+        "file": "runner.py",
+        "recorded_sha256": "caecabb3a5093a8f585b256e962c8b6b75061d8fc61e15b6789a74c9a676f21d",
+        "current_sha256": "b58d7515a6249aaa74c45899c09a9357a97fa128d1530dc8e5f98be57deac1ad"
+      },
+      {
+        "file": "sr_adapter/narrative.py",
+        "recorded_sha256": "fa78ac023db9893ae57343f11703a71027068d93e7914edd252faa0dd97854d4",
+        "current_sha256": "ebc84e27224ae246be8d7a5265c87c27a7bd0c92e21ea5f5fde741adc48e5df4"
+      }
+    ],
+    "environment": {
+      "python": "3.13.13",
+      "packages": {
+        "pydantic": "2.14.1",
+        "httpx": "0.28.1",
+        "Pillow": "12.3.0"
+      }
+    },
+    "frozen_files_unchanged": true,
+    "frozen_code_executed": false,
+    "model_requests": 0
+  },
+  "original_tracked_artifacts_unchanged": true,
+  "audit_result_unchanged": true,
+  "comparison_result_unchanged": true,
+  "current_audit": {
+    "inputs": 5,
+    "exact": true,
+    "tuples": {
+      "tp": 40,
+      "fp": 0,
+      "fn": 0,
+      "expected": 40,
+      "predicted": 40,
+      "duplicate_count": 0
+    }
+  },
+  "current_comparison": {
+    "status": "complete_descriptive_only",
+    "requests": 8,
+    "cases": {
+      "md": {
+        "original": {
+          "planned_answers": 24,
+          "completed_answers": 24,
+          "strict_correct": 23,
+          "input_tokens": 3644,
+          "output_tokens": 3009,
+          "total_tokens": 6653,
+          "cached_input_tokens": 1280,
+          "reasoning_tokens": 476
+        },
+        "relations_with_source": {
+          "planned_answers": 24,
+          "completed_answers": 24,
+          "strict_correct": 24,
+          "input_tokens": 10160,
+          "output_tokens": 2882,
+          "total_tokens": 13042,
+          "cached_input_tokens": 4864,
+          "reasoning_tokens": 345
+        }
+      },
+      "png": {
+        "original": {
+          "planned_answers": 12,
+          "completed_answers": 12,
+          "strict_correct": 11,
+          "input_tokens": 4318,
+          "output_tokens": 1286,
+          "total_tokens": 5604,
+          "cached_input_tokens": 1792,
+          "reasoning_tokens": 177
+        },
+        "relations_with_source": {
+          "planned_answers": 12,
+          "completed_answers": 12,
+          "strict_correct": 12,
+          "input_tokens": 5892,
+          "output_tokens": 1207,
+          "total_tokens": 7099,
+          "cached_input_tokens": 2816,
+          "reasoning_tokens": 150
+        }
+      }
+    },
+    "winner": null
+  },
+  "regression_before": {
+    "failed": 11,
+    "passed": 1,
+    "log_sha256": "8ee4a59ea0c3c9b3f45ad435b6db3b683cdf75b2f9b5d999e64cc4e1d0ca6514"
+  },
+  "new_model_requests": 0
+}
