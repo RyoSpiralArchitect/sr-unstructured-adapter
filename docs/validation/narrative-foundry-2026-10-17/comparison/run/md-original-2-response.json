@@ -1,0 +1,252 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 12000,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "narrative_answers",
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "answer_kind": {
+                  "enum": [
+                    "asserted",
+                    "denied",
+                    "unknown",
+                    "ambiguous",
+                    "not_stated",
+                    "conflicting",
+                    "distinct_entities",
+                    "mixed"
+                  ],
+                  "type": "string"
+                },
+                "claims": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "document_id": {
+                        "enum": [
+                          "memo-a",
+                          "memo-b"
+                        ],
+                        "type": "string"
+                      },
+                      "object": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "predicate": {
+                        "enum": [
+                          "managedBy",
+                          "supportedBy",
+                          "approvedBy",
+                          "budgetYen"
+                        ],
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": [
+                          "asserted",
+                          "denied",
+                          "unknown",
+                          "ambiguous"
+                        ],
+                        "type": "string"
+                      },
+                      "subject": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "document_id",
+                      "subject",
+                      "predicate",
+                      "object",
+                      "status"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "question_id": {
+                  "enum": [
+                    "Q01",
+                    "Q02",
+                    "Q03",
+                    "Q04",
+                    "Q05",
+                    "Q06",
+                    "Q07",
+                    "Q08",
+                    "Q09",
+                    "Q10",
+                    "Q11",
+                    "Q12"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "question_id",
+                "answer_kind",
+                "claims",
+                "explanation"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_0fe1ff41eeae28ea016ad2702c94ac8195b0db4df7d57398d3",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792176172,
+  "completed_at": 1792176183,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "reasoning",
+      "id": "rs_0fe1ff41eeae28ea016ad2702dafc081958221a0dfed352ec5",
+      "response_id": "resp_0fe1ff41eeae28ea016ad2702c94ac8195b0db4df7d57398d3",
+      "encrypted_content": "gAAAAABq0nA3pz_ZlzPYb1yBweh6g6OauzXCXL72o3IQONhX_U-WH1biUug_gHLQYyeWWYuTZwjiHsPlUKno_W5y8JG29KlABF7tnmA0wyNF4opbdO-UZ8vKovD1D4d7Eh4Ugh1pgN4wogB9wNHSZ-2s9dh90ihwuhdUICiOe5WU0w9-AqInJmgDSQe3LkrUAFnXFbB10VU4l5evL70V31WfwS79852l2OCSCcyMEWvQwnRESG18yERgZmxciPAR3L1IKV7xlOYZjiqk2AddL1Pg82W_WCMH88yEJ1mC84r_X0EKYjBQH68a7M2nKGtNYVjYfC1M06m6L3X-oUL722i7M2XWY0cP-x1EuH2tyabLiyz1NN-dPxISCzTxRTIsLH96eqWNuexYHc2wwAwwIU4cfVkfhw4NV7xQZewkJsI1qTZf1crisvgHhaQQVHfkauD91qp8wdLsBu6KtnLs0Qw1MoLQulUTMjMN8TIvV_Q90mxRynbdIlfS-aFlpjYFnmWZVZVV49FHF_I8q307vSuu_ZymvR-1WuYjM_vC46YggWQOPCXf8MCtzP8HSEu-0-klWG807Q_GYgqJQ0NWKcgn1dplWZy_B_0UDEHmHWhH3vT6LN9eq_L-hFpeQz-u7CWiOFOSIpXLZapDMpu8DiaEFISbklBXfOq5a9T6hfWMpVTKwYYCm7gPVl-_PkfVeymDxEiMdfr3yatsNrrKjBKAusjLYpCrr4n10HZvLKHj2qwkFbG19SepxJxz9rec5Dh-ik7mxgw9lFDjem4uqoIB-bixIswPthxjhuUkY62RtYqcdqRSB5Fhxtbtke2806AOI_iqgU70U7hobT9hwMCPyHEYmhSCHJfm6ShUGajQ_8ypJ8YWoYuZHd-G9Ccwjqn5ZtSyl0p-oKkUrFfPOZm5-QgUglLgu9_yiLivKtdLxj55g4Q4pHiXARkiZIcZ302gbC9e3Zj4oatHbBCbNt9yeryd1pGk3OHfqsHhPZ0G6aSx0P84gE5VHlH4R2R-DBThg_wGTMjI-XpF9gfowRKRj-j0Yu5Yqx26hbqCyXSzvm2t1vpC49NgGfiaqMqWBd4BtgHpHR1TkyOlwkt_NGseiVM7NvGa2zGEnaWzVuJwVeeTnaM3Qxy9S40Dn50kUZTELnyl1uevKFu2y2vcVCpdK_h9VtSJIMO5d8ti4DHR4E_pmFt4DX73fKXlP6ooLZ-eBVS99SlxcUG2XpfGLqjstrVBCvJIxakTznOEF-jVMQWDlcPa-T2MvbjxtutqeT5uRyrPJ0oQ-dp6_Zi62vMAUI5iYmiPNObPFfwPDWgweZvg9FhooU80G5HNFSQoVberDObJ4NQd6glbGRxSyM9d6r7-ZoxwfW39FdfLiCvWlDS98AV2jxzKu69XncxKSdYSsSOPapJD5HF7wGkiZoV06qWmjsdV5LRs6BGqCMsf3Ioqq-JSpX1PX43rypXzmcTYGZwv_H59KMDYDMAI4GuDb7D47EWQkA1X0RQGh_CUlBo0U8RpvtyLE1_Mz5DEtlHHonlSMTDwSvWmgoo5pn23vS1gg91g1Am_vHZsDxpJtjVYIRR0mDQyQpSzqgbiR4hgmH_iH25M91J6EGSReE6gp64-KpvgGKhaJqVaNpHplh_SgsJG6PlXl7ZRrbyFc6VR6vV7gDvFKBkCpKYiyakwV4Cpkbq2lVOBd7f_agdw1U8uOtirlxFs1AdpaKztNswtFStJIN8NLiZjyV4Lu5CVm4k3WLxHRCOMqpNNRzu4xNGofiPGvdBTUgJsxI7MAd9y8EfNrViqGvJzMEplZKs2ME_hLmSZ9fBVVkZuEMKG6jM9Qcz-qRJGE3i3ZbVO8TZu841HvMSpi3rbMnNYK4ArUH2F5VYe5a4HqkEkUHdMZYhvjwMPhYCUsIaLmAGxE2Lim-PsKEkMkbZrTgJZY7-XFYmVfItAUOuyYWSYjkmgXZas9asTDr7j59UarGHZwPzz0zAiRLPX2IDA_C4RsTwKpFVdYhG8k1Y2SMpar9Ctc9ZiQlrE1ITlQQNX7EAphSOvsUpROya87mzbKPRbHXRQ51_95a7llzFvFqvHPnLpuKje6jvC3Sr4ZXsrj_fgYjcHtW56ky5wdG2UKOsRUUjRVVHy3DVjtXuNZoltHUPJJT2QuwGcT6zzuz_ROaD-z05MJLgsb0x5e76aaKmBaOPrLAVFGzU6nL5Cc3HGPQqb-nTLr_0XmdmbxzuH8ASUdlYIi8tGUf80dmmp9oQHUJ5Jb90mghqXVIeiv_Hk7MH_yOQio1HGgGO42Sazt-CDHu9gD4cqHZM1kvOYgWvAYOilYNtmSYY9glrcryn5rUz3gGJtNrFOYqNk67YvwO1GFLGnM6Fl2wzIfP-OJ99BcpW9DgVB_AL_3qdxsqcD1HS96TRvNG7DnBmfJLxHb_7g7u89c8WP68A7",
+      "summary": [],
+      "content": []
+    },
+    {
+      "type": "message",
+      "id": "msg_0fe1ff41eeae28ea016ad270309c188195a324e7fbd6dbabb3",
+      "response_id": "resp_0fe1ff41eeae28ea016ad2702c94ac8195b0db4df7d57398d3",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"answers\":[{\"answer_kind\":\"asserted\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-a\",\"object\":\"西部室\",\"predicate\":\"supportedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"}],\"explanation\":\"資料Aには、朝凪の主担当は東部室、支援担当は西部室と記載されています。\",\"question_id\":\"Q01\"},{\"answer_kind\":\"asserted\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"審査室\",\"predicate\":\"approvedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-a\",\"object\":\"1200000円\",\"predicate\":\"budgetYen\",\"status\":\"asserted\",\"subject\":\"朝凪\"}],\"explanation\":\"資料Aには、朝凪の承認担当は審査室、予算額は1200000円と記載されています。\",\"question_id\":\"Q02\"},{\"answer_kind\":\"denied\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"supportedBy\",\"status\":\"denied\",\"subject\":\"星凪\"}],\"explanation\":\"資料Aには、星凪の支援担当は東部室ではないと記載されています。\",\"question_id\":\"Q03\"},{\"answer_kind\":\"not_stated\",\"claims\":[],\"explanation\":\"資料Aには、星凪の承認担当についての記載はありません。\",\"question_id\":\"Q04\"},{\"answer_kind\":\"unknown\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":null,\"predicate\":\"budgetYen\",\"status\":\"unknown\",\"subject\":\"星凪\"}],\"explanation\":\"資料Aには、星凪の予算額は未定であり、金額は定まっていないと記載されています。\",\"question_id\":\"Q05\"},{\"answer_kind\":\"ambiguous\",\"claims\":[{\"document_id\":\"memo-b\",\"object\":null,\"predicate\":\"approvedBy\",\"status\":\"ambiguous\",\"subject\":\"星凪\"}],\"explanation\":\"資料Bでは、星凪の承認担当候補は審査室と品質室だが、いずれを採用するか決定していないとされています。\",\"question_id\":\"Q06\"},{\"answer_kind\":\"conflicting\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-b\",\"object\":\"西部室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-b\",\"object\":\"東部室\",\"predicate\":\"managedBy\",\"status\":\"denied\",\"subject\":\"朝凪\"}],\"explanation\":\"朝凪は両資料で同一案件と明記されています。資料Aは主担当を東部室とし、資料Bは主担当を西部室とし、さらに東部室ではないとしています。\",\"question_id\":\"Q07\"},{\"answer_kind\":\"conflicting\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"1200000円\",\"predicate\":\"budgetYen\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-b\",\"object\":\"1200000円\",\"predicate\":\"budgetYen\",\"status\":\"denied\",\"subject\":\"朝凪\"}],\"explanation\":\"朝凪は両資料で同一案件と明記されています。資料Aは予算額を1200000円とし、資料Bは1200000円ではないとしています。\",\"question_id\":\"Q08\"},{\"answer_kind\":\"conflicting\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"supportedBy\",\"status\":\"denied\",\"subject\":\"星凪\"},{\"document_id\":\"memo-b\",\"object\":\"東部室\",\"predicate\":\"supportedBy\",\"status\":\"asserted\",\"subject\":\"星凪\"}],\"explanation\":\"星凪は両資料で同一案件と明記されています。資料Aでは支援担当は東部室ではないとされ、資料Bでは支援担当は東部室とされています。\",\"question_id\":\"Q09\"},{\"answer_kind\":\"distinct_entities\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"受付運用室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"灯台\"},{\"document_id\":\"memo-b\",\"object\":\"在庫運用室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"灯台\"}],\"explanation\":\"両資料は、灯台について名称だけが同じ別案件であると明記しています。資料Aの灯台の主担当は受付運用室、資料Bの灯台の主担当は在庫運用室です。\",\"question_id\":\"Q10\"},{\"answer_kind\":\"asserted\",\"claims\":[{\"document_id\":\"memo-b\",\"object\":\"企画室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"月凪\"},{\"document_id\":\"memo-b\",\"object\":\"2400000円\",\"predicate\":\"budgetYen\",\"status\":\"asserted\",\"subject\":\"月凪\"}],\"explanation\":\"資料Bには、月凪の主担当は企画室、予算額は2400000円と記載されています。\",\"question_id\":\"Q11\"},{\"answer_kind\":\"mixed\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"supportedBy\",\"status\":\"denied\",\"subject\":\"星凪\"}],\"explanation\":\"資料Aでは、東部室は朝凪の主担当として記載されています。また、星凪の支援担当は東部室ではないという否定の関係も記載されています。\",\"question_id\":\"Q12\"}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 1822,
+    "input_tokens_details": {
+      "cached_tokens": 1280,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 1472,
+    "output_tokens_details": {
+      "reasoning_tokens": 225
+    },
+    "total_tokens": 3294
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 4488,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 4393,
+        "check_offset": 0
+      }
+    }
+  ]
+}

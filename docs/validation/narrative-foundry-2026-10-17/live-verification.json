@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "kind": "narrative_foundry_live_verification",
+  "observed_at_jst": "2026-10-17",
+  "snapshot_id": "77f73ca72ce6b18270e00e6bb788d59ba92b36d827d29708cb8d66b43211ce15",
+  "model_deployment": "gpt-5.5",
+  "response_models": [
+    "gpt-5.5"
+  ],
+  "cloud_status": "configured_and_observed",
+  "agent_kind": "prompt",
+  "agent_version": "1",
+  "publication": {
+    "status": "configured",
+    "accepted_documents": 40,
+    "planned_documents": 40,
+    "operations": [
+      {
+        "http_status": 201,
+        "method": "PUT",
+        "name": "index",
+        "request_sha256": "31abf824daeed5c328e2a14c9591e19ab18622e757e6163b72ef46d3c3820d67",
+        "response_sha256": "bc6457ba05d7ee7319c78ecb553aa5cd9b3418bd7eba5607568338411bc593f2",
+        "status": "created_and_verified"
+      },
+      {
+        "http_status": 200,
+        "method": "POST",
+        "name": "documents",
+        "request_sha256": "bcca9f9449f1e8f7fbd12b9fd1093478efcec95e9c74f973e4337e90822ae86f",
+        "response_sha256": "a620b9c89c3181e7bf85bcfa9c472bda716b4c0efed952c7d9666039e716b441",
+        "status": "documents_accepted"
+      },
+      {
+        "http_status": 201,
+        "method": "PUT",
+        "name": "knowledge_source",
+        "request_sha256": "1d7c1de526012a621ed5af56dae969a394a99c34b3e874e44ad4ab5cd6f05e7a",
+        "response_sha256": "04c57629018137a1ad3ac67c936046be814cb16fa29e9b965d857d415153bfcc",
+        "status": "created_and_verified"
+      },
+      {
+        "http_status": 201,
+        "method": "PUT",
+        "name": "knowledge_base",
+        "request_sha256": "de7a4c675e0436544d3b87c5da2ec3bfc720fa3e75a202cf86bdb42c618b5946",
+        "response_sha256": "20882230a872a37b32d6fc6da15c9855ec4582c59036e2b814b23672987224d4",
+        "status": "created_and_verified"
+      },
+      {
+        "http_status": 200,
+        "method": "PUT",
+        "name": "connection",
+        "request_sha256": "4226e092504737123efb23db86feb4ea1aab6a1f3e5abde10a796234d853ed8c",
+        "response_sha256": "02e5b17bf36472e09bef4c0a3eebe687c32d6ef869b29ab57d111fe8fccfd5b7",
+        "status": "created_and_verified"
+      },
+      {
+        "http_status": 200,
+        "method": "POST",
+        "name": "agent",
+        "request_sha256": "0d67da0288654acdc8d882ece41b3146ed3d48f7894ccdaa5ee635637a04eb2a",
+        "response_sha256": "517b9e3882a34853eb494545dad9b203ceed2b45ce1f9c60c0a03905d26d1a8e",
+        "status": "created"
+      }
+    ]
+  },
+  "search_readback": {
+    "documents": 40,
+    "response_sha256": "414a92c589a92279cec4f789e6f37430037677d428b017bd11370a5ed0c3b817",
+    "status": "exact_match"
+  },
+  "agent_readback": {
+    "response_sha256": "ab445cf40de5939e471c7a7f7c6cbc57d8d5823fe00f8d93a931584c2447928a",
+    "status": "definition_match_after_allowed_tools_normalization"
+  },
+  "native_agent": {
+    "planned_requests": 6,
+    "completed_requests": 6,
+    "automatic_retries": 0,
+    "audit_status": "pass_with_limitations",
+    "summary": {
+      "all_fields_semantically_equal": 524,
+      "answer_locator_values_match_evidence": 25,
+      "citation_annotations": 41,
+      "citation_mappings_passed": 41,
+      "errors": 0,
+      "hand_gold_assertions_not_requested_in_native_questions": [
+        "A03",
+        "A05"
+      ],
+      "manual_answer_relation_claims": 25,
+      "manual_answer_relation_claims_passed": 25,
+      "mcp_calls": 15,
+      "retrieved_document_occurrences": 524,
+      "unique_documents_retrieved": 40,
+      "unique_hand_gold_assertions_covered": [
+        "A01",
+        "A02",
+        "A04",
+        "A06",
+        "A07",
+        "A08",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "unresolved_expected_tuple_or_mapping_unknowns": 0
+    },
+    "usage": {
+      "input_tokens": 255229,
+      "output_tokens": 8584,
+      "total_tokens": 263813
+    },
+    "cached_input_tokens": 0
+  },
+  "initial_attempt": {
+    "status": "incomplete",
+    "completed_model_requests": 0,
+    "planned_requests": 6,
+    "reason": "Agent readback changed allowed_tools from a list to an object containing tool_names. The initial strict comparison stopped before inference. A second plan normalized only this representation and verified the remaining definition before six calls.",
+    "receipt_sha256": "1eab3b3b033e17a2b26c564618c77c72c4c227f34dc71c721e998bc1f1b97f55"
+  },
+  "public_artifacts": {
+    "native-projection.json": "c90d27165dbfab115170eb124bc1a515626809a568a6ce4c4eab719f180bad59",
+    "native-audit.json": "489f344aad03b953adbd8845121aeb506028475ec5e88a254883bb0fe1f52c00",
+    "handoff/manifest.json": "07a0e0aebb666467cd54c6d57b6408ab2b59e97e82dc8937395726b1ba9555e0",
+    "audit/report.json": "a1dc5446eb809d8eef5fe0f46e7cd9852aa46597b3c4cee74480844c730fde49"
+  },
+  "private_receipts": {
+    "publish_sha256": "eafd1eedd4305bf28d48beef943e4fb02e973f56675adf5596eee1849570f4d6",
+    "native_receipt_sha256": "90b3c0d24904f5dd7f617bb570a573690f2ebd352dc48d79a21bca3b018b9dac"
+  },
+  "raw_response_policy": "Extraction and controlled-comparison raw bodies are published. Native MCP responses and Azure endpoint configuration are retained privately; native-projection.json removes service URLs and generated remote identifiers while preserving text, document IDs, usage and raw-response hashes. Native-audit.json records an offline audit against those private raw bodies.",
+  "server_side_evaluation_job": null,
+  "evaluation_mode": "manual_fallback_no_Foundry_MCP_evaluation_tools",
+  "limitations": [
+    "This is a post-hoc audit of six custom prompts on five small synthetic sources, not the complete twelve-question gold benchmark or a statistical quality estimate.",
+    "The not_stated/absence question Q04 was not exercised. Gold A03 and A05 were not requested in the native answers.",
+    "Image transcription accuracy against pixels remains UNKNOWN. Matching saved transcript evidence and faithful uncertainty wording do not establish visual correctness.",
+    "CSV/PPTX/PNG answer semantics are mapped to memo-a hand-gold assertions using matching source quotes; independent format-specific gold and pixel-location annotations were not created.",
+    "Retrieval returned documents from other source formats too. All answer citations obeyed requested source scope; retrieval itself was not source-isolated.",
+    "Extracted assertions remain model_candidate. This manual synthetic evaluation does not validate arbitrary documents or promote all model extractions to authoritative ontology facts.",
+    "Citation URLs were checked as stored identifiers only. No URLs, live services or authorization states were queried by this auditor.",
+    "Full source context is repeated per assertion card. Native retrieval is expensive and may return other formats; this run is not a source-isolated or cost-reduction benchmark."
+  ]
+}

@@ -1,0 +1,3592 @@
+{
+  "artifact_integrity": {
+    "assertion_evidence_checks": [
+      {
+        "assertion_lists_match": true,
+        "document_id": "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-6c2fd3930fbf8d1de74fce68d65e21226ffc962a3452e3ca43a02c9485cd3381"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-43fc683f76356c696babd6cd0117f61e97caf034d0dfb16ac60d03a5068eedaf"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-abccd20fedf5653ce9c4356cdf9b218eb75b435fedd3fcdbe75de12c1cd4dce9"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-37ddbadaf48046fdc694fb09da1ab9ea298325a24715d25f6b905930b1ab6b52"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-71a5bf55dda53ae10f3d09e5ce073b7f4c05a3cbd2cd4679bf828ccf36665b1d"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-09af31371159e9916ec05e6eae8756962dcc64c72ce46c9aeb159e6647ff8327"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-fa764cb741392baa038897cf9b449f0f0399a6288482879fedaa0f4ac369c005"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-531c107d445985458cfe5c74354b705f4ea2ce1f7bce1fc6e5fc865f006fc6fe"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-d78f720dbe8fa7031f800233961b03b2411d53578b19b0455060f514e600ad27"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-4eb875fd00e280c2307c8ea295543fec58bff6eed53e3d644afd8ba3e77cfab6"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-3385297f96ad4a0f5156f67dfd7f3c07af2f9a390d74c393652f4761e4232c13"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-374d050eb17eda61dffcb17f79e99e41b190ac4e0095e8e0e15f700c99e5589f"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-809abf19d777308bafc377fac75063f864be0b5e418821c393999b6d664554e6"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-ce8ea8fcb0b2061ee089e4be5e19c77090dfd7a9cbb447474fcdb1c4cad8b569"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-cf3843277667406044d2d1381f1cb88fe5fa5c95290c26689c3034d210770d4d"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-0ba4618b3b2842a6ab1909c3f1959cb76230c0c057d7f1eca8d573a23ca0ef23"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-b9a91ce1f75c62d85dd4a499a9b45adb4c6742e6aeec741c55f1c71a28a677aa"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-95325ab45e779c3c7c306e0684b555eb5d723fbe0389db56cd58ad13eae09957"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-a78843d0c45cc6744be87e96d62313c03600fad6c2c40b74a221a91aa83db87a"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-6a9700023f14a63e353e2e86ed1598fc94073eb1e39d93c68a6a37b6d35a6f1e"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-5553c16209e2f4572399b8281e20772cba47c12790c7e0eb050e02f5661c5417"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-8fe51ec365a8920907971bc1e5db02deadf3e89df15bf65144059d6501472eca"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-d859c8b61a4f40025f7eb4856426430ae143c74c9c6394e4f01e1dd99d13840e"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-c0185dbe2daf9bb46e8daf033de5b1c2cf2d1771e0ef90958e3dcc136a86bb8e"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-21c86bdecc2dbf1b2303734e6e745801a0bf1289a7e6325e2f255c4171136f53"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-26ac04a7a649b3d7760c34e6555e00ee142139013d713f7bfded29e9928022d7"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-78d4cf1991971105284ffe3a599880ac092c9b910debb9f48e131e590a4a1d6f"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-11648d5e63b5e77367a34e7c06495d97c672fda26a1f52c75fe450818d094959"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-04cd48b57c20ebd803d252341a55701d8c274ed12fee3ef2eba98f1c6fa52854"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-3712d41fde9a080bcda18c17593a383afc0f122d725e8c2cad77be0b982d3017"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-4043369b6ea66e2f7b4c3255803c09383a4f39045df3e94ba9c1f8ddfe059635"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-83600ada335280276e5f1de769a7fdc44e98d1f79eab7b5a55644dc74b3a9823"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-87215b2d4f5751c764ad1796f716257318b3fb34efe14963a1c6af34873de679"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-5bc11fef0be89a0f39bf764145126e4c7eac5a65feecadffc5b1a1c45136554c"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-5aaab78b899cfcd1b876c2392b1ffbab330e925588c5d2941760dbae07762ece"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-6c2e48fa4b0355baf9ecbf1bab63ca4702aeade352bde77ba23e88cbc54646ae"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-24457be846ed8f84e1d40ce46e92799e987c858724a50ee1e8b4f8408894963a"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-430aed927109d35d591632b71d36330e754c0e136a1a3347a390fcffcbe82bcc"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-051eaeb42ad92b63cf154a9db580f8aaa578961e833c0a4b1024ddf51a6b5f38"
+      },
+      {
+        "assertion_lists_match": true,
+        "document_id": "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+        "source_context_matches": true,
+        "status": "pass",
+        "unit_id": "source-unit-e42cca7bd36e150da46a06ddae19dbda1e85376bd4e9271bef74c876e366d042"
+      }
+    ],
+    "cards_match_search_documents_excluding_added_snapshot_id": {
+      "passed": 40,
+      "total": 40
+    },
+    "export_manifest_files": [
+      {
+        "matches": true,
+        "path": "agent-instructions.txt"
+      },
+      {
+        "matches": true,
+        "path": "cards.json"
+      },
+      {
+        "matches": true,
+        "path": "deployment-plan.json"
+      },
+      {
+        "matches": true,
+        "path": "knowledge-base.json"
+      },
+      {
+        "matches": true,
+        "path": "knowledge-source.json"
+      },
+      {
+        "matches": true,
+        "path": "project-connection.json"
+      },
+      {
+        "matches": true,
+        "path": "prompt-agent.json"
+      },
+      {
+        "matches": true,
+        "path": "retrieval-request.json"
+      },
+      {
+        "matches": true,
+        "path": "search-documents.jsonl"
+      },
+      {
+        "matches": true,
+        "path": "search-index.json"
+      },
+      {
+        "matches": true,
+        "path": "search-upload.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/assertions.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/extraction.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/manifest.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/ontology.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/relations.csv"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/request.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/response.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/source.bin"
+      },
+      {
+        "matches": true,
+        "path": "sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/source.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/assertions.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/extraction.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/manifest.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/ontology.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/relations.csv"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/request.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/response.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/source.bin"
+      },
+      {
+        "matches": true,
+        "path": "sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/source.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/assertions.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/extraction.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/manifest.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/ontology.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/relations.csv"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/request.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/response.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/source.bin"
+      },
+      {
+        "matches": true,
+        "path": "sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/source.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/assertions.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/extraction.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/manifest.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/ontology.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/relations.csv"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/request.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/response.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/source.bin"
+      },
+      {
+        "matches": true,
+        "path": "sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/source.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/assertions.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/extraction.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/manifest.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/ontology.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/relations.csv"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/request.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/response.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/source.bin"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/source.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/transcription-request.json"
+      },
+      {
+        "matches": true,
+        "path": "sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/transcription-response.json"
+      },
+      {
+        "matches": true,
+        "path": "target.json"
+      }
+    ],
+    "receipt_digest_definition": {
+      "note": "Saved request files include a trailing newline; comparing their raw-file hashes with the canonical request digests is not the correct receipt check.",
+      "producer_lines": [
+        34,
+        78,
+        79
+      ],
+      "producer_path": ".git/narrative-live-20261017/native_validate_v2.py",
+      "request": "sha256(canonical_json(body)); independently reproduced from parsed saved request JSON",
+      "response": "sha256(response.content); independently reproduced from saved raw response bytes"
+    },
+    "search_readback_all_fields_match_excluding_search_score": {
+      "passed": 40,
+      "total": 40
+    },
+    "source_units": [
+      {
+        "complete_text_unit_coverage_for_this_fixture": true,
+        "hand_gold_source_sha256_match": "not_applicable",
+        "pixel_transcription_accuracy": "not_applicable",
+        "raw_hash_matches": true,
+        "source_name": "memo-a.csv",
+        "source_sha256": "485603bbc73fe8e29a74f1916272933caa479760a5072555921321c1472199bb",
+        "unit_count": 15,
+        "units_verified": 15,
+        "verification_kind": "raw_source_text"
+      },
+      {
+        "complete_text_unit_coverage_for_this_fixture": true,
+        "hand_gold_source_sha256_match": true,
+        "pixel_transcription_accuracy": "not_applicable",
+        "raw_hash_matches": true,
+        "source_name": "memo-b.md",
+        "source_sha256": "5ab38c35b303c25710ffa9453c3b00a57bbe2c64b8adb02248ecd857f185c69f",
+        "unit_count": 15,
+        "units_verified": 15,
+        "verification_kind": "raw_source_text"
+      },
+      {
+        "complete_text_unit_coverage_for_this_fixture": true,
+        "hand_gold_source_sha256_match": true,
+        "pixel_transcription_accuracy": "not_applicable",
+        "raw_hash_matches": true,
+        "source_name": "memo-a.md",
+        "source_sha256": "0b96203e1e7266028652cc9111eb2cc6aaf6211c471ddad232e8563ac6aef1cf",
+        "unit_count": 15,
+        "units_verified": 15,
+        "verification_kind": "raw_source_text"
+      },
+      {
+        "complete_text_unit_coverage_for_this_fixture": true,
+        "hand_gold_source_sha256_match": "not_applicable",
+        "pixel_transcription_accuracy": "not_applicable",
+        "raw_hash_matches": true,
+        "source_name": "memo-a.pptx",
+        "source_sha256": "d22fb24560a116c105061f73bc02471c1dc340f661e478f9fc01739b7b8f8274",
+        "unit_count": 10,
+        "units_verified": 10,
+        "verification_kind": "raw_source_text"
+      },
+      {
+        "complete_text_unit_coverage_for_this_fixture": true,
+        "hand_gold_source_sha256_match": "not_applicable",
+        "pixel_transcription_accuracy": "unknown",
+        "raw_hash_matches": true,
+        "source_name": "memo-a.png",
+        "source_sha256": "ad01e5ac20f1dc0db7ef7f5143aec2f6b746c5a3582606bdc1ee7e7cfb51ddcd",
+        "unit_count": 15,
+        "units_verified": 15,
+        "verification_kind": "saved_model_transcription_only"
+      }
+    ]
+  },
+  "audit_kind": "independent_offline_native_mcp_artifact_and_manual_semantic_audit",
+  "completed_at_utc": "2026-10-16T18:39:39.890336+00:00",
+  "created_at_utc": "2026-10-16T18:37:56.001874+00:00",
+  "errors": [],
+  "excluded_initial_attempt": {
+    "gate_failure_description": "Parent reports allowed_tools list/dict readback normalization; no model responses from this attempt were included.",
+    "model_calls_in_receipt": 0,
+    "path": ".git/narrative-live-20261017/native/receipt.json",
+    "six_requests_not_executed": true,
+    "status": "incomplete"
+  },
+  "extraction_to_hand_gold_alignment": [
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+      "gold_assertion_id": "A01",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+      "gold_assertion_id": "A02",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+      "gold_assertion_id": "A03",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+      "gold_assertion_id": "A04",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+      "gold_assertion_id": "A05",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+      "gold_assertion_id": "A06",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+      "gold_assertion_id": "A07",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+      "gold_assertion_id": "A08",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.csv",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+      "gold_assertion_id": "B01",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+      "gold_assertion_id": "B02",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+      "gold_assertion_id": "B03",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+      "gold_assertion_id": "B04",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+      "gold_assertion_id": "B05",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+      "gold_assertion_id": "B06",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+      "gold_assertion_id": "B07",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+      "gold_assertion_id": "B08",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-b.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+      "gold_assertion_id": "A01",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+      "gold_assertion_id": "A02",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+      "gold_assertion_id": "A03",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+      "gold_assertion_id": "A04",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+      "gold_assertion_id": "A05",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+      "gold_assertion_id": "A06",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+      "gold_assertion_id": "A07",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_exact_source",
+      "document_id": "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+      "gold_assertion_id": "A08",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.md",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+      "gold_assertion_id": "A01",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+      "gold_assertion_id": "A02",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+      "gold_assertion_id": "A03",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+      "gold_assertion_id": "A04",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+      "gold_assertion_id": "A05",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+      "gold_assertion_id": "A06",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+      "gold_assertion_id": "A07",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+      "gold_assertion_id": "A08",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.pptx",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+      "gold_assertion_id": "A01",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a",
+      "gold_assertion_id": "A02",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+      "gold_assertion_id": "A03",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+      "gold_assertion_id": "A04",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+      "gold_assertion_id": "A05",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+      "gold_assertion_id": "A06",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+      "gold_assertion_id": "A07",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    },
+    {
+      "authority": "hand_gold_memo_a_semantics_with_matching_variant_quote",
+      "document_id": "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+      "gold_assertion_id": "A08",
+      "gold_quote_present_in_saved_source_units": true,
+      "source_name": "memo-a.png",
+      "status": "pass"
+    }
+  ],
+  "input_sha256": {
+    ".git/narrative-live-20261017/export/agent-instructions.txt": "df074150e38396848c4c1db38112251ce939d8e2bd69f8ba30eaa69c6eb33cba",
+    ".git/narrative-live-20261017/export/cards.json": "34a2328631ae4f7ae54c5142cb77cfde50501c4972bc5393cb92d07d87712e25",
+    ".git/narrative-live-20261017/export/deployment-plan.json": "1fd579a6df6700d77be803624f8dbc774d580623c31ef27934d013a942389720",
+    ".git/narrative-live-20261017/export/knowledge-base.json": "de7a4c675e0436544d3b87c5da2ec3bfc720fa3e75a202cf86bdb42c618b5946",
+    ".git/narrative-live-20261017/export/knowledge-source.json": "1d7c1de526012a621ed5af56dae969a394a99c34b3e874e44ad4ab5cd6f05e7a",
+    ".git/narrative-live-20261017/export/manifest.json": "e751c352a65254ed06c1f9a177a550dbbb11cf283abaea062c8ea8bfe839d927",
+    ".git/narrative-live-20261017/export/project-connection.json": "4226e092504737123efb23db86feb4ea1aab6a1f3e5abde10a796234d853ed8c",
+    ".git/narrative-live-20261017/export/prompt-agent.json": "0d67da0288654acdc8d882ece41b3146ed3d48f7894ccdaa5ee635637a04eb2a",
+    ".git/narrative-live-20261017/export/retrieval-request.json": "db2e667e297ce27c9119facebb3b635603a1cf1fa7c1b28b760b585256bf0b78",
+    ".git/narrative-live-20261017/export/search-documents.jsonl": "c1207b10e50ccdd835d67aaac01e9eae60ff3c0dea539cb0534b0f51f9658927",
+    ".git/narrative-live-20261017/export/search-index.json": "31abf824daeed5c328e2a14c9591e19ab18622e757e6163b72ef46d3c3820d67",
+    ".git/narrative-live-20261017/export/search-upload.json": "bcca9f9449f1e8f7fbd12b9fd1093478efcec95e9c74f973e4337e90822ae86f",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/assertions.json": "749c1c150daeae73f0080a31477d23aabf372c9dec19d84b2b39a6e49e75831d",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/extraction.json": "98622790b0c6fb2d2d531f471b1aa9252a885433d8197f1eb605933fd7efe4d4",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/manifest.json": "b8e93d42e753142f245603613e83d040ad2ee97dd71b5d87b4cb72e5b4fd3faf",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/ontology.json": "9b2e80ff139d7178f06f1657e75af33b2003d44367f62886ea194651dea6d9de",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/relations.csv": "2ff7731f07d6dfb2bdc2f32f0122b80d65d4f3df554d8b3cdb862e4785021eaf",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/request.json": "bcb0ecdc1cc3817d72f7028d44f04f30eac5f0edd7fd37d96f73f9436af1eab3",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/response.json": "c1916d0f23beb7d0100de74cefa9c3cadef956fb4a96873ff198ddab41c41896",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/source.bin": "485603bbc73fe8e29a74f1916272933caa479760a5072555921321c1472199bb",
+    ".git/narrative-live-20261017/export/sources/08bd29134d21bb26d8af7e27291cf11503138e66ea6e17c4ef02b1202880b47f/source.json": "c733cf0e36474bf426a90dfbc1e8a1c2c88a56c6e1dc4bfffa8744c0f3a8e34f",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/assertions.json": "c01750d66f67a8c57e953c696a08b70afd3559f7dd5dac4fb42f44e1044548b9",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/extraction.json": "622cafdf9288eb88e9f7c3c99a815cf173be98c092f0b6e55e9e24af6ed122a5",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/manifest.json": "a441367aa9cc4b873c180bbf480aa7b4e16f6ca401bf1320b413395df01328b7",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/ontology.json": "9b2e80ff139d7178f06f1657e75af33b2003d44367f62886ea194651dea6d9de",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/relations.csv": "f0bd79c01146c76747d4afc680aa9dc37c3ad872dd2a185c9aacba26d8895ae3",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/request.json": "fe95f50c4bef0010e4b58b64f37898469db011321dbda679290ca0a9fc1d6fbc",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/response.json": "e221d4fc80b3dfc9d1cef6f575c0cdb3bf708799da646395f67d67596ebe4827",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/source.bin": "5ab38c35b303c25710ffa9453c3b00a57bbe2c64b8adb02248ecd857f185c69f",
+    ".git/narrative-live-20261017/export/sources/0a05208895b33a4dc3feaf20b05ef119e26918fa3b6a00231a845d09c67061ed/source.json": "562856f389747e8736a4d588c4ba0bed528fd9435743d9fbf81bed03143d4b5d",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/assertions.json": "18523341ba342b97e2d1790902f160bc92961a3890bba4e22b8953ce63e4a406",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/extraction.json": "a9abb97d9e10213c38d99f539c8bac3e8805d8af52b03b663c49623747b88628",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/manifest.json": "94c410d07e838030f8fbb385f9f12262eeb2ba02d8bf081e32c76e9ae3e22b0e",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/ontology.json": "9b2e80ff139d7178f06f1657e75af33b2003d44367f62886ea194651dea6d9de",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/relations.csv": "53b6a54ca719b105ec95bf94bb475251d41af337a9d349ea40b04a06d9dc269f",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/request.json": "d661666be4fcab3ab85625fcdd7e7ccdbfa21c54e54a776f963ba024261f785f",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/response.json": "5bfa29347ae51c07e48de6d6d348bfd53e76735f4ec6bc9dcb00bf7c607cd498",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/source.bin": "0b96203e1e7266028652cc9111eb2cc6aaf6211c471ddad232e8563ac6aef1cf",
+    ".git/narrative-live-20261017/export/sources/2180658db7884d859dc13318378f3c19ddc6121407e06f14b2951d58f90fda36/source.json": "e865d408b4d7c6521bfb4a6c9bb94b53ec5d79c686c4a56bb98d45d7e4ca76a3",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/assertions.json": "1f1ed1718cd32bc79ffca3dd40ca6559c9d4f02c6e7fb05553c22436b9d0892f",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/extraction.json": "681347854ba2252c4282d69276d0ef53182e7b855b8e17062e3ed35f18f003aa",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/manifest.json": "323da7946ce47897f3235a0bdf538458bf2c128d6f2b1153afd95bd309cdac24",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/ontology.json": "9b2e80ff139d7178f06f1657e75af33b2003d44367f62886ea194651dea6d9de",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/relations.csv": "7acc0fafad8f07a22987b0ee1ee9dc72e894d99cb57d5d3662a5b875c0d6b11b",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/request.json": "8d1dd234d4c2d3f428058e908a2fb84fe59d0e82ccb8f5ebf768968e71c809e9",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/response.json": "bcfdb9939ed15bc2e742c7a0cd3481bcc9b79cfd025d07ce2663b8669594390e",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/source.bin": "d22fb24560a116c105061f73bc02471c1dc340f661e478f9fc01739b7b8f8274",
+    ".git/narrative-live-20261017/export/sources/2806e2b19dd3804289e52c23581730166556b2c7bcb2268247586f6ab9df71d8/source.json": "9d20a9b000382cd0ea0955909441f6eca4954a8af0a60888913caf7b71ce76a2",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/assertions.json": "d029fe8c7bc0739da3e6a7c9cd1c9f38fec6ad762de28775a21efc6ed077c8e2",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/extraction.json": "1f6ccf2e8d6fd51644a6b5c8fe093ef9d88997d8b17693afcc4e9b7855e79b58",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/manifest.json": "c648fdc839888daa7532d8a48b664ae48def5e36f1f968fda7b159d3a7af75a4",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/ontology.json": "9b2e80ff139d7178f06f1657e75af33b2003d44367f62886ea194651dea6d9de",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/relations.csv": "fdb26931d24cb199a366bc9a88ae5104faa27510112f8f596ced7b0344190387",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/request.json": "34463b195b863b13c64874b4f6d56f97f6aa26ed5629190046a4c8bfaf882c82",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/response.json": "cc96834675adfe6daeadcf683181969e4cf862a7699268729a3debcb8d24ea2e",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/source.bin": "ad01e5ac20f1dc0db7ef7f5143aec2f6b746c5a3582606bdc1ee7e7cfb51ddcd",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/source.json": "ffef2c518921a099793811527e6eb17844734856674c2f8ffb987fa05ed16494",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/transcription-request.json": "ecad34732481fcc69c3f0254e6e88035458d1d3589bc8248f989d051e00bae6c",
+    ".git/narrative-live-20261017/export/sources/683006c4173fcbaec5ec772e329a86dba751d6870296e0b417816637ca9b7d54/transcription-response.json": "548725d5ff16dd65222a2b4fbf4d3514f635c54f9ead3e6471091b04aab6b417",
+    ".git/narrative-live-20261017/export/target.json": "263298cc78d367f0c566cb88f3dc8f2965b78ff88a9941efd508717d5e2cf4c3",
+    ".git/narrative-live-20261017/native-v2/conflicts-request.json": "1cd8ef23eff27a8415060e103570b0f0c590e9f087a1e9f3fea0ff9164961d7f",
+    ".git/narrative-live-20261017/native-v2/conflicts-response.json": "6d1dc82280d11555c352051534e7a0cd339d80b3ba42d5df6abb615b9902fce0",
+    ".git/narrative-live-20261017/native-v2/csv-request.json": "a7a901232f1e9ad3676524a1815a8f8f024a918b83d240aa620b6377ef88a27e",
+    ".git/narrative-live-20261017/native-v2/csv-response.json": "3b41e3851bf7bef13e1097e7c2cf65ef9d341df0ab883fbcd10c0ddb915567d3",
+    ".git/narrative-live-20261017/native-v2/image-request.json": "b44d321455dfe829d47efa3686c6f095f67f42449c74f7c5b2e358da036d33f5",
+    ".git/narrative-live-20261017/native-v2/image-response.json": "a10afebdb48f55bd6eb5cdfede09fb53ef363fa55eaca625bf0a1cad76207226",
+    ".git/narrative-live-20261017/native-v2/markdown-request.json": "392098c35c79d875f9eb269cc06c1e8dcfa0398dc63983dfc63a3ac2712b3d0d",
+    ".git/narrative-live-20261017/native-v2/markdown-response.json": "7b4e4703a33ac99fbc8b5d16f67ecab4ec91538699fd24a1a9ad96b316393a29",
+    ".git/narrative-live-20261017/native-v2/pptx-request.json": "d0a925c4c4af88e2d01583628ec7d79ab1bae16143f3482f8e4bf261fbbd74ff",
+    ".git/narrative-live-20261017/native-v2/pptx-response.json": "a6147827988790a1d0899bbdbf44cbce5a91b50c558013b2272c67af8c1f7548",
+    ".git/narrative-live-20261017/native-v2/receipt.json": "90b3c0d24904f5dd7f617bb570a573690f2ebd352dc48d79a21bca3b018b9dac",
+    ".git/narrative-live-20261017/native-v2/search-readback-response.json": "414a92c589a92279cec4f789e6f37430037677d428b017bd11370a5ed0c3b817",
+    ".git/narrative-live-20261017/native-v2/uncertainty-request.json": "b8eb84743a5564514c083d530f88fc8d4f5b445ffafe7d830fc2d11c5414d7d8",
+    ".git/narrative-live-20261017/native-v2/uncertainty-response.json": "dbb173bfdd3dbbd78b4ab0f08b544d3b59389f1756e5a64a9bdc445b8e9b8a3e",
+    ".git/narrative-live-20261017/native/receipt.json": "1eab3b3b033e17a2b26c564618c77c72c4c227f34dc71c721e998bc1f1b97f55",
+    ".git/narrative-live-20261017/native_validate_v2.py": "004a1e5b4a1c0843b16763fe88e03ee52bd4d180b7e0fb46a6e0744caca78a17",
+    "data/knowledge/narrative-mock/gold.json": "6ea15734c152db4c6668496ca8f852b56bbf08f2a1c9af7392ed16d24435c51d"
+  },
+  "limitations": [
+    "This is a post-hoc audit of six custom prompts on five small synthetic sources, not the complete twelve-question gold benchmark or a statistical quality estimate.",
+    "The not_stated/absence question Q04 was not exercised. Gold A03 and A05 were not requested in the native answers.",
+    "Image transcription accuracy against pixels remains UNKNOWN. Matching saved transcript evidence and faithful uncertainty wording do not establish visual correctness.",
+    "CSV/PPTX/PNG answer semantics are mapped to memo-a hand-gold assertions using matching source quotes; independent format-specific gold and pixel-location annotations were not created.",
+    "Retrieval returned documents from other source formats too. All answer citations obeyed requested source scope; retrieval itself was not source-isolated.",
+    "Extracted assertions remain model_candidate. This manual synthetic evaluation does not validate arbitrary documents or promote all model extractions to authoritative ontology facts.",
+    "Citation URLs were checked as stored identifiers only. No URLs, live services or authorization states were queried by this auditor."
+  ],
+  "scenarios": {
+    "conflicts": {
+      "abbreviated_identifier_checks": [
+        {
+          "match_count": 1,
+          "prefix": "source-unit-3a5653",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "source-unit-3b0215",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "source-unit-52b254",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "source-unit-a2ec4d",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "source-unit-930dcf",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "source-unit-3b9843",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:1609b834",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:5f9a24b7",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:ca3940ee",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:bcfddece",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:076ac82f",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:182324c7",
+          "status": "pass"
+        },
+        {
+          "match_count": 1,
+          "prefix": "urn:sr:assertion:8002e884",
+          "status": "pass"
+        }
+      ],
+      "all_fields_semantically_equal": 141,
+      "answer_claim_checks": [
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 11",
+          "citation_index": 10,
+          "document_id": "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 11,
+              "line_start": 11
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "東部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A01",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 14",
+          "citation_index": 11,
+          "document_id": "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 14,
+              "line_start": 14
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "budgetYen",
+            "1200000円",
+            "Literal",
+            "asserted"
+          ],
+          "gold_assertion_id": "A04",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 11",
+          "citation_index": 12,
+          "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 11,
+              "line_start": 11
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "西部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "B01",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 12",
+          "citation_index": 13,
+          "document_id": "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 12,
+              "line_start": 12
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "東部室",
+            "Organization",
+            "denied"
+          ],
+          "gold_assertion_id": "B02",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 13",
+          "citation_index": 14,
+          "document_id": "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 13,
+              "line_start": 13
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "budgetYen",
+            "1200000円",
+            "Literal",
+            "denied"
+          ],
+          "gold_assertion_id": "B03",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 17",
+          "citation_index": 17,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 17,
+              "line_start": 17
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "supportedBy",
+            "東部室",
+            "Organization",
+            "denied"
+          ],
+          "gold_assertion_id": "A06",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "line 15",
+          "citation_index": 18,
+          "document_id": "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 15,
+              "line_start": 15
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "supportedBy",
+            "東部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "B04",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "not_requested_or_stated",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": null,
+          "citation_index": 23,
+          "document_id": "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 20,
+              "line_start": 20
+            }
+          ],
+          "expected_subject_scope": "memo-a:A-201",
+          "expected_tuple": [
+            "灯台",
+            "Project",
+            "managedBy",
+            "受付運用室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A08",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "not_requested_or_stated",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": null,
+          "citation_index": 24,
+          "document_id": "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 21,
+              "line_start": 21
+            }
+          ],
+          "expected_subject_scope": "memo-b:B-201",
+          "expected_tuple": [
+            "灯台",
+            "Project",
+            "managedBy",
+            "在庫運用室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "B08",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        }
+      ],
+      "citation_count": 25,
+      "citation_mappings": [
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 345,
+          "index": 0,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 330,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+          "end_index": 361,
+          "index": 1,
+          "retrieved_occurrences": [
+            {
+              "document_index": 25,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            },
+            {
+              "document_index": 6,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:0†memo-b.md】",
+          "start_index": 345,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 524,
+          "index": 2,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 509,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+          "end_index": 540,
+          "index": 3,
+          "retrieved_occurrences": [
+            {
+              "document_index": 25,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            },
+            {
+              "document_index": 6,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:0†memo-b.md】",
+          "start_index": 524,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 726,
+          "index": 4,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 711,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+          "end_index": 742,
+          "index": 5,
+          "retrieved_occurrences": [
+            {
+              "document_index": 25,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            },
+            {
+              "document_index": 6,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:0†memo-b.md】",
+          "start_index": 726,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 884,
+          "index": 6,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 869,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+          "end_index": 900,
+          "index": 7,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            },
+            {
+              "document_index": 24,
+              "output_index": 4
+            },
+            {
+              "document_index": 1,
+              "output_index": 6
+            },
+            {
+              "document_index": 15,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:1†memo-b.md】",
+          "start_index": 884,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+          "end_index": 1032,
+          "index": 8,
+          "retrieved_occurrences": [
+            {
+              "document_index": 6,
+              "output_index": 2
+            },
+            {
+              "document_index": 2,
+              "output_index": 4
+            },
+            {
+              "document_index": 19,
+              "output_index": 6
+            },
+            {
+              "document_index": 13,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:2†memo-a.md】",
+          "start_index": 1017,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+          "end_index": 1048,
+          "index": 9,
+          "retrieved_occurrences": [
+            {
+              "document_index": 9,
+              "output_index": 2
+            },
+            {
+              "document_index": 30,
+              "output_index": 4
+            },
+            {
+              "document_index": 2,
+              "output_index": 6
+            },
+            {
+              "document_index": 17,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:2†memo-b.md】",
+          "start_index": 1032,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+          "end_index": 1263,
+          "index": 10,
+          "retrieved_occurrences": [
+            {
+              "document_index": 21,
+              "output_index": 2
+            },
+            {
+              "document_index": 3,
+              "output_index": 4
+            },
+            {
+              "document_index": 23,
+              "output_index": 6
+            },
+            {
+              "document_index": 1,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【15:1†memo-a.md】",
+          "start_index": 1247,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+          "end_index": 1403,
+          "index": 11,
+          "retrieved_occurrences": [
+            {
+              "document_index": 10,
+              "output_index": 2
+            },
+            {
+              "document_index": 1,
+              "output_index": 4
+            },
+            {
+              "document_index": 10,
+              "output_index": 6
+            },
+            {
+              "document_index": 28,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:1†memo-a.md】",
+          "start_index": 1388,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+          "end_index": 1534,
+          "index": 12,
+          "retrieved_occurrences": [
+            {
+              "document_index": 25,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            },
+            {
+              "document_index": 6,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:0†memo-b.md】",
+          "start_index": 1518,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+          "end_index": 1664,
+          "index": 13,
+          "retrieved_occurrences": [
+            {
+              "document_index": 23,
+              "output_index": 2
+            },
+            {
+              "document_index": 28,
+              "output_index": 4
+            },
+            {
+              "document_index": 5,
+              "output_index": 6
+            },
+            {
+              "document_index": 0,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【15:0†memo-b.md】",
+          "start_index": 1648,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+          "end_index": 1804,
+          "index": 14,
+          "retrieved_occurrences": [
+            {
+              "document_index": 11,
+              "output_index": 2
+            },
+            {
+              "document_index": 25,
+              "output_index": 4
+            },
+            {
+              "document_index": 3,
+              "output_index": 6
+            },
+            {
+              "document_index": 25,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:3†memo-b.md】",
+          "start_index": 1788,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 2006,
+          "index": 15,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 1991,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+          "end_index": 2022,
+          "index": 16,
+          "retrieved_occurrences": [
+            {
+              "document_index": 25,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            },
+            {
+              "document_index": 6,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:0†memo-b.md】",
+          "start_index": 2006,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 2242,
+          "index": 17,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 2227,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+          "end_index": 2375,
+          "index": 18,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            },
+            {
+              "document_index": 24,
+              "output_index": 4
+            },
+            {
+              "document_index": 1,
+              "output_index": 6
+            },
+            {
+              "document_index": 15,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:1†memo-b.md】",
+          "start_index": 2359,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 2539,
+          "index": 19,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            },
+            {
+              "document_index": 8,
+              "output_index": 6
+            },
+            {
+              "document_index": 10,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:0†memo-a.md】",
+          "start_index": 2524,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+          "end_index": 2555,
+          "index": 20,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            },
+            {
+              "document_index": 24,
+              "output_index": 4
+            },
+            {
+              "document_index": 1,
+              "output_index": 6
+            },
+            {
+              "document_index": 15,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:1†memo-b.md】",
+          "start_index": 2539,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+          "end_index": 2713,
+          "index": 21,
+          "retrieved_occurrences": [
+            {
+              "document_index": 6,
+              "output_index": 2
+            },
+            {
+              "document_index": 2,
+              "output_index": 4
+            },
+            {
+              "document_index": 19,
+              "output_index": 6
+            },
+            {
+              "document_index": 13,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:2†memo-a.md】",
+          "start_index": 2698,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+          "end_index": 2729,
+          "index": 22,
+          "retrieved_occurrences": [
+            {
+              "document_index": 9,
+              "output_index": 2
+            },
+            {
+              "document_index": 30,
+              "output_index": 4
+            },
+            {
+              "document_index": 2,
+              "output_index": 6
+            },
+            {
+              "document_index": 17,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:2†memo-b.md】",
+          "start_index": 2713,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+          "end_index": 2916,
+          "index": 23,
+          "retrieved_occurrences": [
+            {
+              "document_index": 6,
+              "output_index": 2
+            },
+            {
+              "document_index": 2,
+              "output_index": 4
+            },
+            {
+              "document_index": 19,
+              "output_index": 6
+            },
+            {
+              "document_index": 13,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:2†memo-a.md】",
+          "start_index": 2901,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+          "end_index": 3026,
+          "index": 24,
+          "retrieved_occurrences": [
+            {
+              "document_index": 9,
+              "output_index": 2
+            },
+            {
+              "document_index": 30,
+              "output_index": 4
+            },
+            {
+              "document_index": 2,
+              "output_index": 6
+            },
+            {
+              "document_index": 17,
+              "output_index": 8
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【12:2†memo-b.md】",
+          "start_index": 3010,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        }
+      ],
+      "document_occurrences": 141,
+      "errors": [],
+      "image_unverified_qualification_present": "not_applicable",
+      "limitations": [],
+      "manual_semantic_notes": [
+        "P-101/P-102の同一案件性と資料間優先順位なしをsource_contextから確認。主担当・1200000円・支援関係の肯定/否定衝突を保持。別の予算を創作していない。",
+        "灯台A-201/B-201は同名の別案件として分離。受付運用室/在庫運用室の差を同一案件内の矛盾と扱っていない。"
+      ],
+      "mcp_calls": [
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 2,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 4,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 6,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 36,
+          "output_index": 8,
+          "returned_documents": 36
+        }
+      ],
+      "native_document_urls_match_ids": 141,
+      "off_scope_retrieved_occurrences": 84,
+      "receipt_integrity": {
+        "request_hash_representation": "canonical JSON UTF-8; sorted keys; compact separators; no final newline",
+        "request_sha256_matches": true,
+        "response_hash_representation": "raw saved response bytes",
+        "response_sha256_matches": true
+      },
+      "response_model": "gpt-5.5",
+      "response_status": "completed",
+      "returned_document_occurrences_by_source": {
+        "memo-a.csv": 24,
+        "memo-a.md": 29,
+        "memo-a.png": 30,
+        "memo-a.pptx": 30,
+        "memo-b.md": 28
+      },
+      "source_context_checks": [
+        {
+          "citation_index": 2,
+          "line": 4,
+          "source_name": "memo-a.md",
+          "status": "pass",
+          "witness": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。"
+        },
+        {
+          "citation_index": 3,
+          "line": 4,
+          "source_name": "memo-b.md",
+          "status": "pass",
+          "witness": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。"
+        },
+        {
+          "citation_index": 4,
+          "line": 5,
+          "source_name": "memo-a.md",
+          "status": "pass",
+          "witness": "朝凪は共通識別子P-101"
+        },
+        {
+          "citation_index": 5,
+          "line": 5,
+          "source_name": "memo-b.md",
+          "status": "pass",
+          "witness": "朝凪は共通識別子P-101"
+        },
+        {
+          "citation_index": 6,
+          "line": 6,
+          "source_name": "memo-a.md",
+          "status": "pass",
+          "witness": "星凪は共通識別子P-102"
+        },
+        {
+          "citation_index": 7,
+          "line": 6,
+          "source_name": "memo-b.md",
+          "status": "pass",
+          "witness": "星凪は共通識別子P-102"
+        },
+        {
+          "citation_index": 8,
+          "line": 7,
+          "source_name": "memo-a.md",
+          "status": "pass",
+          "witness": "受付支援案件A-201"
+        },
+        {
+          "citation_index": 9,
+          "line": 7,
+          "source_name": "memo-b.md",
+          "status": "pass",
+          "witness": "在庫支援案件B-201"
+        }
+      ],
+      "status": "pass_with_limitations",
+      "unique_document_count": 40,
+      "unique_document_ids": [
+        "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+        "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+        "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+        "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+        "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+        "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+        "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+        "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a"
+      ],
+      "unknowns": []
+    },
+    "csv": {
+      "abbreviated_identifier_checks": [],
+      "all_fields_semantically_equal": 69,
+      "answer_claim_checks": [
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "row 9 / line 9、列1「案件」=朝凪、列2「記述」",
+          "citation_index": 0,
+          "document_id": "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+          "evidence_locators": [
+            {
+              "cells": [
+                {
+                  "column": 1,
+                  "header": "案件",
+                  "value": "朝凪"
+                },
+                {
+                  "column": 2,
+                  "header": "記述",
+                  "value": "朝凪の主担当は東部室である。"
+                }
+              ],
+              "kind": "csv",
+              "line_end": 9,
+              "line_start": 9,
+              "row": 9
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "東部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A01",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.csv",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "row 10 / line 10、列1「案件」=朝凪、列2「記述」",
+          "citation_index": 1,
+          "document_id": "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+          "evidence_locators": [
+            {
+              "cells": [
+                {
+                  "column": 1,
+                  "header": "案件",
+                  "value": "朝凪"
+                },
+                {
+                  "column": 2,
+                  "header": "記述",
+                  "value": "朝凪の支援担当は西部室である。"
+                }
+              ],
+              "kind": "csv",
+              "line_end": 10,
+              "line_start": 10,
+              "row": 10
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "supportedBy",
+            "西部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A02",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.csv",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "row 15 / line 15、列1「案件」=星凪、列2「記述」",
+          "citation_index": 2,
+          "document_id": "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+          "evidence_locators": [
+            {
+              "cells": [
+                {
+                  "column": 1,
+                  "header": "案件",
+                  "value": "星凪"
+                },
+                {
+                  "column": 2,
+                  "header": "記述",
+                  "value": "星凪の予算額は未定であり、金額は定まっていない。"
+                }
+              ],
+              "kind": "csv",
+              "line_end": 15,
+              "line_start": 15,
+              "row": 15
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "budgetYen",
+            null,
+            "Literal",
+            "unknown"
+          ],
+          "gold_assertion_id": "A07",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.csv",
+          "status": "pass"
+        }
+      ],
+      "citation_count": 3,
+      "citation_mappings": [
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+          "end_index": 244,
+          "index": 0,
+          "retrieved_occurrences": [
+            {
+              "document_index": 6,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            }
+          ],
+          "source_name": "memo-a.csv",
+          "source_scope_matches": true,
+          "span": "【9:0†source】",
+          "start_index": 232,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+          "end_index": 364,
+          "index": 1,
+          "retrieved_occurrences": [
+            {
+              "document_index": 1,
+              "output_index": 2
+            },
+            {
+              "document_index": 6,
+              "output_index": 4
+            }
+          ],
+          "source_name": "memo-a.csv",
+          "source_scope_matches": true,
+          "span": "【6:1†source】",
+          "start_index": 352,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+          "end_index": 515,
+          "index": 2,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            }
+          ],
+          "source_name": "memo-a.csv",
+          "source_scope_matches": true,
+          "span": "【6:0†source】",
+          "start_index": 503,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        }
+      ],
+      "document_occurrences": 69,
+      "errors": [],
+      "image_unverified_qualification_present": "not_applicable",
+      "limitations": [
+        "Cross-format expected semantics map to memo-a hand gold; no independent format-specific hand gold was created."
+      ],
+      "manual_semantic_notes": [
+        "主担当・支援担当・未定予算を正しく区別。row 9/10/15、列1「案件」・列2「記述」は生CSVと一致。"
+      ],
+      "mcp_calls": [
+        {
+          "all_fields_semantically_equal": 34,
+          "output_index": 2,
+          "returned_documents": 34
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 4,
+          "returned_documents": 35
+        }
+      ],
+      "native_document_urls_match_ids": 69,
+      "off_scope_retrieved_occurrences": 54,
+      "receipt_integrity": {
+        "request_hash_representation": "canonical JSON UTF-8; sorted keys; compact separators; no final newline",
+        "request_sha256_matches": true,
+        "response_hash_representation": "raw saved response bytes",
+        "response_sha256_matches": true
+      },
+      "response_model": "gpt-5.5",
+      "response_status": "completed",
+      "returned_document_occurrences_by_source": {
+        "memo-a.csv": 15,
+        "memo-a.md": 14,
+        "memo-a.png": 14,
+        "memo-a.pptx": 14,
+        "memo-b.md": 12
+      },
+      "source_context_checks": [],
+      "status": "pass_with_limitations",
+      "unique_document_count": 40,
+      "unique_document_ids": [
+        "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+        "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+        "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+        "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+        "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+        "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+        "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+        "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a"
+      ],
+      "unknowns": []
+    },
+    "image": {
+      "abbreviated_identifier_checks": [],
+      "all_fields_semantically_equal": 104,
+      "answer_claim_checks": [
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "frame 1 / transcript_line 8",
+          "citation_index": 0,
+          "document_id": "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+          "evidence_locators": [
+            {
+              "frame": 1,
+              "kind": "image",
+              "transcript_line": 8
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "東部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A01",
+          "image_pixel_grounding": "unknown",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.png",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "frame 1 / transcript_line 9",
+          "citation_index": 1,
+          "document_id": "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a",
+          "evidence_locators": [
+            {
+              "frame": 1,
+              "kind": "image",
+              "transcript_line": 9
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "supportedBy",
+            "西部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A02",
+          "image_pixel_grounding": "unknown",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.png",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "frame 1 / transcript_line 14",
+          "citation_index": 2,
+          "document_id": "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+          "evidence_locators": [
+            {
+              "frame": 1,
+              "kind": "image",
+              "transcript_line": 14
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "budgetYen",
+            null,
+            "Literal",
+            "unknown"
+          ],
+          "gold_assertion_id": "A07",
+          "image_pixel_grounding": "unknown",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.png",
+          "status": "pass"
+        }
+      ],
+      "citation_count": 3,
+      "citation_mappings": [
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+          "end_index": 389,
+          "index": 0,
+          "retrieved_occurrences": [
+            {
+              "document_index": 5,
+              "output_index": 2
+            },
+            {
+              "document_index": 3,
+              "output_index": 4
+            },
+            {
+              "document_index": 6,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.png",
+          "source_scope_matches": true,
+          "span": "【9:3†source】",
+          "start_index": 377,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a",
+          "end_index": 508,
+          "index": 1,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 7,
+              "output_index": 4
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.png",
+          "source_scope_matches": true,
+          "span": "【12:0†source】",
+          "start_index": 495,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+          "end_index": 680,
+          "index": 2,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            },
+            {
+              "document_index": 1,
+              "output_index": 4
+            },
+            {
+              "document_index": 15,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.png",
+          "source_scope_matches": true,
+          "span": "【9:1†source】",
+          "start_index": 668,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        }
+      ],
+      "document_occurrences": 104,
+      "errors": [],
+      "image_unverified_qualification_present": true,
+      "limitations": [
+        "Image pixel/OCR accuracy is unknown; this audit verifies saved transcript evidence only.",
+        "Cross-format expected semantics map to memo-a hand gold; no independent format-specific hand gold was created."
+      ],
+      "manual_semantic_notes": [
+        "同じ3関係を保持。frame 1、transcript_line 8/9/14は保存転記と一致。model_transcription_unverifiedおよび画像の視覚的正しさ未検証を明記。"
+      ],
+      "mcp_calls": [
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 2,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 4,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 34,
+          "output_index": 6,
+          "returned_documents": 34
+        }
+      ],
+      "native_document_urls_match_ids": 104,
+      "off_scope_retrieved_occurrences": 80,
+      "receipt_integrity": {
+        "request_hash_representation": "canonical JSON UTF-8; sorted keys; compact separators; no final newline",
+        "request_sha256_matches": true,
+        "response_hash_representation": "raw saved response bytes",
+        "response_sha256_matches": true
+      },
+      "response_model": "gpt-5.5",
+      "response_status": "completed",
+      "returned_document_occurrences_by_source": {
+        "memo-a.csv": 22,
+        "memo-a.md": 22,
+        "memo-a.png": 24,
+        "memo-a.pptx": 22,
+        "memo-b.md": 14
+      },
+      "source_context_checks": [],
+      "status": "pass_with_limitations",
+      "unique_document_count": 38,
+      "unique_document_ids": [
+        "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+        "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+        "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+        "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+        "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+        "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a"
+      ],
+      "unknowns": []
+    },
+    "markdown": {
+      "abbreviated_identifier_checks": [],
+      "all_fields_semantically_equal": 105,
+      "answer_claim_checks": [
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-a.md line 11",
+          "citation_index": 0,
+          "document_id": "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 11,
+              "line_start": 11
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "東部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A01",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-a.md line 12",
+          "citation_index": 1,
+          "document_id": "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 12,
+              "line_start": 12
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "supportedBy",
+            "西部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A02",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-a.md line 18",
+          "citation_index": 2,
+          "document_id": "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 18,
+              "line_start": 18
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "budgetYen",
+            null,
+            "Literal",
+            "unknown"
+          ],
+          "gold_assertion_id": "A07",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-a.md line 17",
+          "citation_index": 3,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 17,
+              "line_start": 17
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "supportedBy",
+            "東部室",
+            "Organization",
+            "denied"
+          ],
+          "gold_assertion_id": "A06",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.md",
+          "status": "pass"
+        }
+      ],
+      "citation_count": 4,
+      "citation_mappings": [
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+          "end_index": 201,
+          "index": 0,
+          "retrieved_occurrences": [
+            {
+              "document_index": 1,
+              "output_index": 2
+            },
+            {
+              "document_index": 17,
+              "output_index": 4
+            },
+            {
+              "document_index": 4,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【6:1†memo-a.md】",
+          "start_index": 186,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+          "end_index": 301,
+          "index": 1,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            },
+            {
+              "document_index": 10,
+              "output_index": 4
+            },
+            {
+              "document_index": 5,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【6:0†memo-a.md】",
+          "start_index": 286,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+          "end_index": 426,
+          "index": 2,
+          "retrieved_occurrences": [
+            {
+              "document_index": 23,
+              "output_index": 2
+            },
+            {
+              "document_index": 2,
+              "output_index": 4
+            },
+            {
+              "document_index": 17,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【9:2†memo-a.md】",
+          "start_index": 411,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+          "end_index": 546,
+          "index": 3,
+          "retrieved_occurrences": [
+            {
+              "document_index": 4,
+              "output_index": 2
+            },
+            {
+              "document_index": 5,
+              "output_index": 4
+            },
+            {
+              "document_index": 0,
+              "output_index": 6
+            }
+          ],
+          "source_name": "memo-a.md",
+          "source_scope_matches": true,
+          "span": "【12:0†memo-a.md】",
+          "start_index": 530,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        }
+      ],
+      "document_occurrences": 105,
+      "errors": [],
+      "image_unverified_qualification_present": "not_applicable",
+      "limitations": [],
+      "manual_semantic_notes": [
+        "主語→関係→目的語を保持。東部室の支援担当関係はdenied、未定予算はunknown/nullであり、0円や主担当の否定へ変えていない。"
+      ],
+      "mcp_calls": [
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 2,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 4,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 6,
+          "returned_documents": 35
+        }
+      ],
+      "native_document_urls_match_ids": 105,
+      "off_scope_retrieved_occurrences": 82,
+      "receipt_integrity": {
+        "request_hash_representation": "canonical JSON UTF-8; sorted keys; compact separators; no final newline",
+        "request_sha256_matches": true,
+        "response_hash_representation": "raw saved response bytes",
+        "response_sha256_matches": true
+      },
+      "response_model": "gpt-5.5",
+      "response_status": "completed",
+      "returned_document_occurrences_by_source": {
+        "memo-a.csv": 20,
+        "memo-a.md": 23,
+        "memo-a.png": 23,
+        "memo-a.pptx": 21,
+        "memo-b.md": 18
+      },
+      "source_context_checks": [],
+      "status": "pass_with_limitations",
+      "unique_document_count": 40,
+      "unique_document_ids": [
+        "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+        "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+        "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+        "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+        "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+        "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+        "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+        "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a"
+      ],
+      "unknowns": []
+    },
+    "pptx": {
+      "abbreviated_identifier_checks": [],
+      "all_fields_semantically_equal": 70,
+      "answer_claim_checks": [
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "slide 1, shape_id 4（paragraph 1）",
+          "citation_index": 0,
+          "document_id": "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+          "evidence_locators": [
+            {
+              "kind": "pptx",
+              "paragraph_end": 1,
+              "paragraph_start": 1,
+              "shape_id": "4",
+              "slide": 1
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "managedBy",
+            "東部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A01",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.pptx",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "slide 1, shape_id 5（paragraph 1）",
+          "citation_index": 1,
+          "document_id": "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+          "evidence_locators": [
+            {
+              "kind": "pptx",
+              "paragraph_end": 1,
+              "paragraph_start": 1,
+              "shape_id": "5",
+              "slide": 1
+            }
+          ],
+          "expected_subject_scope": "common:P-101",
+          "expected_tuple": [
+            "朝凪",
+            "Project",
+            "supportedBy",
+            "西部室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "A02",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.pptx",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "slide 1, shape_id 10（paragraph 1）",
+          "citation_index": 2,
+          "document_id": "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+          "evidence_locators": [
+            {
+              "kind": "pptx",
+              "paragraph_end": 1,
+              "paragraph_start": 1,
+              "shape_id": "10",
+              "slide": 1
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "budgetYen",
+            null,
+            "Literal",
+            "unknown"
+          ],
+          "gold_assertion_id": "A07",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-a.pptx",
+          "status": "pass"
+        }
+      ],
+      "citation_count": 3,
+      "citation_mappings": [
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+          "end_index": 241,
+          "index": 0,
+          "retrieved_occurrences": [
+            {
+              "document_index": 6,
+              "output_index": 2
+            },
+            {
+              "document_index": 1,
+              "output_index": 4
+            }
+          ],
+          "source_name": "memo-a.pptx",
+          "source_scope_matches": true,
+          "span": "【9:1†source】",
+          "start_index": 229,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+          "end_index": 360,
+          "index": 1,
+          "retrieved_occurrences": [
+            {
+              "document_index": 1,
+              "output_index": 2
+            },
+            {
+              "document_index": 2,
+              "output_index": 4
+            }
+          ],
+          "source_name": "memo-a.pptx",
+          "source_scope_matches": true,
+          "span": "【9:2†source】",
+          "start_index": 348,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+          "end_index": 512,
+          "index": 2,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            },
+            {
+              "document_index": 0,
+              "output_index": 4
+            }
+          ],
+          "source_name": "memo-a.pptx",
+          "source_scope_matches": true,
+          "span": "【9:0†source】",
+          "start_index": 500,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        }
+      ],
+      "document_occurrences": 70,
+      "errors": [],
+      "image_unverified_qualification_present": "not_applicable",
+      "limitations": [
+        "Cross-format expected semantics map to memo-a hand gold; no independent format-specific hand gold was created."
+      ],
+      "manual_semantic_notes": [
+        "主担当・支援担当・未定予算を正しく区別。slide 1、shape_id 4/5/10、paragraph 1は生OOXMLと一致。座標は不明と明記。"
+      ],
+      "mcp_calls": [
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 2,
+          "returned_documents": 35
+        },
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 4,
+          "returned_documents": 35
+        }
+      ],
+      "native_document_urls_match_ids": 70,
+      "off_scope_retrieved_occurrences": 54,
+      "receipt_integrity": {
+        "request_hash_representation": "canonical JSON UTF-8; sorted keys; compact separators; no final newline",
+        "request_sha256_matches": true,
+        "response_hash_representation": "raw saved response bytes",
+        "response_sha256_matches": true
+      },
+      "response_model": "gpt-5.5",
+      "response_status": "completed",
+      "returned_document_occurrences_by_source": {
+        "memo-a.csv": 13,
+        "memo-a.md": 14,
+        "memo-a.png": 16,
+        "memo-a.pptx": 16,
+        "memo-b.md": 11
+      },
+      "source_context_checks": [],
+      "status": "pass_with_limitations",
+      "unique_document_count": 39,
+      "unique_document_ids": [
+        "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+        "0b15925cc86c4a742813506409ca04b405868b9149c3ca877e53a42bd0b75b6b",
+        "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "3cafa8ebac2f0c798ac7bcf3ce8ddaa012db9d0d10c4333651761c85c48a7582",
+        "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "994a140383994ea789dabc83e81d483d236a5f93a563a5299da6cf2f051ef798",
+        "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "c0dd4e215cb06877b79dede3f06251377cc0d22f7aaa8f216ab089c8d6ebdfd4",
+        "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "f0e5fa6cd9a1068d6319468ad685247d109cccbbc663bbdf547a2ebf07953b1e",
+        "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a"
+      ],
+      "unknowns": []
+    },
+    "uncertainty": {
+      "abbreviated_identifier_checks": [],
+      "all_fields_semantically_equal": 35,
+      "answer_claim_checks": [
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-b.md, line 16",
+          "citation_index": 0,
+          "document_id": "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 16,
+              "line_start": 16
+            }
+          ],
+          "expected_subject_scope": "common:P-102",
+          "expected_tuple": [
+            "星凪",
+            "Project",
+            "approvedBy",
+            null,
+            "Organization",
+            "ambiguous"
+          ],
+          "gold_assertion_id": "B05",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-b.md, line 18",
+          "citation_index": 1,
+          "document_id": "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 18,
+              "line_start": 18
+            }
+          ],
+          "expected_subject_scope": "memo-b:P-103",
+          "expected_tuple": [
+            "月凪",
+            "Project",
+            "managedBy",
+            "企画室",
+            "Organization",
+            "asserted"
+          ],
+          "gold_assertion_id": "B06",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        },
+        {
+          "answer_locator_state": "stated_and_verified",
+          "answer_locator_values_match_evidence": true,
+          "answer_locator_witness": "memo-b.md, line 19",
+          "citation_index": 2,
+          "document_id": "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+          "evidence_locators": [
+            {
+              "kind": "text",
+              "line_end": 19,
+              "line_start": 19
+            }
+          ],
+          "expected_subject_scope": "memo-b:P-103",
+          "expected_tuple": [
+            "月凪",
+            "Project",
+            "budgetYen",
+            "2400000円",
+            "Literal",
+            "asserted"
+          ],
+          "gold_assertion_id": "B07",
+          "image_pixel_grounding": "not_applicable",
+          "method": "manual comparison of full answer meaning plus cited tuple and evidence checks",
+          "source_name": "memo-b.md",
+          "status": "pass"
+        }
+      ],
+      "citation_count": 3,
+      "citation_mappings": [
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+          "end_index": 281,
+          "index": 0,
+          "retrieved_occurrences": [
+            {
+              "document_index": 0,
+              "output_index": 2
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【6:0†source】",
+          "start_index": 269,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+          "end_index": 384,
+          "index": 1,
+          "retrieved_occurrences": [
+            {
+              "document_index": 3,
+              "output_index": 2
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【6:3†source】",
+          "start_index": 372,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        },
+        {
+          "annotation_span_matches_visible_citation": true,
+          "document_id": "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+          "end_index": 502,
+          "index": 2,
+          "retrieved_occurrences": [
+            {
+              "document_index": 1,
+              "output_index": 2
+            }
+          ],
+          "source_name": "memo-b.md",
+          "source_scope_matches": true,
+          "span": "【6:1†source】",
+          "start_index": 490,
+          "target_is_retrieved_document": true,
+          "type": "url_citation"
+        }
+      ],
+      "document_occurrences": 35,
+      "errors": [],
+      "image_unverified_qualification_present": "not_applicable",
+      "limitations": [],
+      "manual_semantic_notes": [
+        "審査室・品質室は候補として保持し、どちらも確定担当へ昇格しない。月凪の企画室・2400000円はasserted。"
+      ],
+      "mcp_calls": [
+        {
+          "all_fields_semantically_equal": 35,
+          "output_index": 2,
+          "returned_documents": 35
+        }
+      ],
+      "native_document_urls_match_ids": 35,
+      "off_scope_retrieved_occurrences": 27,
+      "receipt_integrity": {
+        "request_hash_representation": "canonical JSON UTF-8; sorted keys; compact separators; no final newline",
+        "request_sha256_matches": true,
+        "response_hash_representation": "raw saved response bytes",
+        "response_sha256_matches": true
+      },
+      "response_model": "gpt-5.5",
+      "response_status": "completed",
+      "returned_document_occurrences_by_source": {
+        "memo-a.csv": 6,
+        "memo-a.md": 7,
+        "memo-a.png": 7,
+        "memo-a.pptx": 7,
+        "memo-b.md": 8
+      },
+      "source_context_checks": [],
+      "status": "pass_with_limitations",
+      "unique_document_count": 35,
+      "unique_document_ids": [
+        "04b647d7c49bfd71a490225c34106eaf217128ed898cb66dac644890adaae92a",
+        "0798269adc3d916cffa852b5ac8980dbaa5cb2f8f1dbd0ca9830dd20daf19db5",
+        "088ac5db2a3799ab487d0f41cb01d63ff61aeb953f639813c91f0d28ebb8889b",
+        "0b810bca0bb7b97cc2f4ab53191ddc6b3d15ec4c7ac550fa1617508b163122f2",
+        "17b932133472a523960e7d9e7fed58d5b74531f345c1e35ecb7bacd136188cf6",
+        "29451d4fdf20e734db8ad9226a5c7a0f6defe75ad609922570f4d47b2103b061",
+        "2c2cc8d976209c6d285a7305e87a4f1a5b9e87725ed18d9542cc86f2faea3daa",
+        "2da4c2026acd529b2bb7706de50444be4c7c1ef43054bb06cf4b610831f2d088",
+        "333347c88f05e6dede321c18f615dc26539ca324a41951c52387cf469f050d49",
+        "4e20f47ed8063fdd4864248fcab5858294e598748f3759115a0d90ed4ac8c2ab",
+        "55b3ede5e23331842cfe65c4f7b4aa19c0c9f0cfc35e55b8b20c4564339479e6",
+        "57422a8ba5bf957c06ad58ff3d5921555d1568dd9e7623c54cfc5575f6b91531",
+        "7496eb173d84a61e79ae8f618971f25fbc1aa71f9912714e9fd62b2025cd062d",
+        "76cc553276749d97df6cac34819d1d093dccd22b1ed507b94d50cc3131596ad2",
+        "7f6606174a47d8d54c23956f7753d0c518f95ebb8f8f2e500583d110d6f47f8f",
+        "7ff02c4f6e8134bfe8a8c06cef3a89a90532ab0f07bbd590a9caed9f5e38a08f",
+        "8a952a19e8f80101fd74b0895ddd8ce4a8d6d11311576ccae7b4c49e2c0fdd97",
+        "914ac7fac57c887b1a82e4337416199848c61e0fc5373e3ce18a743d45b28a34",
+        "929db367675034348f11f93169262f04b08527f352c2a4c5668dad9dae70cb83",
+        "93591cd42662ea452ac045016d84771c419ce94e382bc9988a4f81f499db71dc",
+        "9c36a04033c17e9b4aa6f12c638e8c0fa6f9c6ab0cd7654c664a02efe8244845",
+        "9d4ffc5f4c1de470700a8c28625c1f35033ac1ca401ed6c6c439b576110d9f07",
+        "a2d2064d8dc29ac9a944f876302f93531ccd9fda78f716025a4498f7f443753c",
+        "b1e715a54b955a59c137c26f7e195425ed7b6ec363a1f3065372964a8c91b588",
+        "b85a4aa79ef73f25ce7a15f4840c9d5722c4dd9bd5f679163adb8c0e26575923",
+        "bf506ebd0eea2248e75e9464dfdb1b1d6ab06a7ef260d911857b7ba8b0470d78",
+        "c2c9818ee0d167c95e873cb6b4777f2d307ef42df89bbcb28376d63ca066ad0d",
+        "c89da76ee3d4e379c150c381b026883cc009cde3d10cdc73deac74a79bebce49",
+        "c96f1bfb881c15b8660f080204eaa690bf50a797722f913aa1e168c728879f9c",
+        "cce4832b4970b7be48d06565f1b4ddbd7f19f5d4b013fbf4033c25161b08d152",
+        "dc807e36c4fc81284c6e2ebf4873d34a0bbf267aa0d797409dcc7037acb3c6b7",
+        "de0c7d36044e5314260443b6256436cafe5ed4155b492c84057e6a3e37b4899f",
+        "dfc7f39383a3c7c33c5aafb5b09f84b94450fc551a101542dafa1115a587b170",
+        "e86f9a1a676798a8438b1a9a6effbdc905e61c7e4448d537fcea0cd574031761",
+        "f79675c06a8539ba2f9102fde2447ee06356031632a35b393abc10aff334aa2a"
+      ],
+      "unknowns": []
+    }
+  },
+  "schema_version": 1,
+  "scope": {
+    "cloud_calls_by_auditor": 0,
+    "completed_scenarios": 6,
+    "gold": "data/knowledge/narrative-mock/gold.json",
+    "planned_scenarios": 6,
+    "semantic_comparison": "All JSON fields including nested facts_json/evidence_json; object key order ignored, array order and string contents preserved.",
+    "source_code_edits_by_auditor": 0,
+    "source_of_truth": ".git/narrative-live-20261017/export",
+    "tuple_ambiguity_policy": "Mark unknown when the expected tuple is not uniquely supported by document-scoped hand gold."
+  },
+  "status": "pass_with_limitations",
+  "summary": {
+    "all_fields_semantically_equal": 524,
+    "answer_locator_values_match_evidence": 25,
+    "citation_annotations": 41,
+    "citation_mappings_passed": 41,
+    "errors": 0,
+    "hand_gold_assertions_not_requested_in_native_questions": [
+      "A03",
+      "A05"
+    ],
+    "manual_answer_relation_claims": 25,
+    "manual_answer_relation_claims_passed": 25,
+    "mcp_calls": 15,
+    "retrieved_document_occurrences": 524,
+    "unique_documents_retrieved": 40,
+    "unique_hand_gold_assertions_covered": [
+      "A01",
+      "A02",
+      "A04",
+      "A06",
+      "A07",
+      "A08",
+      "B01",
+      "B02",
+      "B03",
+      "B04",
+      "B05",
+      "B06",
+      "B07",
+      "B08"
+    ],
+    "unresolved_expected_tuple_or_mapping_unknowns": 0
+  },
+  "unknowns": []
+}

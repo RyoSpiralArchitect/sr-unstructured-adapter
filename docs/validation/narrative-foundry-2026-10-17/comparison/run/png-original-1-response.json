@@ -1,0 +1,245 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 12000,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "narrative_answers",
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "answer_kind": {
+                  "enum": [
+                    "asserted",
+                    "denied",
+                    "unknown",
+                    "ambiguous",
+                    "not_stated",
+                    "conflicting",
+                    "distinct_entities",
+                    "mixed"
+                  ],
+                  "type": "string"
+                },
+                "claims": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "document_id": {
+                        "enum": [
+                          "memo-a"
+                        ],
+                        "type": "string"
+                      },
+                      "object": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "predicate": {
+                        "enum": [
+                          "managedBy",
+                          "supportedBy",
+                          "approvedBy",
+                          "budgetYen"
+                        ],
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": [
+                          "asserted",
+                          "denied",
+                          "unknown",
+                          "ambiguous"
+                        ],
+                        "type": "string"
+                      },
+                      "subject": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "document_id",
+                      "subject",
+                      "predicate",
+                      "object",
+                      "status"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "question_id": {
+                  "enum": [
+                    "Q01",
+                    "Q02",
+                    "Q03",
+                    "Q04",
+                    "Q05",
+                    "Q12"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "question_id",
+                "answer_kind",
+                "claims",
+                "explanation"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_0f0a5eb33a5218c1016ad26fe38fd0819795e2a0a0421f8a76",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792176099,
+  "completed_at": 1792176108,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "reasoning",
+      "id": "rs_0f0a5eb33a5218c1016ad26fe75e348197b95c231e81e4fcaf",
+      "response_id": "resp_0f0a5eb33a5218c1016ad26fe38fd0819795e2a0a0421f8a76",
+      "encrypted_content": "gAAAAABq0m_sttKafDORr2rLR7g95H7vctUNy4iQCQZ1jhCxmeWwbTsDBx9j5ynjIVvKMFRhDjR4MZhBoYUX0PB2ilj4xAPS_YamHI_Oj6xw7trzzczqDXUL1R1xEkA5hjFQ9tbHHfBJu8Zw7pAKK8FXd3eByw740YkkWikmQMPU_45x1Ovfy5rFAPOzW_V-G-UwgcW_reJ37kX1JjwpSB6DJYLf4SnkNHy7EbFZu7vOgalNV4ZTMDClThkqV7UCesh2ZrYXuYbn3hmv1SdiwBflNRuB3sSZHSMDJw9NwxlSMlr7g0sZ2XnrxhrI27mfpdI1mX50wlq1ucKMCDs2MQHjD-h8r9nd9SvN0vFwesft2D34ZiAan4sE2K_rx3ZYAvY_kLgN2Fp9R2jqLOKlidxTIgV23TppybRSS48dc9TBJd8P2GgQLPl6JrMfZdudsgR1Iebw0PB1qCuoHdEP0TuTfd9ZhG0HwmFTAZiSR4fRzN8xtb2ONm5O7uSsAjiAVLQTa4G3imtDjisrY3Rz1ABa0gtYoh4cBG1gFreGAChjpyyo2zxogI32oRlHPHi6wHqLXaVZBtfVRX7rLTIGU5iO4nf2jLJ1jTyKFiZ7Bti6LTcRrMRTqmKa8-A2o97mbFC0mBE7xyzSG3dtxGN-tBxaOblaazAu2HSfHMBcDZvRMuyoax_rs97FJzk3M4R97AamkeGGiI88fdT6tgSurgIB937AWW4MkgVJGAUNJvNigAHR2N5nri2SxOjhFZcyWfUCLJw0SrDUCbPIbvj4ACa9NVTvymXbjIxKlrZjgsqfvvWj0dsqtSMHd9zjtry3ADutKg2quA0R_GwuDVVjSGfG6ZI7HtBjVx5N-P5w8hlB9npQY_1VWq0Bc4RN_NEyZbdc3el-fRmoDM273oZ9EmVPVWLJXus02LOPa_2W6zbj3duZx9kP2MWqF7hDpqGW8gP9G-Ag2d9Pa19uk-aJdQYC9kHRPHUvbw-7vpqNQJQ5BI8LvcxH-xIVc7uH0CayFvjp18l9D7iliiSjFG4Feuz3e6GDgxSKOutLB7NLQcLBKK1OEpHhVyeH2QhN1fB8ChnT3aVWGc4A5FGYVI0ehJy7xEgpGHKLelmSfReUa_6SJyT1TPDvbQp6GOhaizN9TanJYe3OFPMTHecaYx5sx842cd2Nzz934-y2UGMXd6BnmXEQJ90FNOWfT_62LMC_iWjpwycQLDrp7fMHoBSAZ48ARTqungBj25PfS-6Fjq0l7IcI3k9op2yCqiYywQ7jAzBNraSnzzqJW_ddlDMdGejtqUTa9EDAeeeZXiCTIbskVjUU547bKzMAPC0dEEbOhlTdLbSFD4Ih_OGkgrEaCoyl-NynciFpD3_jPtUtM89O4AgyyalwGP4KmC2xho07iEVwRT5GgfOS5v5J9mNlXBAeaEkeZDmNssRDXirKq6xb1O3pCyFoaIBPbUef1jz5ENjnSUYMRaJr6zzPdAPwUeTAfLr55Agq-hl11XVUQv1iKDsKIydgRyoWBHqCfTw3yONx6ah7sBOaxJCsMujWW2QVGieX6m6gO2c3CI60n-sPL8c_8ubDYfEW08DG8oEShf9GT8rTEa0sPpU2s8BYUBQjf_XN9HWmL4wUZebg11OfpImTLnYGqfWuFyzlq2iKzQbc0bjaf9GzOotr_l9IZKKPiTUY-4PdWrJ4r9FzUbRc-AwHvYgaH8MEg4jrY0KtGuucQt8D33yiRPzMlRlpS9ElS-OQ4s31x5kxl98gA7LYgXGsQVNV_9jaTeEUmGb0oCZzYcUro4GyjiM3FZdo5Qhegm0sGWJ-bDdd3k_xfnSJaC12XOfZgnAy9nEpwNewufoR6bQA7K4ESyOhIRjji6f9vRQHZbt1lRuVoq9G78JM5ThOuTm_kdTGbtxSCxmi_JzAjRv-KJd1mLe6T-W8e65ByghPQ4_dNqCcT5Py_q9tS5Aleke3AFmLwjSnx_YEJ6XL5Hwi-vU5s8N7LbyyRYfLr28ZSyP5ged4zRJ-xYN2f3CaF_-ii_9RDVFjPKJYMVLrwxJM_EjfaVi2VqTtNUcGcUxYsa0t05II7nA14LN0s70JNNsQ_W4fIykQW4kohW4g2B3OvGbUJwKbnzpkaC5Itha3LZ0dNg==",
+      "summary": [],
+      "content": []
+    },
+    {
+      "type": "message",
+      "id": "msg_0f0a5eb33a5218c1016ad26fe957ac8197aa558a1a86f9788a",
+      "response_id": "resp_0f0a5eb33a5218c1016ad26fe38fd0819795e2a0a0421f8a76",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"answers\":[{\"answer_kind\":\"asserted\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-a\",\"object\":\"西部室\",\"predicate\":\"supportedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"}],\"explanation\":\"資料Aに「朝凪の主担当は東部室」「朝凪の支援担当は西部室」と記載されています。\",\"question_id\":\"Q01\"},{\"answer_kind\":\"asserted\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"審査室\",\"predicate\":\"approvedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-a\",\"object\":\"1200000円\",\"predicate\":\"budgetYen\",\"status\":\"asserted\",\"subject\":\"朝凪\"}],\"explanation\":\"資料Aに「朝凪の承認担当は審査室」「朝凪の予算額は1200000円」と記載されています。\",\"question_id\":\"Q02\"},{\"answer_kind\":\"denied\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"supportedBy\",\"status\":\"denied\",\"subject\":\"星凪\"}],\"explanation\":\"資料Aに「星凪の支援担当は東部室ではない」と明記されています。\",\"question_id\":\"Q03\"},{\"answer_kind\":\"not_stated\",\"claims\":[],\"explanation\":\"資料Aには星凪の承認担当についての記載はありません。\",\"question_id\":\"Q04\"},{\"answer_kind\":\"unknown\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":null,\"predicate\":\"budgetYen\",\"status\":\"unknown\",\"subject\":\"星凪\"}],\"explanation\":\"資料Aに「星凪の予算額は未定であり、金額は定まっていない」と明記されています。\",\"question_id\":\"Q05\"},{\"answer_kind\":\"mixed\",\"claims\":[{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"朝凪\"},{\"document_id\":\"memo-a\",\"object\":\"東部室\",\"predicate\":\"supportedBy\",\"status\":\"denied\",\"subject\":\"星凪\"}],\"explanation\":\"資料Aでは、東部室は朝凪の主担当として記載され、星凪の支援担当については東部室ではないと否定されています。\",\"question_id\":\"Q12\"}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 2159,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 709,
+    "output_tokens_details": {
+      "reasoning_tokens": 177
+    },
+    "total_tokens": 2868
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 3122,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 2095,
+        "check_offset": 0
+      }
+    }
+  ]
+}

@@ -32,8 +32,9 @@ def test_git_checkout_preserves_frozen_artifact_bytes(tmp_path):
     def git(*args):
         return subprocess.run(
             ["git", "-c", "core.autocrlf=true", "-c", "core.safecrlf=false",
+             "-c", "core.longpaths=true",
              "-c", f"core.attributesFile={os.devnull}", *args],
-            cwd=checkout, env=env, check=True, capture_output=True, timeout=30,
+            cwd=checkout, env=env, check=True, timeout=30,
         )
 
     git("init", "--quiet")

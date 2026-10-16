@@ -16,6 +16,15 @@ direction, missing values, and cell evidence. Export locally with
 `sr-adapt knowledge foundry <bundle> --out <new-directory>`; an explicit target
 and `foundry-publish --execute` opt into cloud configuration.
 
+The [document relation extraction path](docs/narrative-relations-foundry.md)
+also turns Markdown/text, CSV, PPTX and images into relation CSV tables using an
+existing Foundry model. It preserves positive, negative, unknown and ambiguous
+claims with their source evidence, and publishes them through the same Foundry IQ
+bridge. Model interpretation and image transcription remain explicitly unverified.
+The [GPT-5.5 synthetic pilot](docs/narrative-foundry-2026-10-17.md) includes live
+Foundry retrieval, frozen direct-source comparisons and offline replay, with
+token overhead and evaluation limits retained.
+
 ## Why this adapter?
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes with streaming output where the parser supports it. Memory use still depends on the document library and format.
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up.

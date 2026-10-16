@@ -1,0 +1,1 @@
+{"name":"{{PROJECT_CONNECTION_NAME}}","properties":{"audience":"https://search.azure.com/","authType":"ProjectManagedIdentity","category":"RemoteTool","isSharedToAll":false,"metadata":{"ApiType":"Azure"},"target":"{{SEARCH_ENDPOINT}}/knowledgebases/sr-narrative-77f73ca72ce6b182-kb/mcp?api-version=2026-08-01-preview"}}

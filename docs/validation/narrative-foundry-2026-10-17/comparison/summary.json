@@ -1,0 +1,977 @@
+{
+  "schema_version": 1,
+  "spec_sha256": "737ac91eb4a2aa088f97fb755c2a91b73640d730e29464e484a1797a9b579fc1",
+  "status": "complete",
+  "planned_requests": 8,
+  "completed_requests": 8,
+  "response_models": [
+    "gpt-5.5"
+  ],
+  "cases": {
+    "md": {
+      "original": {
+        "planned_answers": 24,
+        "completed_answers": 24,
+        "strict_correct": 23,
+        "input_tokens": 3644,
+        "output_tokens": 3009,
+        "total_tokens": 6653,
+        "cached_input_tokens": 1280,
+        "reasoning_tokens": 476
+      },
+      "relations_with_source": {
+        "planned_answers": 24,
+        "completed_answers": 24,
+        "strict_correct": 24,
+        "input_tokens": 10160,
+        "output_tokens": 2882,
+        "total_tokens": 13042,
+        "cached_input_tokens": 4864,
+        "reasoning_tokens": 345
+      }
+    },
+    "png": {
+      "original": {
+        "planned_answers": 12,
+        "completed_answers": 12,
+        "strict_correct": 11,
+        "input_tokens": 4318,
+        "output_tokens": 1286,
+        "total_tokens": 5604,
+        "cached_input_tokens": 1792,
+        "reasoning_tokens": 177
+      },
+      "relations_with_source": {
+        "planned_answers": 12,
+        "completed_answers": 12,
+        "strict_correct": 12,
+        "input_tokens": 5892,
+        "output_tokens": 1207,
+        "total_tokens": 7099,
+        "cached_input_tokens": 2816,
+        "reasoning_tokens": 150
+      }
+    }
+  },
+  "requests": [
+    {
+      "id": "md-original-1",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q06",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q07",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 3,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q08",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q09",
+            "answer_count": 1,
+            "answer_kind_match": false,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": false
+          },
+          {
+            "question_id": "Q10",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q11",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 11,
+        "planned_answers": 12,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "md-relations_with_source-1",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q06",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q07",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 3,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q08",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q09",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q10",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q11",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 12,
+        "planned_answers": 12,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "png-original-1",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 6,
+        "planned_answers": 6,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "png-relations_with_source-1",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 6,
+        "planned_answers": 6,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "png-relations_with_source-2",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 6,
+        "planned_answers": 6,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "png-original-2",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": false,
+            "claims_exact_match": false,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 1,
+            "fn": 0,
+            "strict": false
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 5,
+        "planned_answers": 6,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "md-relations_with_source-2",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q06",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q07",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 3,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q08",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q09",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q10",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q11",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 12,
+        "planned_answers": 12,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    },
+    {
+      "id": "md-original-2",
+      "status": "completed",
+      "scores": {
+        "questions": [
+          {
+            "question_id": "Q01",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q02",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q03",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q04",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q05",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q06",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q07",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 3,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q08",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q09",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q10",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q11",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          },
+          {
+            "question_id": "Q12",
+            "answer_count": 1,
+            "answer_kind_match": true,
+            "claims_exact_match": true,
+            "duplicate_claims": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "strict": true
+          }
+        ],
+        "strict_correct": 12,
+        "planned_answers": 12,
+        "missing_answers": [],
+        "extra_answers": [],
+        "duplicate_question_ids": [],
+        "explanations_judged": false
+      }
+    }
+  ],
+  "limitations": [
+    "Hand-defined synthetic development pilot; not a held-out generalization evaluation.",
+    "Format variants repeat memo-a: five inputs contain sixteen independent gold tuples, not forty.",
+    "Quote/source replay checks provenance, not the correctness of relation meaning or direction.",
+    "Image transfer scores eight fixed hand-gold facts only; it does not certify all OCR text, layout, or pixels.",
+    "QA scores exact document-scoped claim sets and answer_kind; explanation prose is not automatically judged.",
+    "Q10 scores document-separated claims and distinct_entities, not the explanation's entity identifiers or reasoning.",
+    "Two repeated calls per arm on these fixed inputs do not support statistical or causal generalization."
+  ],
+  "comparison": "complete_descriptive_only",
+  "winner": null,
+  "strict_delta_relations_minus_original": {
+    "md": 1,
+    "png": 1
+  }
+}

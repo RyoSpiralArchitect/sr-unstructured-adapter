@@ -1,4 +1,4 @@
-"""CLI for the opt-in table → knowledge → storage path."""
+"""CLI for opt-in document relations, table knowledge and storage."""
 
 import json
 import os
@@ -10,13 +10,20 @@ from .tables import extract_pdf_tables
 
 
 def add_parser(subparsers):
-    parser = subparsers.add_parser("knowledge", help="Extract grounded table knowledge and persist it")
+    parser = subparsers.add_parser("knowledge", help="Extract source-linked relations and persist them")
     commands = parser.add_subparsers(dest="knowledge_command", required=True)
     extract = commands.add_parser("extract", help="Extract ruled PDF tables using an explicit ontology mapping")
     extract.add_argument("source", type=Path)
     extract.add_argument("--mapping", required=True, type=Path)
     extract.add_argument("--out", required=True, type=Path)
     extract.add_argument("--parquet", action="store_true")
+    narrative = commands.add_parser("narrative", help="Extract model-proposed relation tables with source evidence")
+    narrative.add_argument("source", type=Path)
+    narrative.add_argument("--ontology", required=True, type=Path)
+    narrative.add_argument("--project-endpoint", required=True)
+    narrative.add_argument("--model", required=True)
+    narrative.add_argument("--out", required=True, type=Path)
+    narrative.add_argument("--execute", action="store_true")
     sqlite = commands.add_parser("sqlite", help="Atomically insert a verified bundle into SQLite")
     sqlite.add_argument("bundle", type=Path)
     sqlite.add_argument("--database", type=Path, required=True)
@@ -37,7 +44,7 @@ def add_parser(subparsers):
     status = commands.add_parser("databricks-status", help="Look up a saved statement without resubmitting")
     status.add_argument("--receipt", type=Path, required=True)
     status.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))
-    foundry = commands.add_parser("foundry", help="Export row relation contexts and Foundry IQ / prompt-agent configuration")
+    foundry = commands.add_parser("foundry", help="Export relation contexts and Foundry IQ / prompt-agent configuration")
     foundry.add_argument("bundles", nargs="+", type=Path)
     foundry.add_argument("--out", required=True, type=Path)
     foundry.add_argument("--prefix", default="sr-relations")
@@ -69,6 +76,11 @@ def handle(args):
             result["entities"] = len(package.entities)
             result["relations"] = len(package.relations)
             result["warnings"] = package.warnings
+        elif args.knowledge_command == "narrative":
+            from .narrative import NarrativeOntology
+            from .narrative_runtime import extract_narrative
+            result = extract_narrative(args.source, ontology=NarrativeOntology.model_validate_json(args.ontology.read_bytes()),
+                endpoint=args.project_endpoint, model=args.model, destination=args.out, execute=args.execute)
         elif args.knowledge_command == "sqlite":
             result = write_sqlite(args.bundle, args.database)
         elif args.knowledge_command == "adls":
@@ -116,7 +128,7 @@ def handle(args):
         # JSON escapes preserve Unicode data even on legacy Windows consoles.
         # Bundle files remain UTF-8; reporting must not fail after a successful write.
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if result.get("status") in {None, "complete", "committed", "configured"} else 1
+        return 0 if result.get("status") in {None, "prepared", "complete", "committed", "configured"} else 1
     except Exception as exc:
         # Provider messages/URLs can contain credentials or source text.
         print(json.dumps({"status": "failed", "error_type": type(exc).__name__,

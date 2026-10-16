@@ -1,0 +1,38 @@
+{
+  "namespace": "urn:sr:mock:",
+  "classes": {
+    "Project": "案件",
+    "Organization": "組織",
+    "Literal": "文字列値"
+  },
+  "predicates": [
+    {
+      "id": "managedBy",
+      "label": "主担当",
+      "subject_type": "Project",
+      "object_type": "Organization",
+      "description": "案件の主担当組織。案件から組織への関係であり、支援担当や承認担当とは別。"
+    },
+    {
+      "id": "supportedBy",
+      "label": "支援担当",
+      "subject_type": "Project",
+      "object_type": "Organization",
+      "description": "案件を支援する組織。案件から組織への関係であり、主担当を意味しない。"
+    },
+    {
+      "id": "approvedBy",
+      "label": "承認担当",
+      "subject_type": "Project",
+      "object_type": "Organization",
+      "description": "案件の承認を担う組織。候補が挙がっただけでは承認担当が決まったことにはならない。"
+    },
+    {
+      "id": "budgetYen",
+      "label": "予算額",
+      "subject_type": "Project",
+      "object_type": "Literal",
+      "description": "案件の円単位の予算額。値は円を含む原文表記の文字列で保持し、未定や未記載をゼロに補完しない。"
+    }
+  ]
+}
