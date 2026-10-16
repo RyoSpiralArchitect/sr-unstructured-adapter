@@ -1,0 +1,502 @@
+{
+  "schema_version": 1,
+  "dataset_id": "narrative-mock-20261017-v1",
+  "gold_origin": "manually_defined_synthetic",
+  "evaluation_role": "development_pilot_not_generalization_evaluation",
+  "gold_must_not_be_sent_to_extraction_or_answer_generation": true,
+  "ontology_path": "ontology.json",
+  "allowed_assertion_statuses": [
+    "asserted",
+    "denied",
+    "unknown",
+    "ambiguous"
+  ],
+  "assertion_count": 16,
+  "question_count": 12,
+  "status_counts": {
+    "asserted": 11,
+    "denied": 3,
+    "unknown": 1,
+    "ambiguous": 1
+  },
+  "documents": [
+    {
+      "document_id": "memo-a",
+      "path": "memo-a.md",
+      "encoding": "UTF-8",
+      "sha256": "0b96203e1e7266028652cc9111eb2cc6aaf6211c471ddad232e8563ac6aef1cf",
+      "line_count": 20,
+      "assertions": [
+        {
+          "assertion_id": "A01",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "managedBy",
+          "object": "東部室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 11,
+            "line_end": 11,
+            "quote": "朝凪の主担当は東部室である。"
+          }
+        },
+        {
+          "assertion_id": "A02",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "supportedBy",
+          "object": "西部室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 12,
+            "line_end": 12,
+            "quote": "朝凪の支援担当は西部室である。"
+          }
+        },
+        {
+          "assertion_id": "A03",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "approvedBy",
+          "object": "審査室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 13,
+            "line_end": 13,
+            "quote": "朝凪の承認担当は審査室である。"
+          }
+        },
+        {
+          "assertion_id": "A04",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "budgetYen",
+          "object": "1200000円",
+          "object_type": "Literal",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 14,
+            "line_end": 14,
+            "quote": "朝凪の予算額は1200000円である。"
+          }
+        },
+        {
+          "assertion_id": "A05",
+          "subject": "星凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-102",
+          "predicate": "managedBy",
+          "object": "南部室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 16,
+            "line_end": 16,
+            "quote": "星凪の主担当は南部室である。"
+          }
+        },
+        {
+          "assertion_id": "A06",
+          "subject": "星凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-102",
+          "predicate": "supportedBy",
+          "object": "東部室",
+          "object_type": "Organization",
+          "status": "denied",
+          "evidence": {
+            "line_start": 17,
+            "line_end": 17,
+            "quote": "星凪の支援担当は東部室ではない。"
+          }
+        },
+        {
+          "assertion_id": "A07",
+          "subject": "星凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-102",
+          "predicate": "budgetYen",
+          "object": null,
+          "object_type": "Literal",
+          "status": "unknown",
+          "evidence": {
+            "line_start": 18,
+            "line_end": 18,
+            "quote": "星凪の予算額は未定であり、金額は定まっていない。"
+          }
+        },
+        {
+          "assertion_id": "A08",
+          "subject": "灯台",
+          "subject_type": "Project",
+          "subject_scope": "memo-a:A-201",
+          "predicate": "managedBy",
+          "object": "受付運用室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 20,
+            "line_end": 20,
+            "quote": "灯台の主担当は受付運用室である。"
+          }
+        }
+      ]
+    },
+    {
+      "document_id": "memo-b",
+      "path": "memo-b.md",
+      "encoding": "UTF-8",
+      "sha256": "5ab38c35b303c25710ffa9453c3b00a57bbe2c64b8adb02248ecd857f185c69f",
+      "line_count": 21,
+      "assertions": [
+        {
+          "assertion_id": "B01",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "managedBy",
+          "object": "西部室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 11,
+            "line_end": 11,
+            "quote": "朝凪の主担当は西部室である。"
+          }
+        },
+        {
+          "assertion_id": "B02",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "managedBy",
+          "object": "東部室",
+          "object_type": "Organization",
+          "status": "denied",
+          "evidence": {
+            "line_start": 12,
+            "line_end": 12,
+            "quote": "朝凪の主担当は東部室ではない。"
+          }
+        },
+        {
+          "assertion_id": "B03",
+          "subject": "朝凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-101",
+          "predicate": "budgetYen",
+          "object": "1200000円",
+          "object_type": "Literal",
+          "status": "denied",
+          "evidence": {
+            "line_start": 13,
+            "line_end": 13,
+            "quote": "朝凪の予算額は1200000円ではない。"
+          }
+        },
+        {
+          "assertion_id": "B04",
+          "subject": "星凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-102",
+          "predicate": "supportedBy",
+          "object": "東部室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 15,
+            "line_end": 15,
+            "quote": "星凪の支援担当は東部室である。"
+          }
+        },
+        {
+          "assertion_id": "B05",
+          "subject": "星凪",
+          "subject_type": "Project",
+          "subject_scope": "common:P-102",
+          "predicate": "approvedBy",
+          "object": null,
+          "object_type": "Organization",
+          "status": "ambiguous",
+          "evidence": {
+            "line_start": 16,
+            "line_end": 16,
+            "quote": "星凪の承認担当の候補は審査室と品質室であり、いずれを採用するか決定していない。"
+          }
+        },
+        {
+          "assertion_id": "B06",
+          "subject": "月凪",
+          "subject_type": "Project",
+          "subject_scope": "memo-b:P-103",
+          "predicate": "managedBy",
+          "object": "企画室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 18,
+            "line_end": 18,
+            "quote": "月凪の主担当は企画室である。"
+          }
+        },
+        {
+          "assertion_id": "B07",
+          "subject": "月凪",
+          "subject_type": "Project",
+          "subject_scope": "memo-b:P-103",
+          "predicate": "budgetYen",
+          "object": "2400000円",
+          "object_type": "Literal",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 19,
+            "line_end": 19,
+            "quote": "月凪の予算額は2400000円である。"
+          }
+        },
+        {
+          "assertion_id": "B08",
+          "subject": "灯台",
+          "subject_type": "Project",
+          "subject_scope": "memo-b:B-201",
+          "predicate": "managedBy",
+          "object": "在庫運用室",
+          "object_type": "Organization",
+          "status": "asserted",
+          "evidence": {
+            "line_start": 21,
+            "line_end": 21,
+            "quote": "灯台の主担当は在庫運用室である。"
+          }
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "Q01",
+      "question": "資料Aによると、朝凪の主担当と支援担当はそれぞれどの組織ですか。",
+      "scope_document_ids": [
+        "memo-a"
+      ],
+      "answer_kind": "asserted",
+      "expected_answer": "朝凪の主担当は東部室、支援担当は西部室である。案件から組織への関係として区別する。",
+      "assertion_ids": [
+        "A01",
+        "A02"
+      ]
+    },
+    {
+      "question_id": "Q02",
+      "question": "資料Aで、朝凪の承認担当と予算額はどう記載されていますか。",
+      "scope_document_ids": [
+        "memo-a"
+      ],
+      "answer_kind": "asserted",
+      "expected_answer": "承認担当は審査室、予算額は1200000円である。",
+      "assertion_ids": [
+        "A03",
+        "A04"
+      ]
+    },
+    {
+      "question_id": "Q03",
+      "question": "資料Aには、星凪と東部室の担当関係について何が記されていますか。",
+      "scope_document_ids": [
+        "memo-a"
+      ],
+      "answer_kind": "denied",
+      "expected_answer": "東部室は星凪の支援担当ではないと明示されている。主担当の否定や記述の欠如には読み替えない。",
+      "assertion_ids": [
+        "A06"
+      ]
+    },
+    {
+      "question_id": "Q04",
+      "question": "資料Aによると、星凪の承認担当はどの組織ですか。",
+      "scope_document_ids": [
+        "memo-a"
+      ],
+      "answer_kind": "not_stated",
+      "expected_answer": "資料Aには星凪の承認担当の記述がない。承認担当が存在しない、または特定の組織ではないとは断定できない。",
+      "assertion_ids": [],
+      "absence_check": {
+        "document_id": "memo-a",
+        "subject": "星凪",
+        "predicate": "approvedBy",
+        "line_start": 1,
+        "line_end": 20
+      }
+    },
+    {
+      "question_id": "Q05",
+      "question": "資料Aによると、星凪の予算額はいくらですか。",
+      "scope_document_ids": [
+        "memo-a"
+      ],
+      "answer_kind": "unknown",
+      "expected_answer": "未定で金額は定まっていない。値はUNKNOWNとして扱い、0円とはしない。",
+      "assertion_ids": [
+        "A07"
+      ]
+    },
+    {
+      "question_id": "Q06",
+      "question": "資料Bで、星凪の承認担当はどのように扱われていますか。",
+      "scope_document_ids": [
+        "memo-b"
+      ],
+      "answer_kind": "ambiguous",
+      "expected_answer": "審査室と品質室が候補だが採用は未決定である。いずれも確定した承認担当としては返さない。",
+      "assertion_ids": [
+        "B05"
+      ]
+    },
+    {
+      "question_id": "Q07",
+      "question": "両資料を参照して、朝凪の主担当について分かることをまとめてください。",
+      "scope_document_ids": [
+        "memo-a",
+        "memo-b"
+      ],
+      "answer_kind": "conflicting",
+      "expected_answer": "資料Aは東部室を主担当とする。資料Bは西部室を主担当とし、東部室を主担当ではないとする。同一案件の記載が矛盾し、優先順位もないため一方へ確定できない。",
+      "assertion_ids": [
+        "A01",
+        "B01",
+        "B02"
+      ],
+      "scope_evidence": [
+        {
+          "document_id": "memo-a",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Bの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Bの星凪と同一案件である。\n本資料の灯台は受付支援案件A-201であり、資料Bの在庫支援案件B-201とは名称だけが同じ別案件である。"
+        },
+        {
+          "document_id": "memo-b",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Aの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Aの星凪と同一案件である。\n本資料の灯台は在庫支援案件B-201であり、資料Aの受付支援案件A-201とは名称だけが同じ別案件である。"
+        }
+      ]
+    },
+    {
+      "question_id": "Q08",
+      "question": "両資料を参照して、朝凪の予算額について分かることをまとめてください。",
+      "scope_document_ids": [
+        "memo-a",
+        "memo-b"
+      ],
+      "answer_kind": "conflicting",
+      "expected_answer": "資料Aは1200000円とするが、資料Bは1200000円ではないとする。同一案件の肯定と否定が矛盾する。資料Bの別の金額は記載されていない。",
+      "assertion_ids": [
+        "A04",
+        "B03"
+      ],
+      "scope_evidence": [
+        {
+          "document_id": "memo-a",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Bの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Bの星凪と同一案件である。\n本資料の灯台は受付支援案件A-201であり、資料Bの在庫支援案件B-201とは名称だけが同じ別案件である。"
+        },
+        {
+          "document_id": "memo-b",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Aの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Aの星凪と同一案件である。\n本資料の灯台は在庫支援案件B-201であり、資料Aの受付支援案件A-201とは名称だけが同じ別案件である。"
+        }
+      ]
+    },
+    {
+      "question_id": "Q09",
+      "question": "星凪と東部室の担当関係を、資料ごとに整理してください。",
+      "scope_document_ids": [
+        "memo-a",
+        "memo-b"
+      ],
+      "answer_kind": "conflicting",
+      "expected_answer": "資料Aは東部室が星凪の支援担当であることを否定し、資料Bは肯定する。矛盾を残し、主担当の話には変えない。",
+      "assertion_ids": [
+        "A06",
+        "B04"
+      ],
+      "scope_evidence": [
+        {
+          "document_id": "memo-a",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Bの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Bの星凪と同一案件である。\n本資料の灯台は受付支援案件A-201であり、資料Bの在庫支援案件B-201とは名称だけが同じ別案件である。"
+        },
+        {
+          "document_id": "memo-b",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Aの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Aの星凪と同一案件である。\n本資料の灯台は在庫支援案件B-201であり、資料Aの受付支援案件A-201とは名称だけが同じ別案件である。"
+        }
+      ]
+    },
+    {
+      "question_id": "Q10",
+      "question": "資料Aと資料Bに登場する灯台の主担当を、それぞれ答えてください。",
+      "scope_document_ids": [
+        "memo-a",
+        "memo-b"
+      ],
+      "answer_kind": "distinct_entities",
+      "expected_answer": "資料Aの灯台は受付支援案件A-201で、主担当は受付運用室。資料Bの灯台は在庫支援案件B-201で、主担当は在庫運用室。同名の別案件なので矛盾として統合しない。",
+      "assertion_ids": [
+        "A08",
+        "B08"
+      ],
+      "scope_evidence": [
+        {
+          "document_id": "memo-a",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Bの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Bの星凪と同一案件である。\n本資料の灯台は受付支援案件A-201であり、資料Bの在庫支援案件B-201とは名称だけが同じ別案件である。"
+        },
+        {
+          "document_id": "memo-b",
+          "line_start": 4,
+          "line_end": 7,
+          "quote": "基準日は2026年10月17日であり、資料Aと資料Bの優先順位は設定しない。\n朝凪は共通識別子P-101の案件であり、資料Aの朝凪と同一案件である。\n星凪は共通識別子P-102の案件であり、資料Aの星凪と同一案件である。\n本資料の灯台は在庫支援案件B-201であり、資料Aの受付支援案件A-201とは名称だけが同じ別案件である。"
+        }
+      ]
+    },
+    {
+      "question_id": "Q11",
+      "question": "資料Bによると、月凪の主担当と予算額はどう記載されていますか。",
+      "scope_document_ids": [
+        "memo-b"
+      ],
+      "answer_kind": "asserted",
+      "expected_answer": "月凪の主担当は企画室、予算額は2400000円である。",
+      "assertion_ids": [
+        "B06",
+        "B07"
+      ]
+    },
+    {
+      "question_id": "Q12",
+      "question": "資料Aで東部室は、どの案件とどの種類の関係として記載されていますか。",
+      "scope_document_ids": [
+        "memo-a"
+      ],
+      "answer_kind": "mixed",
+      "expected_answer": "朝凪の主担当として肯定され、星凪の支援担当としては否定されている。保存tupleは案件を主語、東部室を目的語とする。",
+      "assertion_ids": [
+        "A01",
+        "A06"
+      ]
+    }
+  ]
+}

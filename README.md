@@ -21,6 +21,9 @@ also turns Markdown/text, CSV, PPTX and images into relation CSV tables using an
 existing Foundry model. It preserves positive, negative, unknown and ambiguous
 claims with their source evidence, and publishes them through the same Foundry IQ
 bridge. Model interpretation and image transcription remain explicitly unverified.
+The [GPT-5.5 synthetic pilot](docs/narrative-foundry-2026-10-17.md) includes live
+Foundry retrieval, frozen direct-source comparisons and offline replay, with
+token overhead and evaluation limits retained.
 
 ## Why this adapter?
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes with streaming output where the parser supports it. Memory use still depends on the document library and format.

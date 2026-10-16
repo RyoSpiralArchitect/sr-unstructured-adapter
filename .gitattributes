@@ -3,3 +3,11 @@ docs/validation/** -text
 
 # Synthetic format variants and their frozen source hashes must survive checkout.
 data/knowledge/narrative-mock/** -text
+# The narrative comparison records and replays these source-file hashes.
+src/sr_adapter/narrative.py text eol=lf
+src/sr_adapter/narrative_runtime.py text eol=lf
+src/sr_adapter/relation_sources.py text eol=lf
+src/sr_adapter/knowledge.py text eol=lf
+src/sr_adapter/knowledge_store.py text eol=lf
+src/sr_adapter/tables.py text eol=lf
+scripts/probe_narrative_relations.py text eol=lf

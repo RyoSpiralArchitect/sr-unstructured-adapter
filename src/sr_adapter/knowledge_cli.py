@@ -1,4 +1,4 @@
-"""CLI for the opt-in table → knowledge → storage path."""
+"""CLI for opt-in document relations, table knowledge and storage."""
 
 import json
 import os
@@ -10,7 +10,7 @@ from .tables import extract_pdf_tables
 
 
 def add_parser(subparsers):
-    parser = subparsers.add_parser("knowledge", help="Extract grounded table knowledge and persist it")
+    parser = subparsers.add_parser("knowledge", help="Extract source-linked relations and persist them")
     commands = parser.add_subparsers(dest="knowledge_command", required=True)
     extract = commands.add_parser("extract", help="Extract ruled PDF tables using an explicit ontology mapping")
     extract.add_argument("source", type=Path)
@@ -44,7 +44,7 @@ def add_parser(subparsers):
     status = commands.add_parser("databricks-status", help="Look up a saved statement without resubmitting")
     status.add_argument("--receipt", type=Path, required=True)
     status.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))
-    foundry = commands.add_parser("foundry", help="Export row relation contexts and Foundry IQ / prompt-agent configuration")
+    foundry = commands.add_parser("foundry", help="Export relation contexts and Foundry IQ / prompt-agent configuration")
     foundry.add_argument("bundles", nargs="+", type=Path)
     foundry.add_argument("--out", required=True, type=Path)
     foundry.add_argument("--prefix", default="sr-relations")

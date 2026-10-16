@@ -230,3 +230,22 @@ def test_image_runtime_preserves_both_calls_and_replays(ontology, tmp_path):
     assert result['status'] == 'complete' and result['planned_model_requests'] == len(calls) == 2
     manifest, files = verify_narrative(tmp_path / 'attempt/bundle')
     assert manifest['assertion_count'] == 1 and files['source.bin'] == image.read_bytes()
+
+
+def test_recorded_live_multiformat_bundles_replay_against_fixed_gold():
+    from pathlib import Path
+    from sr_adapter.foundry import verify_foundry
+    repo = Path(__file__).resolve().parents[1]
+    root = repo / 'docs/validation/narrative-foundry-2026-10-17'
+    gold = json.loads((repo / 'data/knowledge/narrative-mock/gold.json').read_bytes())
+    for name in ['memo-a', 'memo-b', 'memo-a-csv', 'memo-a-pptx', 'memo-a-png']:
+        manifest, files = verify_narrative(root / 'extractions' / name)
+        document = gold['documents'][int(name == 'memo-b')]
+        expected = {(a['subject'], a['predicate'], a['object'], a['status']) for a in document['assertions']}
+        actual = json.loads(files['assertions.json'])
+        assert {(a['subject'], a['predicate'].rsplit(':', 1)[-1], a['object'], a['status']) for a in actual} == expected
+        assert manifest['assertion_count'] == len(actual) == 8
+        if name == 'memo-a-png':
+            assert {a['grounding'] for a in actual} == {'model_transcription_unverified'}
+    manifest, _ = verify_foundry(root / 'handoff')
+    assert manifest['card_count'] == 40 and manifest['schema_version'] == 3
