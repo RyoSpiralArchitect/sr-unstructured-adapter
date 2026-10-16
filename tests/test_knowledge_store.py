@@ -150,12 +150,13 @@ def test_databricks_values_are_parameters_and_identifiers_are_checked(bundle):
         databricks_plan(bundle, table="catalog.schema.name;DROP", warehouse_id="abc123")
 
 
-def test_databricks_pending_is_not_success_and_status_never_resends(bundle, tmp_path):
+@pytest.mark.parametrize("terminal_state", ["SUCCEEDED", "CLOSED"])
+def test_databricks_pending_is_not_success_and_status_never_resends(bundle, tmp_path, terminal_state):
     calls = []
     def handler(request):
         calls.append(request.method)
         assert request.headers['authorization'] == 'Bearer fixture-token'
-        state = 'PENDING' if request.method == 'POST' else 'SUCCEEDED'
+        state = 'PENDING' if request.method == 'POST' else terminal_state
         return httpx.Response(200, json={'statement_id':'statement-123', 'status':{'state':state}})
     transport = httpx.MockTransport(handler)
     receipt = tmp_path / 'statement.json'
@@ -168,6 +169,21 @@ def test_databricks_pending_is_not_success_and_status_never_resends(bundle, tmp_
         write_databricks(bundle, host='https://workspace.azuredatabricks.net', token='fixture-token',
             table='catalog.schema.knowledge', warehouse_id='abc123', receipt=receipt, transport=transport)
     assert calls == ['POST', 'GET']
+
+
+@pytest.mark.parametrize("http_status, expected", [(400, 'failed'), (401, 'failed'),
+    (403, 'failed'), (404, 'failed'), (409, 'failed'), (429, 'failed'), (500, 'unknown'), (502, 'unknown')])
+def test_databricks_rejections_are_distinct_from_ambiguous_server_errors(bundle, tmp_path, http_status, expected):
+    calls = []
+    def handler(request):
+        calls.append(request.method)
+        return httpx.Response(http_status, json={'message': 'sensitive provider detail'})
+    receipt = tmp_path / 'rejected.json'
+    report = write_databricks(bundle, host='https://workspace.azuredatabricks.net', token='fixture-token',
+        table='catalog.schema.knowledge', warehouse_id='abc123', receipt=receipt, transport=httpx.MockTransport(handler))
+    assert report['status'] == expected and report['http_status'] == http_status
+    assert calls == ['POST'] and report['error_type'] == 'HTTPStatusError'
+    assert 'sensitive provider' not in receipt.read_text('utf-8')
 
 
 def test_databricks_ambiguous_transport_is_recorded_without_retry(bundle, tmp_path):

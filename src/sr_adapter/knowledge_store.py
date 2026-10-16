@@ -241,7 +241,7 @@ def _statement_result(report, body):
         raise ValueError("Statement identity changed")
     report["statement_id"] = statement_id
     state = body.get("status", {}).get("state")
-    report["status"] = {"SUCCEEDED": "committed", "PENDING": "pending", "RUNNING": "pending",
+    report["status"] = {"SUCCEEDED": "committed", "CLOSED": "committed", "PENDING": "pending", "RUNNING": "pending",
                         "FAILED": "failed", "CANCELED": "failed"}.get(state, "unknown")
     report["provider_state"] = state
 
@@ -268,6 +268,11 @@ def write_databricks(bundle, *, host: str, token: str, table: str, warehouse_id:
             report["http_status"] = response.status_code
             response.raise_for_status()
             _statement_result(report, response.json())
+    except httpx.HTTPStatusError as exc:
+        # Databricks 4xx responses reject the request; transport/5xx outcomes
+        # cannot establish whether the write was accepted. Neither is retried.
+        report.update(status="failed" if 400 <= exc.response.status_code < 500 else "unknown",
+                      error_type=type(exc).__name__)
     except Exception as exc:
         report.update(status="unknown", error_type=type(exc).__name__)
     atomic_json(path, report)

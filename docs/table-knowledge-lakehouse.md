@@ -171,8 +171,10 @@ Parquet/ADLS route instead.
 The HTTP receipt is reserved before dispatch. A pending statement returns a
 nonzero CLI status and retains its statement ID. Status lookup only performs GET;
 it never resubmits the MERGE. An ambiguous timeout without an ID remains `unknown`
-and must be reconciled in the workspace. `SUCCEEDED` alone is treated as committed;
-HTTP 200, `PENDING`, or an unfamiliar state does not count as a completed write.
+and must be reconciled in the workspace. `SUCCEEDED` and `CLOSED` are treated as
+committed (`CLOSED` means successful execution with results no longer available).
+Definitive HTTP 4xx rejections are `failed`; transport failures and server errors
+remain `unknown`. HTTP 200, `PENDING`, or an unfamiliar state does not count as a completed write.
 The connector does not provision catalogs, credentials, warehouses, or tables.
 
 Cloud authentication, runtime-specific SQL execution, ACLs, and actual writes
