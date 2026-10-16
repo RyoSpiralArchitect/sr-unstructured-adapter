@@ -57,6 +57,7 @@ jobs:
           from tempfile import TemporaryDirectory
           from sr_adapter import Block, OntologyMapping, extract_pdf_tables, extract_knowledge
           from sr_adapter.knowledge_store import export_bundle, write_sqlite
+          from sr_adapter.foundry import export_foundry, verify_foundry
           from sr_adapter.pipeline import convert
           from sr_adapter.recipe import load_recipe
           from sr_adapter.drivers.manager import TenantManager
@@ -90,5 +91,9 @@ jobs:
               export_bundle(package, bundle, parquet=True)
               assert write_sqlite(bundle, database)["inserted"] > 0
               assert write_sqlite(bundle, database)["inserted"] == 0
+              foundry = Path(directory) / "foundry"
+              manifest = export_foundry([bundle], foundry)
+              assert manifest["card_count"] == 1
+              assert verify_foundry(foundry)[0] == manifest
           print(Block(text="wheel ready"))
           PY

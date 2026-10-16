@@ -37,6 +37,16 @@ def add_parser(subparsers):
     status = commands.add_parser("databricks-status", help="Look up a saved statement without resubmitting")
     status.add_argument("--receipt", type=Path, required=True)
     status.add_argument("--host", default=os.getenv("DATABRICKS_HOST"))
+    foundry = commands.add_parser("foundry", help="Export row relation contexts and Foundry IQ / prompt-agent configuration")
+    foundry.add_argument("bundles", nargs="+", type=Path)
+    foundry.add_argument("--out", required=True, type=Path)
+    foundry.add_argument("--prefix", default="sr-relations")
+    foundry.add_argument("--target", type=Path, help="Optional JSON with existing Search/Foundry endpoints and deployment names")
+    publish = commands.add_parser("foundry-publish", help="Publish a verified Foundry export to explicitly configured existing services")
+    publish.add_argument("bundle", type=Path)
+    publish.add_argument("--target", type=Path, required=True)
+    publish.add_argument("--receipt", type=Path, required=True)
+    publish.add_argument("--execute", action="store_true")
 
 
 def handle(args):
@@ -65,6 +75,16 @@ def handle(args):
                     raise ValueError("Execution requires --receipt and --host")
                 result = write_databricks(args.bundle, host=args.host, token=os.getenv("DATABRICKS_TOKEN", ""),
                     table=args.table, warehouse_id=args.warehouse_id, receipt=args.receipt)
+        elif args.knowledge_command == "foundry":
+            from .foundry import FoundryTarget, export_foundry
+            target = FoundryTarget.model_validate_json(args.target.read_bytes()) if args.target else None
+            result = export_foundry(args.bundles, args.out, prefix=args.prefix, target=target)
+        elif args.knowledge_command == "foundry-publish":
+            from .foundry import FoundryTarget
+            from .foundry_runtime import publish_foundry
+            if not args.execute:
+                raise ValueError('Publication requires --execute; inspect the export deployment-plan.json first')
+            result = publish_foundry(args.bundle, target=FoundryTarget.model_validate_json(args.target.read_bytes()), receipt=args.receipt)
         else:
             if not args.host:
                 raise ValueError("A workspace host is required")
@@ -72,7 +92,7 @@ def handle(args):
         # JSON escapes preserve Unicode data even on legacy Windows consoles.
         # Bundle files remain UTF-8; reporting must not fail after a successful write.
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 0 if result.get("status") in {None, "complete", "committed"} else 1
+        return 0 if result.get("status") in {None, "complete", "committed", "configured"} else 1
     except Exception as exc:
         # Provider messages/URLs can contain credentials or source text.
         print(json.dumps({"status": "failed", "error_type": type(exc).__name__,

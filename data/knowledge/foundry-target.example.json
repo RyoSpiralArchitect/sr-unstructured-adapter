@@ -1,0 +1,8 @@
+{
+  "search_endpoint": "https://your-search-service.search.windows.net",
+  "project_endpoint": "https://your-account.services.ai.azure.com/api/projects/your-project",
+  "project_resource_id": "/subscriptions/YOUR-SUBSCRIPTION-ID/resourceGroups/your-resource-group/providers/Microsoft.CognitiveServices/accounts/your-account/projects/your-project",
+  "model_deployment": "your-existing-model-deployment",
+  "project_connection_name": "sr-relations-dedicated-connection",
+  "agent_name": "sr-relations"
+}

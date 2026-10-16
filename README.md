@@ -9,6 +9,13 @@ and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks D
 records. Cloud connectors have offline protocol tests; deployment-specific cloud
 authentication and writes require validation in the destination environment.
 
+The [Foundry IQ bridge](docs/foundry-iq.md) projects those facts into complete row
+contexts for Azure AI Search and generates a knowledge source, knowledge base,
+and prompt agent using the native retrieval MCP tool. It preserves relation
+direction, missing values, and cell evidence. Export locally with
+`sr-adapt knowledge foundry <bundle> --out <new-directory>`; an explicit target
+and `foundry-publish --execute` opt into cloud configuration.
+
 ## Why this adapter?
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes with streaming output where the parser supports it. Memory use still depends on the document library and format.
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up.

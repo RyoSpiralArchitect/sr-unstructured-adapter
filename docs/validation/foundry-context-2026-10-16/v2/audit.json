@@ -1,0 +1,24 @@
+{
+  "spec_sha256": "d3467e3540c94d0590810b546a97cea3d48bfb25317d908614508c9e50cf7bb1",
+  "planned_requests": 8,
+  "arms": {
+    "normalized_records": {
+      "planned_questions": 24,
+      "completed_requests": 4,
+      "answer_match": 24,
+      "evidence_match": 16,
+      "strict": 16,
+      "prompt_tokens": 42698,
+      "completion_tokens": 1464
+    },
+    "row_contexts": {
+      "planned_questions": 24,
+      "completed_requests": 4,
+      "answer_match": 24,
+      "evidence_match": 24,
+      "strict": 24,
+      "prompt_tokens": 40006,
+      "completion_tokens": 1476
+    }
+  }
+}

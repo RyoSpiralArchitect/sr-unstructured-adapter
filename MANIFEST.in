@@ -5,6 +5,11 @@ include scripts/build_table_probe.py
 include data/vlm_benchmark/table-correspondence-v1.json
 include data/knowledge/project-ownership.json
 include data/knowledge/digital-agency-roles.json
-include tests/conftest.py
+recursive-include tests *.py
+include configs/settings.yaml
 include docs/table-knowledge-lakehouse.md
 include docs/table-knowledge-2026-10-16.md
+include data/knowledge/foundry-target.example.json
+include docs/foundry-iq.md
+include docs/foundry-context-2026-10-16.md
+include scripts/probe_relation_context.py
