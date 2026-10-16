@@ -1,0 +1,14 @@
+{
+  "namespace": "https://example.org/sr-demo/",
+  "classes": {"Project": "案件", "Organization": "組織"},
+  "entities": [
+    {"key": "project", "column": "案件", "class_id": "Project"},
+    {"key": "primary", "column": "主担当", "class_id": "Organization"},
+    {"key": "secondary", "column": "副担当", "class_id": "Organization"}
+  ],
+  "relations": [
+    {"predicate": "managedBy", "subject": "project", "object": "primary"},
+    {"predicate": "supportedBy", "subject": "project", "object": "secondary"}
+  ],
+  "properties": [{"predicate": "budgetManYen", "subject": "project", "column": "予算(万円)"}]
+}

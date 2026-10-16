@@ -1,0 +1,1343 @@
+{
+  "annotation_status": "agent-authored; visual source check required; not independent human gold",
+  "study": "table-correspondence-v1",
+  "cases": [
+    {
+      "id": "column-order-base",
+      "kind": "synthetic",
+      "source_pages": [
+        1
+      ],
+      "tags": [
+        "column-order",
+        "base"
+      ],
+      "fields": [
+        {
+          "id": "smallest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最小のものは何か。数値のみ。",
+          "accepted": [
+            "125"
+          ],
+          "page": 1,
+          "evidence": [
+            "125"
+          ],
+          "anchors": [
+            "125"
+          ]
+        },
+        {
+          "id": "largest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最大のものは何か。数値のみ。",
+          "accepted": [
+            "240"
+          ],
+          "page": 1,
+          "evidence": [
+            "240"
+          ],
+          "anchors": [
+            "240"
+          ]
+        },
+        {
+          "id": "binding_0",
+          "task": "association",
+          "question": "案件「朝凪」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "東部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "東部室",
+            "朝凪 東部室 西部室 125"
+          ],
+          "anchors": [
+            "東部室"
+          ]
+        },
+        {
+          "id": "binding_1",
+          "task": "association",
+          "question": "案件「夕凪」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "西部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "西部室",
+            "夕凪 西部室 南部室 240"
+          ],
+          "anchors": [
+            "西部室"
+          ]
+        },
+        {
+          "id": "binding_2",
+          "task": "association",
+          "question": "案件「朝凪」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "西部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "西部室",
+            "朝凪 東部室 西部室 125"
+          ],
+          "anchors": [
+            "西部室"
+          ]
+        },
+        {
+          "id": "binding_3",
+          "task": "association",
+          "question": "案件「夕凪」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "南部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "南部室",
+            "夕凪 西部室 南部室 240"
+          ],
+          "anchors": [
+            "南部室"
+          ]
+        },
+        {
+          "id": "binding_4",
+          "task": "association",
+          "question": "案件「朝凪」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "125"
+          ],
+          "page": 1,
+          "evidence": [
+            "125",
+            "朝凪 東部室 西部室 125"
+          ],
+          "anchors": [
+            "125"
+          ]
+        },
+        {
+          "id": "binding_5",
+          "task": "association",
+          "question": "案件「星凪」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定",
+            "星凪 南部室 東部室 未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "担当・予算一覧",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "案件",
+                    "主担当",
+                    "副担当",
+                    "予算(万円)"
+                  ],
+                  [
+                    "朝凪",
+                    "東部室",
+                    "西部室",
+                    "125"
+                  ],
+                  [
+                    "夕凪",
+                    "西部室",
+                    "南部室",
+                    "240"
+                  ],
+                  [
+                    "星凪",
+                    "南部室",
+                    "東部室",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  180,
+                  180,
+                  180,
+                  180
+                ]
+              }
+            ],
+            "notes": [
+              "予算の単位は万円。未定は確定値ではない。",
+              "主担当と副担当を区別して読むこと。"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "column-order-changed",
+      "kind": "synthetic",
+      "source_pages": [
+        1
+      ],
+      "tags": [
+        "column-order",
+        "changed"
+      ],
+      "fields": [
+        {
+          "id": "smallest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最小のものは何か。数値のみ。",
+          "accepted": [
+            "125"
+          ],
+          "page": 1,
+          "evidence": [
+            "125"
+          ],
+          "anchors": [
+            "125"
+          ]
+        },
+        {
+          "id": "largest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最大のものは何か。数値のみ。",
+          "accepted": [
+            "240"
+          ],
+          "page": 1,
+          "evidence": [
+            "240"
+          ],
+          "anchors": [
+            "240"
+          ]
+        },
+        {
+          "id": "binding_0",
+          "task": "association",
+          "question": "案件「朝凪」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "東部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "東部室",
+            "125 西部室 朝凪 東部室"
+          ],
+          "anchors": [
+            "東部室"
+          ]
+        },
+        {
+          "id": "binding_1",
+          "task": "association",
+          "question": "案件「夕凪」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "西部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "西部室",
+            "240 南部室 夕凪 西部室"
+          ],
+          "anchors": [
+            "西部室"
+          ]
+        },
+        {
+          "id": "binding_2",
+          "task": "association",
+          "question": "案件「朝凪」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "西部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "西部室",
+            "125 西部室 朝凪 東部室"
+          ],
+          "anchors": [
+            "西部室"
+          ]
+        },
+        {
+          "id": "binding_3",
+          "task": "association",
+          "question": "案件「夕凪」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "南部室"
+          ],
+          "page": 1,
+          "evidence": [
+            "南部室",
+            "240 南部室 夕凪 西部室"
+          ],
+          "anchors": [
+            "南部室"
+          ]
+        },
+        {
+          "id": "binding_4",
+          "task": "association",
+          "question": "案件「朝凪」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "125"
+          ],
+          "page": 1,
+          "evidence": [
+            "125",
+            "125 西部室 朝凪 東部室"
+          ],
+          "anchors": [
+            "125"
+          ]
+        },
+        {
+          "id": "binding_5",
+          "task": "association",
+          "question": "案件「星凪」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定",
+            "未定 東部室 星凪 南部室"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "担当・予算一覧",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "予算(万円)",
+                    "副担当",
+                    "案件",
+                    "主担当"
+                  ],
+                  [
+                    "125",
+                    "西部室",
+                    "朝凪",
+                    "東部室"
+                  ],
+                  [
+                    "240",
+                    "南部室",
+                    "夕凪",
+                    "西部室"
+                  ],
+                  [
+                    "未定",
+                    "東部室",
+                    "星凪",
+                    "南部室"
+                  ]
+                ],
+                "widths": [
+                  180,
+                  180,
+                  180,
+                  180
+                ]
+              }
+            ],
+            "notes": [
+              "予算の単位は万円。未定は確定値ではない。",
+              "主担当と副担当を区別して読むこと。"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "header-binding-base",
+      "kind": "synthetic",
+      "source_pages": [
+        1
+      ],
+      "tags": [
+        "header-binding",
+        "base"
+      ],
+      "fields": [
+        {
+          "id": "smallest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最小のものは何か。数値のみ。",
+          "accepted": [
+            "315"
+          ],
+          "page": 1,
+          "evidence": [
+            "315"
+          ],
+          "anchors": [
+            "315"
+          ]
+        },
+        {
+          "id": "largest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最大のものは何か。数値のみ。",
+          "accepted": [
+            "480"
+          ],
+          "page": 1,
+          "evidence": [
+            "480"
+          ],
+          "anchors": [
+            "480"
+          ]
+        },
+        {
+          "id": "binding_0",
+          "task": "association",
+          "question": "案件「白樺」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "企画室"
+          ],
+          "page": 1,
+          "evidence": [
+            "企画室",
+            "白樺 企画室 審査室 315"
+          ],
+          "anchors": [
+            "企画室"
+          ]
+        },
+        {
+          "id": "binding_1",
+          "task": "association",
+          "question": "案件「青葉」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "審査室"
+          ],
+          "page": 1,
+          "evidence": [
+            "審査室",
+            "青葉 審査室 運用室 480"
+          ],
+          "anchors": [
+            "審査室"
+          ]
+        },
+        {
+          "id": "binding_2",
+          "task": "association",
+          "question": "案件「白樺」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "審査室"
+          ],
+          "page": 1,
+          "evidence": [
+            "審査室",
+            "白樺 企画室 審査室 315"
+          ],
+          "anchors": [
+            "審査室"
+          ]
+        },
+        {
+          "id": "binding_3",
+          "task": "association",
+          "question": "案件「青葉」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "運用室"
+          ],
+          "page": 1,
+          "evidence": [
+            "運用室",
+            "青葉 審査室 運用室 480"
+          ],
+          "anchors": [
+            "運用室"
+          ]
+        },
+        {
+          "id": "binding_4",
+          "task": "association",
+          "question": "案件「白樺」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "315"
+          ],
+          "page": 1,
+          "evidence": [
+            "315",
+            "白樺 企画室 審査室 315"
+          ],
+          "anchors": [
+            "315"
+          ]
+        },
+        {
+          "id": "binding_5",
+          "task": "association",
+          "question": "案件「若竹」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定",
+            "若竹 運用室 企画室 未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "担当・予算一覧",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "案件",
+                    "主担当",
+                    "副担当",
+                    "予算(万円)"
+                  ],
+                  [
+                    "白樺",
+                    "企画室",
+                    "審査室",
+                    "315"
+                  ],
+                  [
+                    "青葉",
+                    "審査室",
+                    "運用室",
+                    "480"
+                  ],
+                  [
+                    "若竹",
+                    "運用室",
+                    "企画室",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  180,
+                  180,
+                  180,
+                  180
+                ]
+              }
+            ],
+            "notes": [
+              "予算の単位は万円。未定は確定値ではない。",
+              "主担当と副担当を区別して読むこと。"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "header-binding-changed",
+      "kind": "synthetic",
+      "source_pages": [
+        1
+      ],
+      "tags": [
+        "header-binding",
+        "changed"
+      ],
+      "fields": [
+        {
+          "id": "smallest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最小のものは何か。数値のみ。",
+          "accepted": [
+            "315"
+          ],
+          "page": 1,
+          "evidence": [
+            "315"
+          ],
+          "anchors": [
+            "315"
+          ]
+        },
+        {
+          "id": "largest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最大のものは何か。数値のみ。",
+          "accepted": [
+            "480"
+          ],
+          "page": 1,
+          "evidence": [
+            "480"
+          ],
+          "anchors": [
+            "480"
+          ]
+        },
+        {
+          "id": "binding_0",
+          "task": "association",
+          "question": "案件「白樺」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "審査室"
+          ],
+          "page": 1,
+          "evidence": [
+            "審査室",
+            "白樺 企画室 審査室 315"
+          ],
+          "anchors": [
+            "審査室"
+          ]
+        },
+        {
+          "id": "binding_1",
+          "task": "association",
+          "question": "案件「青葉」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "運用室"
+          ],
+          "page": 1,
+          "evidence": [
+            "運用室",
+            "青葉 審査室 運用室 480"
+          ],
+          "anchors": [
+            "運用室"
+          ]
+        },
+        {
+          "id": "binding_2",
+          "task": "association",
+          "question": "案件「白樺」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "企画室"
+          ],
+          "page": 1,
+          "evidence": [
+            "企画室",
+            "白樺 企画室 審査室 315"
+          ],
+          "anchors": [
+            "企画室"
+          ]
+        },
+        {
+          "id": "binding_3",
+          "task": "association",
+          "question": "案件「青葉」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "審査室"
+          ],
+          "page": 1,
+          "evidence": [
+            "審査室",
+            "青葉 審査室 運用室 480"
+          ],
+          "anchors": [
+            "審査室"
+          ]
+        },
+        {
+          "id": "binding_4",
+          "task": "association",
+          "question": "案件「白樺」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "315"
+          ],
+          "page": 1,
+          "evidence": [
+            "315",
+            "白樺 企画室 審査室 315"
+          ],
+          "anchors": [
+            "315"
+          ]
+        },
+        {
+          "id": "binding_5",
+          "task": "association",
+          "question": "案件「若竹」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定",
+            "若竹 運用室 企画室 未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "担当・予算一覧",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "案件",
+                    "副担当",
+                    "主担当",
+                    "予算(万円)"
+                  ],
+                  [
+                    "白樺",
+                    "企画室",
+                    "審査室",
+                    "315"
+                  ],
+                  [
+                    "青葉",
+                    "審査室",
+                    "運用室",
+                    "480"
+                  ],
+                  [
+                    "若竹",
+                    "運用室",
+                    "企画室",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  180,
+                  180,
+                  180,
+                  180
+                ]
+              }
+            ],
+            "notes": [
+              "予算の単位は万円。未定は確定値ではない。",
+              "主担当と副担当を区別して読むこと。"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "row-order-base",
+      "kind": "synthetic",
+      "source_pages": [
+        1
+      ],
+      "tags": [
+        "row-order",
+        "base"
+      ],
+      "fields": [
+        {
+          "id": "smallest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最小のものは何か。数値のみ。",
+          "accepted": [
+            "165"
+          ],
+          "page": 1,
+          "evidence": [
+            "165"
+          ],
+          "anchors": [
+            "165"
+          ]
+        },
+        {
+          "id": "largest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最大のものは何か。数値のみ。",
+          "accepted": [
+            "290"
+          ],
+          "page": 1,
+          "evidence": [
+            "290"
+          ],
+          "anchors": [
+            "290"
+          ]
+        },
+        {
+          "id": "binding_0",
+          "task": "association",
+          "question": "案件「港」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "海班"
+          ],
+          "page": 1,
+          "evidence": [
+            "海班",
+            "港 海班 山班 165"
+          ],
+          "anchors": [
+            "海班"
+          ]
+        },
+        {
+          "id": "binding_1",
+          "task": "association",
+          "question": "案件「丘」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "山班"
+          ],
+          "page": 1,
+          "evidence": [
+            "山班",
+            "丘 山班 川班 290"
+          ],
+          "anchors": [
+            "山班"
+          ]
+        },
+        {
+          "id": "binding_2",
+          "task": "association",
+          "question": "案件「港」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "山班"
+          ],
+          "page": 1,
+          "evidence": [
+            "山班",
+            "港 海班 山班 165"
+          ],
+          "anchors": [
+            "山班"
+          ]
+        },
+        {
+          "id": "binding_3",
+          "task": "association",
+          "question": "案件「丘」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "川班"
+          ],
+          "page": 1,
+          "evidence": [
+            "川班",
+            "丘 山班 川班 290"
+          ],
+          "anchors": [
+            "川班"
+          ]
+        },
+        {
+          "id": "binding_4",
+          "task": "association",
+          "question": "案件「港」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "165"
+          ],
+          "page": 1,
+          "evidence": [
+            "165",
+            "港 海班 山班 165"
+          ],
+          "anchors": [
+            "165"
+          ]
+        },
+        {
+          "id": "binding_5",
+          "task": "association",
+          "question": "案件「森」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定",
+            "森 川班 海班 未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "担当・予算一覧",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "案件",
+                    "主担当",
+                    "副担当",
+                    "予算(万円)"
+                  ],
+                  [
+                    "港",
+                    "海班",
+                    "山班",
+                    "165"
+                  ],
+                  [
+                    "丘",
+                    "山班",
+                    "川班",
+                    "290"
+                  ],
+                  [
+                    "森",
+                    "川班",
+                    "海班",
+                    "未定"
+                  ]
+                ],
+                "widths": [
+                  180,
+                  180,
+                  180,
+                  180
+                ]
+              }
+            ],
+            "notes": [
+              "予算の単位は万円。未定は確定値ではない。",
+              "主担当と副担当を区別して読むこと。"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "row-order-changed",
+      "kind": "synthetic",
+      "source_pages": [
+        1
+      ],
+      "tags": [
+        "row-order",
+        "changed"
+      ],
+      "fields": [
+        {
+          "id": "smallest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最小のものは何か。数値のみ。",
+          "accepted": [
+            "165"
+          ],
+          "page": 1,
+          "evidence": [
+            "165"
+          ],
+          "anchors": [
+            "165"
+          ]
+        },
+        {
+          "id": "largest",
+          "task": "value_recognition",
+          "question": "予算(万円)列の数値のうち最大のものは何か。数値のみ。",
+          "accepted": [
+            "290"
+          ],
+          "page": 1,
+          "evidence": [
+            "290"
+          ],
+          "anchors": [
+            "290"
+          ]
+        },
+        {
+          "id": "binding_0",
+          "task": "association",
+          "question": "案件「港」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "海班"
+          ],
+          "page": 1,
+          "evidence": [
+            "海班",
+            "港 海班 山班 165"
+          ],
+          "anchors": [
+            "海班"
+          ]
+        },
+        {
+          "id": "binding_1",
+          "task": "association",
+          "question": "案件「丘」の「主担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "山班"
+          ],
+          "page": 1,
+          "evidence": [
+            "山班",
+            "丘 山班 川班 290"
+          ],
+          "anchors": [
+            "山班"
+          ]
+        },
+        {
+          "id": "binding_2",
+          "task": "association",
+          "question": "案件「港」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "山班"
+          ],
+          "page": 1,
+          "evidence": [
+            "山班",
+            "港 海班 山班 165"
+          ],
+          "anchors": [
+            "山班"
+          ]
+        },
+        {
+          "id": "binding_3",
+          "task": "association",
+          "question": "案件「丘」の「副担当」は何か。名称または数値のみ。",
+          "accepted": [
+            "川班"
+          ],
+          "page": 1,
+          "evidence": [
+            "川班",
+            "丘 山班 川班 290"
+          ],
+          "anchors": [
+            "川班"
+          ]
+        },
+        {
+          "id": "binding_4",
+          "task": "association",
+          "question": "案件「港」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "165"
+          ],
+          "page": 1,
+          "evidence": [
+            "165",
+            "港 海班 山班 165"
+          ],
+          "anchors": [
+            "165"
+          ]
+        },
+        {
+          "id": "binding_5",
+          "task": "association",
+          "question": "案件「森」の「予算(万円)」は何か。名称または数値のみ。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "未定",
+            "森 川班 海班 未定"
+          ],
+          "anchors": [
+            "未定"
+          ]
+        }
+      ],
+      "document": {
+        "pages": [
+          {
+            "title": "担当・予算一覧",
+            "tables": [
+              {
+                "rows": [
+                  [
+                    "案件",
+                    "主担当",
+                    "副担当",
+                    "予算(万円)"
+                  ],
+                  [
+                    "森",
+                    "川班",
+                    "海班",
+                    "未定"
+                  ],
+                  [
+                    "丘",
+                    "山班",
+                    "川班",
+                    "290"
+                  ],
+                  [
+                    "港",
+                    "海班",
+                    "山班",
+                    "165"
+                  ]
+                ],
+                "widths": [
+                  180,
+                  180,
+                  180,
+                  180
+                ]
+              }
+            ],
+            "notes": [
+              "予算の単位は万円。未定は確定値ではない。",
+              "主担当と副担当を区別して読むこと。"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "da-roles",
+      "kind": "digital_agency",
+      "tags": [
+        "diagram_vs_table",
+        "role_binding",
+        "unknown"
+      ],
+      "filename": "別添12 デジタル庁の体制（想定）.pdf",
+      "source_sha256": "3d08c7da34433881a47543cdecabc194cb7a8414b1d147e42c736f2ee73678e2",
+      "source_pages": [
+        1
+      ],
+      "fields": [
+        {
+          "id": "table_decision",
+          "question": "下半分の表で、本事業の執行責任を持ち決裁を行うポジション名は何か。",
+          "accepted": [
+            "事業責任者"
+          ],
+          "page": 1,
+          "evidence": [
+            "事業責任者 本事業の執行責任を持ち決裁を行う 定期的な状況報告を受け、事業全体に関わる重要な意思決定やリリースの承認を行う"
+          ],
+          "anchors": [
+            "事業責任者",
+            "執行責任"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "diagram_decision",
+          "question": "上半分の図で「執行責任・決裁」の領域に置かれた白い箱の役職名を、そのまま答える。",
+          "accepted": [
+            "プロジェクトマネージャー"
+          ],
+          "page": 1,
+          "evidence": [
+            "プロジェクトマネージャー"
+          ],
+          "anchors": [
+            "プロジェクトマネージャー"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "backlog_role",
+          "question": "表で、プロダクトバックログの優先順位を決定・承認するポジション名は何か。",
+          "accepted": [
+            "PdM／プロダクトマネージャー",
+            "プロダクトマネージャー",
+            "PdM"
+          ],
+          "page": 1,
+          "evidence": [
+            "PdM／プロダクトマネージャー プロジェクトメンバーと協議し、プロダクトバックログの優先順位、スコープ、リリース単位の決定や承認を行う"
+          ],
+          "anchors": [
+            "プロダクトバックログ",
+            "プロダクトマネージャー",
+            "PdM"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "code_review_role",
+          "question": "表で、コードレビュー等でアプリケーション開発業務を支援するポジション名は何か。",
+          "accepted": [
+            "エンジニア"
+          ],
+          "page": 1,
+          "evidence": [
+            "エンジニア 受託者のアプリケーション開発業務を支援する（設計レビュー、コードレビュー等）"
+          ],
+          "anchors": [
+            "エンジニア",
+            "コードレビュー"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "staff_count",
+          "question": "エンジニアに配置する確定人数を答える。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": 1,
+          "evidence": [
+            "各ポジションへの配置人数は未定である。"
+          ],
+          "anchors": [
+            "未定"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "contract_role",
+          "question": "表で、契約や予算関連の管理業務を行うポジション名は何か。",
+          "accepted": [
+            "PjM／プロジェクトマネージャー",
+            "プロジェクトマネージャー",
+            "PjM"
+          ],
+          "page": 1,
+          "evidence": [
+            "PjM／プロジェクトマネージャー 事業全体の計画策定や推進、契約や予算関連の管理業務を行う"
+          ],
+          "anchors": [
+            "プロジェクトマネージャー",
+            "PjM",
+            "契約"
+          ],
+          "task": "real_document"
+        }
+      ]
+    },
+    {
+      "id": "da-story-policy",
+      "kind": "digital_agency",
+      "tags": [
+        "table",
+        "negative_condition",
+        "unknown"
+      ],
+      "filename": "別添6 要求事項一覧_ストーリー定義.pdf",
+      "source_sha256": "ff9413ba6ac4f8799c687424cbe7c80bd4aad147aa6021e72a697ce6f4e980bc",
+      "source_pages": [
+        1
+      ],
+      "fields": [
+        {
+          "id": "keep_flow",
+          "question": "既存のフローをほぼ維持しつつ主に表現を見直す方針のラベル名は何か。",
+          "accepted": [
+            "新 UI へ移管し提供"
+          ],
+          "page": 1,
+          "evidence": [
+            "新 UI へ移管し提供 ベータ版の体験として、既存のフローをほぼ維持しつつ、主に表現を見直し。画面はベータ版環境で構築。"
+          ],
+          "anchors": [
+            "新UIへ移管し提供",
+            "既存のフロー"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "link_label",
+          "question": "現マイナポへのリンクをベータ版環境に設置する方針のラベル名は何か。",
+          "accepted": [
+            "現マイナポに残し誘導"
+          ],
+          "page": 1,
+          "evidence": [
+            "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+          ],
+          "anchors": [
+            "現マイナポに残し誘導",
+            "リンク"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "link_screen",
+          "question": "「現マイナポに残し誘導」はベータ版環境で画面を「提供する」「提供しない」のどちらか。",
+          "accepted": [
+            "提供しない"
+          ],
+          "page": 1,
+          "evidence": [
+            "現マイナポに残し誘導 ベータ版環境で画面を提供しない。現マイナポへのリンクをベータ版環境に設置。"
+          ],
+          "anchors": [
+            "提供しない"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "alpha_label",
+          "question": "アルファ版ですでに実現しているストーリーを扱うラベル名は何か。",
+          "accepted": [
+            "アルファ版を保持拡充"
+          ],
+          "page": 1,
+          "evidence": [
+            "アルファ版を保持拡充 アルファ版ですでに実現しているストーリー。画面は、多少見直しを行い、ベータ版環境で構築。"
+          ],
+          "anchors": [
+            "アルファ版を保持拡充",
+            "実現"
+          ],
+          "task": "real_document"
+        },
+        {
+          "id": "pending_detail",
+          "question": "「要検討」行の詳細として具体的な方針は何か。横線だけならUNKNOWN。",
+          "accepted": [
+            "UNKNOWN"
+          ],
+          "page": null,
+          "evidence": [],
+          "anchors": [],
+          "task": "real_document"
+        },
+        {
+          "id": "research_label",
+          "question": "ニーズやあるべき姿、実績などを調べてから開発方針を決定するラベル名は何か。",
+          "accepted": [
+            "調査"
+          ],
+          "page": 1,
+          "evidence": [
+            "調査 ニーズやあるべき姿、実績などを調査。そのうえで開発方針を決定。"
+          ],
+          "anchors": [
+            "調査"
+          ],
+          "task": "real_document"
+        }
+      ]
+    }
+  ]
+}

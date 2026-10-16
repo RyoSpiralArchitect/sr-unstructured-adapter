@@ -293,6 +293,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Indentation level for JSON output",
     )
 
+    from .knowledge_cli import add_parser as add_knowledge_parser
+    add_knowledge_parser(subparsers)
     return parser.parse_args(argv)
 
 
@@ -335,6 +337,9 @@ def _load_path_entries(paths: list[str], paths_file: Path | None) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
+    if args.command == "knowledge":
+        from .knowledge_cli import handle
+        return handle(args)
     if args.command == "convert":
         try:
             entries = _load_path_entries(args.paths, args.paths_file)
