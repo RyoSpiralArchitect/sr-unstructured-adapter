@@ -2,6 +2,7 @@ import copy
 import csv
 import io
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
@@ -176,20 +177,53 @@ def test_schema_has_dynamic_predicates_and_no_secrets(ontology):
     assert request["text"]["format"]["schema"]["$defs"]["Candidate"]["properties"]["predicate"]["enum"] == ["managedBy"]
 
 
-def test_live_runtime_records_before_submit_and_never_overwrites(ontology, tmp_path):
+def test_pre_context_prompt_bundle_replays_without_rewriting_saved_evidence():
+    root = Path(__file__).resolve().parents[1] / "docs/validation/narrative-foundry-2026-10-17/extractions/memo-a"
+    original = {p.name: p.read_bytes() for p in root.iterdir() if p.is_file()}
+    manifest, files = verify_narrative(root)
+    assert files == original
+    assert manifest["assertion_count"] == 8
+    assert "instructions_version" not in json.loads(files["extraction.json"])
+
+
+def test_context_prompt_is_recorded_and_cannot_be_relabelled_as_legacy(ontology):
+    manifest, files = bundle(ontology)
+    config = json.loads(files["extraction.json"])
+    assert config["instructions_version"] == 2
+    verify_narrative_payloads(files)
+    config.pop("instructions_version")
+    files["extraction.json"] = canonical_json(config) + b"\n"
+    manifest["files"]["extraction.json"] = {"sha256": sha256(files["extraction.json"]), "bytes": len(files["extraction.json"])}
+    files["manifest.json"] = canonical_json(manifest) + b"\n"
+    with pytest.raises(ValueError, match="reproduce"):
+        verify_narrative_payloads(files)
+
+
+@pytest.mark.parametrize("version", [0, 3, True, "2", None])
+def test_unknown_extraction_prompt_versions_reject(ontology, version):
+    with pytest.raises(ValueError, match="instructions version"):
+        extraction_request(read_source(b'A is managed by B.', 'source.txt'), ontology,
+                           "gpt-5.5", instructions_version=version)
+
+
+@pytest.mark.parametrize("instructions_version", [1, 2])
+def test_live_runtime_records_before_submit_and_never_overwrites(ontology, tmp_path, instructions_version):
     source = tmp_path / 'source.txt'
     source.write_bytes(b'A is managed by B.')
     out = tmp_path / "attempt"
     def handler(request):
         receipt = json.loads((out / 'receipt.json').read_bytes())
         assert receipt['requests'][0]['status'] == 'submitting'
+        assert receipt['instructions_version'] == instructions_version
         assert (out / 'extraction-request.json').exists()
         return httpx.Response(200, json=response([candidate()]))
     credential = SimpleNamespace(get_token=lambda _: SimpleNamespace(token='fake'))
     kwargs = dict(ontology=ontology, endpoint='https://unit.services.ai.azure.com/api/projects/test', model='gpt-5.5',
-        destination=out, execute=True, credential=credential, transport=httpx.MockTransport(handler))
+        destination=out, execute=True, credential=credential, transport=httpx.MockTransport(handler),
+        instructions_version=instructions_version)
     assert extract_narrative(source, **kwargs)['status'] == 'complete'
-    verify_narrative(out / 'bundle')
+    _, files = verify_narrative(out / 'bundle')
+    assert json.loads(files['extraction.json']).get('instructions_version', 1) == instructions_version
     with pytest.raises(FileExistsError):
         extract_narrative(source, **kwargs)
 

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "dataset_id": "realistic-relations-dev-20261019-v1",
+  "gold_origin": "manually_defined_synthetic",
+  "evaluation_role": "authored_development_set_not_held_out",
+  "gold_must_not_be_sent_to_model": true,
+  "ontology_path": "ontology.json",
+  "documents": [
+    {
+      "path": "operations-review.md",
+      "assertions": [
+        {"subject": "住民窓口刷新", "predicate": "managedBy", "object": "市民サービス課", "status": "asserted", "required_lines": [4, 8, 10]},
+        {"subject": "住民窓口刷新", "predicate": "supportedBy", "object": "デジタル推進室", "status": "asserted", "required_lines": [4, 8, 10]},
+        {"subject": "住民窓口刷新", "predicate": "approvedBy", "object": "政策調整会議", "status": "asserted", "required_lines": [4, 8, 10]},
+        {"subject": "給付申請オンライン化", "predicate": "managedBy", "object": "福祉企画課", "status": "asserted", "required_lines": [4, 8, 11]},
+        {"subject": "給付申請オンライン化", "predicate": "supportedBy", "object": "外部事業者", "status": "denied", "required_lines": [4, 8, 11]},
+        {"subject": "給付申請オンライン化", "predicate": "approvedBy", "object": null, "status": "ambiguous", "required_lines": [4, 8, 11]},
+        {"subject": "住民窓口刷新", "predicate": "budgetAmount", "object": "12,500", "status": "asserted", "required_lines": [4, 14, 15, 17]},
+        {"subject": "給付申請オンライン化", "predicate": "budgetAmount", "object": null, "status": "unknown", "required_lines": [4, 14, 15, 18]},
+        {"subject": "住民窓口刷新", "predicate": "managedBy", "object": "総務課", "status": "asserted", "required_lines": [21]},
+        {"subject": "住民窓口刷新", "predicate": "managedBy", "object": null, "status": "ambiguous", "required_lines": [22]}
+      ]
+    },
+    {
+      "path": "procurement-ledger.csv",
+      "assertions": [
+        {"subject": "防災通知連携", "predicate": "managedBy", "object": "危機管理課", "status": "asserted", "required_lines": [2]},
+        {"subject": "防災通知連携", "predicate": "supportedBy", "object": "デジタル推進室", "status": "asserted", "required_lines": [2]},
+        {"subject": "防災通知連携", "predicate": "approvedBy", "object": "危機管理会議", "status": "asserted", "required_lines": [2]},
+        {"subject": "防災通知連携", "predicate": "budgetAmount", "object": "4,800", "status": "asserted", "required_lines": [2]},
+        {"subject": "学校施設予約", "predicate": "managedBy", "object": "教育施設課", "status": "asserted", "required_lines": [3]},
+        {"subject": "学校施設予約", "predicate": "approvedBy", "object": null, "status": "unknown", "required_lines": [3]},
+        {"subject": "学校施設予約", "predicate": "budgetAmount", "object": "0", "status": "asserted", "required_lines": [3]}
+      ]
+    }
+  ]
+}

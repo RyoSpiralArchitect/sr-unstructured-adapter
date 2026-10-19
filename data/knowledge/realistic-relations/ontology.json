@@ -1,0 +1,10 @@
+{
+  "namespace": "urn:sr:realistic-dev:",
+  "classes": {"Project": "事業", "Organization": "組織", "Literal": "原文の値"},
+  "predicates": [
+    {"id": "managedBy", "label": "主担当", "subject_type": "Project", "object_type": "Organization", "description": "事業から主担当組織への関係。支援、承認、連絡窓口とは別。時点や条件の異なる記載を根拠とともに保持する。"},
+    {"id": "supportedBy", "label": "支援担当", "subject_type": "Project", "object_type": "Organization", "description": "事業から支援担当組織への関係。空欄は未記載であり、否定や未定を意味しない。"},
+    {"id": "approvedBy", "label": "承認担当", "subject_type": "Project", "object_type": "Organization", "description": "事業から承認担当組織への関係。未決定の候補列挙を確定した組織と扱わない。"},
+    {"id": "budgetAmount", "label": "承認済予算（原文表記）", "subject_type": "Project", "object_type": "Literal", "description": "事業の承認済予算。参考見積や保守実績は対象外。値はセルまたは原文の数値表記をそのままコピーし、単位の付加や換算はしない。単位、年度、対象範囲を示す根拠も保持する。明記された0と未定・未記載を区別する。"}
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "assertion_count": 7,
+  "automatic_retries": 0,
+  "bundle_manifest_sha256": "12cf66dc0e7f9eea5ee5355106cfcb9899fac8dd109cc58a06382c5221a88001",
+  "model_deployment": "gpt-5.5",
+  "ontology_sha256": "44bd061eab074c5e0db27bc0150c08f084cbce19b3ed8c7317e65591e44ef0bf",
+  "package_id": "urn:sr:narrative:7b4b9f0ac41e1eab8e078cb49fe9416c2b64e23204b18ada1b2f3882ebd623a1",
+  "planned_model_requests": 1,
+  "publication": "not_performed",
+  "requests": [
+    {
+      "http_status": 200,
+      "request_sha256": "491a739360c421ae5b0fc9623055729fa6d196fa13e536f7cc9a84c1e966cd4e",
+      "response_model": "gpt-5.5",
+      "stage": "extraction",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 1769,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 2113,
+        "output_tokens_details": {
+          "reasoning_tokens": 99
+        },
+        "total_tokens": 3882
+      },
+      "wire_response_sha256": "1d71b752dc63acc6329fe522bd95321d8c9cd5fe65074fc2b29753687ddda26d"
+    }
+  ],
+  "schema_version": 1,
+  "semantic_validation": "not_performed",
+  "source_name": "procurement-ledger.csv",
+  "source_sha256": "c460de7492c3963d5d72b2ac05095b6d7bc41cfca65e04e2f79e8a9e2aa41341",
+  "status": "complete",
+  "project_endpoint_sha256": "e927c13464f0e7364b50ca2f6b52b03a26ef7c29befd6be31da01944f3ebbd40",
+  "public_redactions": [
+    "project_endpoint"
+  ],
+  "original_receipt_sha256": "727eeec190ffd48c921339baae3be464fb46f7cdac0ace6b9e97432780538e65"
+}

@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "dataset_id": "realistic-relations-dev-20261019-v1",
+  "gold_sha256": "58e4024fc33762559808120f13f08b32c96cedb70951a4e645a08ae2485b6f66",
+  "documents": [
+    {
+      "source": "operations-review.md",
+      "source_sha256": "999dd26a6203178306b4e53374c484afe37d90447bc53083027329684aa62842",
+      "bundle_package_id": "urn:sr:narrative:beb9ec380a80a0c916db64b315b6d126677a303c7a855ffa043f21bff5a913f7",
+      "tuple_metrics": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 10,
+        "expected": 10
+      },
+      "literal_value_metrics": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 7,
+        "expected": 7
+      },
+      "unexpected_tuples": [],
+      "missing_tuples": [],
+      "context_complete": 10,
+      "context_expected": 10,
+      "context_rows": [
+        {
+          "subject": "住民窓口刷新",
+          "predicate": "managedBy",
+          "object": "市民サービス課",
+          "status": "asserted",
+          "required_lines": [
+            4,
+            8,
+            10
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "住民窓口刷新",
+          "predicate": "supportedBy",
+          "object": "デジタル推進室",
+          "status": "asserted",
+          "required_lines": [
+            4,
+            8,
+            10
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "住民窓口刷新",
+          "predicate": "approvedBy",
+          "object": "政策調整会議",
+          "status": "asserted",
+          "required_lines": [
+            4,
+            8,
+            10
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "給付申請オンライン化",
+          "predicate": "managedBy",
+          "object": "福祉企画課",
+          "status": "asserted",
+          "required_lines": [
+            4,
+            8,
+            11
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "給付申請オンライン化",
+          "predicate": "supportedBy",
+          "object": "外部事業者",
+          "status": "denied",
+          "required_lines": [
+            4,
+            8,
+            11
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "給付申請オンライン化",
+          "predicate": "approvedBy",
+          "object": null,
+          "status": "ambiguous",
+          "required_lines": [
+            4,
+            8,
+            11
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "住民窓口刷新",
+          "predicate": "budgetAmount",
+          "object": "12,500",
+          "status": "asserted",
+          "required_lines": [
+            4,
+            14,
+            15,
+            17
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "給付申請オンライン化",
+          "predicate": "budgetAmount",
+          "object": null,
+          "status": "unknown",
+          "required_lines": [
+            4,
+            14,
+            15,
+            18
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "住民窓口刷新",
+          "predicate": "managedBy",
+          "object": "総務課",
+          "status": "asserted",
+          "required_lines": [
+            21
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "住民窓口刷新",
+          "predicate": "managedBy",
+          "object": null,
+          "status": "ambiguous",
+          "required_lines": [
+            22
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        }
+      ]
+    },
+    {
+      "source": "procurement-ledger.csv",
+      "source_sha256": "c460de7492c3963d5d72b2ac05095b6d7bc41cfca65e04e2f79e8a9e2aa41341",
+      "bundle_package_id": "urn:sr:narrative:ee7778fd5feffb286daa02bd4feab640d0f8e74eddcc06b52e50ecbc5e6d1ff5",
+      "tuple_metrics": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 7,
+        "expected": 7
+      },
+      "literal_value_metrics": {
+        "tp": 6,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 6,
+        "expected": 6
+      },
+      "unexpected_tuples": [],
+      "missing_tuples": [],
+      "context_complete": 7,
+      "context_expected": 7,
+      "context_rows": [
+        {
+          "subject": "防災通知連携",
+          "predicate": "managedBy",
+          "object": "危機管理課",
+          "status": "asserted",
+          "required_lines": [
+            2
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "防災通知連携",
+          "predicate": "supportedBy",
+          "object": "デジタル推進室",
+          "status": "asserted",
+          "required_lines": [
+            2
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "防災通知連携",
+          "predicate": "approvedBy",
+          "object": "危機管理会議",
+          "status": "asserted",
+          "required_lines": [
+            2
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "防災通知連携",
+          "predicate": "budgetAmount",
+          "object": "4,800",
+          "status": "asserted",
+          "required_lines": [
+            2
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "学校施設予約",
+          "predicate": "managedBy",
+          "object": "教育施設課",
+          "status": "asserted",
+          "required_lines": [
+            3
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "学校施設予約",
+          "predicate": "approvedBy",
+          "object": null,
+          "status": "unknown",
+          "required_lines": [
+            3
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        },
+        {
+          "subject": "学校施設予約",
+          "predicate": "budgetAmount",
+          "object": "0",
+          "status": "asserted",
+          "required_lines": [
+            3
+          ],
+          "exact_tuple_occurrences": 1,
+          "context_complete": true
+        }
+      ]
+    }
+  ],
+  "tuple_totals": {
+    "tp": 17,
+    "fp": 0,
+    "fn": 0,
+    "predicted": 17,
+    "expected": 17
+  },
+  "context_complete": 17,
+  "context_expected": 17,
+  "limitations": [
+    "Authored synthetic development set, not held-out or real-world accuracy.",
+    "Context coverage checks fixed required source units, not every semantic implication.",
+    "Literal-value matches alone do not establish correct row, subject, predicate or status association.",
+    "No Foundry managed evaluation, retrieval, publication or downstream agent QA is performed."
+  ]
+}

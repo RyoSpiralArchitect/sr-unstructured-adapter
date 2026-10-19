@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "planned_requests": 4,
+  "completed_requests": 4,
+  "instructions_versions": {
+    "baseline": 1,
+    "contextual": 2
+  },
+  "run_order": [
+    "baseline",
+    "contextual"
+  ],
+  "calls_per_document_per_version": 1,
+  "automatic_retries": 0,
+  "publication": "not_performed",
+  "monetary_cost": null,
+  "monetary_cost_status": "unknown_account_billing_rate_not_verified",
+  "python": "3.13.13",
+  "packages": {
+    "pydantic": "2.14.1",
+    "httpx": "0.28.1",
+    "Pillow": "12.3.0",
+    "azure-identity": "1.26.0"
+  },
+  "arms": {
+    "baseline": {
+      "usage": {
+        "input_tokens": 4731,
+        "output_tokens": 3997,
+        "total_tokens": 8728,
+        "cached_input_tokens": 0
+      },
+      "response_models": [
+        "gpt-5.5"
+      ],
+      "scores": "baseline-score.json"
+    },
+    "contextual": {
+      "usage": {
+        "input_tokens": 5393,
+        "output_tokens": 5501,
+        "total_tokens": 10894,
+        "cached_input_tokens": 0
+      },
+      "response_models": [
+        "gpt-5.5"
+      ],
+      "scores": "contextual-score.json"
+    }
+  },
+  "only_request_difference": "system extraction instructions",
+  "claim_ceiling": "Authored two-format development check; no held-out, real-world, OCR, retrieval, or direct-VLM superiority claim."
+}
