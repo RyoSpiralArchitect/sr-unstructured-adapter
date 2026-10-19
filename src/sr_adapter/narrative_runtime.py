@@ -9,7 +9,7 @@ import httpx
 
 from .knowledge import sha256
 from .knowledge_store import atomic_json
-from .narrative import (NarrativeOntology, _json_response, extraction_request,
+from .narrative import (EXTRACTION_INSTRUCTIONS_VERSION, NarrativeOntology, _json_response, extraction_request,
                         render_narrative, save_narrative, transcription_request)
 from .relation_sources import read_source
 from .tables import canonical_json
@@ -27,18 +27,21 @@ def project_endpoint(value: str) -> str:
 
 def extract_narrative(source_path: str | Path, *, ontology: NarrativeOntology, endpoint: str,
                       model: str, destination: str | Path, execute: bool = False,
-                      credential=None, transport=None) -> dict:
+                      credential=None, transport=None,
+                      instructions_version: int = EXTRACTION_INSTRUCTIONS_VERSION) -> dict:
     endpoint = project_endpoint(endpoint)
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", model):
         raise ValueError("Invalid model deployment name")
     path = Path(source_path)
     data = path.read_bytes()
     source = read_source(data, path.name)
+    planned_extraction = extraction_request(source, ontology, model, instructions_version=instructions_version)
     root = Path(destination)
     root.mkdir(parents=True, exist_ok=False)
     receipt = {"schema_version": 1, "status": "prepared", "project_endpoint": endpoint,
         "model_deployment": model, "source_name": path.name, "source_sha256": sha256(data),
         "ontology_sha256": sha256(canonical_json(ontology.model_dump(mode="json"))),
+        "instructions_version": instructions_version,
         "planned_model_requests": 2 if source["needs_transcription"] else 1,
         "automatic_retries": 0, "requests": [], "publication": "not_performed"}
     receipt_path = root / "receipt.json"
@@ -46,7 +49,7 @@ def extract_narrative(source_path: str | Path, *, ontology: NarrativeOntology, e
     (root / "source.bin").write_bytes(data)
     atomic_json(root / "ontology.json", ontology.model_dump(mode="json"))
     first = (transcription_request(data, source, model) if source["needs_transcription"]
-             else extraction_request(source, ontology, model))
+             else planned_extraction)
     atomic_json(root / "planned-request.json", first)
     if not execute:
         return receipt
@@ -81,9 +84,9 @@ def extract_narrative(source_path: str | Path, *, ontology: NarrativeOntology, e
             if source["needs_transcription"]:
                 transcription_response = send("transcription", first)
                 source = read_source(data, path.name, transcription=_json_response(transcription_response))
-            raw = send("extraction", extraction_request(source, ontology, model))
+            raw = send("extraction", extraction_request(source, ontology, model, instructions_version=instructions_version))
         manifest, files = render_narrative(data=data, source_name=path.name, ontology=ontology, model=model,
-            response=raw, transcription_response=transcription_response)
+            response=raw, transcription_response=transcription_response, instructions_version=instructions_version)
         save_narrative(root / "bundle", manifest, files)
         receipt.update(status="complete", package_id=manifest["package_id"], assertion_count=manifest["assertion_count"],
             bundle_manifest_sha256=sha256((root / "bundle/manifest.json").read_bytes()), semantic_validation="not_performed")

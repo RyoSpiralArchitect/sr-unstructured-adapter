@@ -17,6 +17,15 @@ misread negation or a wrong predicate. Assess those separately against reviewed
 source material. `model_transcription_unverified` means the text came from a
 model reading an image; matching that transcript does not validate the pixels.
 
+New extractions use instruction version 2. It asks for the applicable table
+headers, unit captions, dates, scope and footnotes in each assertion's evidence,
+so a separated row retains the context needed to interpret its literal value.
+Numbers are not converted or combined with a separately printed unit. Empty
+cells remain absent; explicit zero, unknown and unresolved alternatives remain
+distinct. These are model instructions, not a guarantee of semantic correctness.
+The [realistic synthetic development check](relation-context-2026-10-19.md)
+scores correct values separately from correct relationships and context coverage.
+
 ## Run
 
 Install the Foundry authentication extra and use an existing authenticated Azure
@@ -102,6 +111,12 @@ Bundle verification re-extracts the saved original bytes, validates the complete
 model response, and regenerates CSV/assertions/cards without another model call.
 Changing derived rows and updating only their hashes is rejected. These hashes
 provide internal consistency, not a digital signature or proof of model origin.
+
+`extraction.json` records `instructions_version` for new bundles. A missing field
+selects the immutable original version 1 request, preserving older bundle bytes
+and their Foundry card IDs. Unsupported versions reject. `extract_narrative` and
+`extraction_request` accept an explicit `instructions_version=1` for a controlled
+baseline; the default is version 2. No model call is needed to replay either.
 
 Narrative Foundry handoffs use schema v3. Existing table handoffs retain their v1/v2
 byte representation and verifier. A single export accepts either table bundles

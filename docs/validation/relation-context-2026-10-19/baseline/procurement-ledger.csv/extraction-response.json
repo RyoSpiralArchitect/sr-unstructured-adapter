@@ -1,0 +1,228 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 12000,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "source_relations",
+      "schema": {
+        "$defs": {
+          "Candidate": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence": {
+                "items": {
+                  "$ref": "#/$defs/Quote"
+                },
+                "type": "array"
+              },
+              "object": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "predicate": {
+                "enum": [
+                  "managedBy",
+                  "supportedBy",
+                  "approvedBy",
+                  "budgetAmount"
+                ],
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "asserted",
+                  "denied",
+                  "unknown",
+                  "ambiguous"
+                ],
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "subject",
+              "predicate",
+              "object",
+              "status",
+              "evidence"
+            ],
+            "type": "object"
+          },
+          "Quote": {
+            "additionalProperties": false,
+            "properties": {
+              "quote": {
+                "type": "string"
+              },
+              "unit_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "unit_id",
+              "quote"
+            ],
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "assertions": {
+            "items": {
+              "$ref": "#/$defs/Candidate"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "assertions"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_00ce771505315eae016ad57da94848819785badc52f478dd0d",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792376233,
+  "completed_at": 1792376245,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "reasoning",
+      "id": "rs_00ce771505315eae016ad57daa406c81978b89fdaeaee860ed",
+      "response_id": "resp_00ce771505315eae016ad57da94848819785badc52f478dd0d",
+      "encrypted_content": "gAAAAABq1X21oeQ8AasqvEIxgoNwT_O9Omnb6lfJn-lG9NETMb95tCn69QS3KLTSvUU2qhXklnFPHbMvNBHA6bp7qWZbsJ9u_h4xTYfxafUsBFuZVoErTNsT4kwcPI0K40qNhcPFLuH_GDpiVAQeJCn9vtgu57tf4imMcNyMOuvePpGyc3FMka2H2f_dGHIjJN-DjuwSsjyAP6UmoEow1u7Dx_wemK9wXiRm0Z9x2oWZFSmr1ZpLhUe4905q5OXcRmubDIQpZWeDF1JRUWLomqXZ-IK5D9tzPVFzFyeTWYnYGMcUGIuCPyTQo5axrK46ajZxMjNm9hnVkkJ4qpFlB1_E4loMhOV0Wa6YruWTYC1QjRviIS99QwPvxFRLUhvggZmwdKP-pvbYxI42dcV33onvAeq0SGvKeCKThzRTAOfITnBWoxoo_37qfQJzymtmSLkz_ywMF_MZLmXPHHY-qKzMR892TCXckyIJXhsNHnl18rk4VjrVrjKomfTgPA296hWXUz0XAHsd7FWKHVECfVHSx9gCyZlTNVKrKbw9zps4UuuIEIjy7FN6N0PYrzjAlLcDuu88_xySOjQu-4zUCvMQ16kT9yDZshKVHlqfQ6gRIk8W99sxi74tsdZeV0eJ2NfVAxjy8VwWdLIDY_JnZhBPEbRaiNq89uXOIw8tOPUkiOOoc6S6JzvfkMZcH2kgpd9gFMp9hFI1r7EAWnAD0gTqeJ0z0uMlRhDUW-5I6-X60NKZk6FDun-Z4wuplx9xajx7LkXY7Q3oKMN_T7mjRpKAn14rX8h1EjukGvgLWzoWhuGfrLzTqk6iCq6npIg81FuElzpOw6kA7sP3VCAe2cQgiiHKRM2ANv8KFgsFY0JXfjvFYt0HjTnC2-wDXBGV6VpG-e2g6V5WM94HT7kCIpyAlOJXHELgXN2VuEvluFJxl4o77Le3E-d_fkpIbMOjpa6VE_ba5E3HIsT-WcbNkedSMC0pjg3SFJFu_W1_oHO0PeaPBXjFte-F2ua61VRXN6GlW9xfCWd_bXj7dzycN1uPku_xKYB6yxsM_7D-_ui3rKjLLlHWfVKGG-bJ61l39CK5hDm9em8eGPoD8tmKKrphBt5YgXMy8568_R6ngCMH-Czmdb1sqJQ365G6mSK5-QTqW9pw4gyED4UlQ1fRC9eGmy0VhT3A7pl36G2NqayMRbSfBiCbXj4gOVlM_JW7IBW5jkIwUjNId_wt89eK0Wzn25u-vy0aW6zgJSX3xj1smesGF-AzrVVd9DXH3eqmG9yk0_Xva09ZfhGs0zDsNA2hDopvzp6vCTcDh6zZ0yZ7l9x5SG9klyAde31AyyHo1RzFgwnDF5Y1dX-r1Esx2B8R9EWdsXL532fSfPAnRf3s6WGUG2n4XFqR_4xsEAkwXaGiFdd_oSquFwLT0w9Nv7r8do-hojTaxy3ftbHqPL026jsVyzlEgy_CK1G8thrrblTjv3yaozaOKR5-H4pvWzz-fUs8m_k1jT2cKOU-HS9PZ_LN1RhfRtGuXDFMJaJKdeXyNXxQconnXtNEOejxOLPKULUAzr8zhuwIinwOfVln_q4pLxwiC6-K6itE6lzqB6c_f2cWAjdnu2AlEibUpTZe1UWImuoSZZlnoK1z7vCfaqFXx97fFmNec4MN0nlgco59lPB2NHu2seJozLCfGhT27hAmNaaG_0jemtDrUJNlvhYYsIUf147F4L8-pn9K_eJ7FalPYQfxDeR-8Ozbtx5r04o2s6OadsSuVwRdOR__zejYb3nSsrY=",
+      "summary": [],
+      "content": []
+    },
+    {
+      "type": "message",
+      "id": "msg_00ce771505315eae016ad57dab87d48197b013dc4f704a24e2",
+      "response_id": "resp_00ce771505315eae016ad57da94848819785badc52f478dd0d",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"assertions\":[{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"防災通知連携\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"危機管理課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"デジタル推進室\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"危機管理会議\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"4,800\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"5,100,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算は千円、見積は円。予算と見積を取り違えない。\\\"}]}\",\"unit_id\":\"source-unit-d4169592c56c9f5f0791f5e352e2bfc8c8f48dba3ddceee76230869d321d9d95\"}],\"object\":\"危機管理課\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"防災通知連携\"},{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"防災通知連携\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"危機管理課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"デジタル推進室\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"危機管理会議\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"4,800\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"5,100,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算は千円、見積は円。予算と見積を取り違えない。\\\"}]}\",\"unit_id\":\"source-unit-d4169592c56c9f5f0791f5e352e2bfc8c8f48dba3ddceee76230869d321d9d95\"}],\"object\":\"デジタル推進室\",\"predicate\":\"supportedBy\",\"status\":\"asserted\",\"subject\":\"防災通知連携\"},{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"防災通知連携\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"危機管理課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"デジタル推進室\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"危機管理会議\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"4,800\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"5,100,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算は千円、見積は円。予算と見積を取り違えない。\\\"}]}\",\"unit_id\":\"source-unit-d4169592c56c9f5f0791f5e352e2bfc8c8f48dba3ddceee76230869d321d9d95\"}],\"object\":\"危機管理会議\",\"predicate\":\"approvedBy\",\"status\":\"asserted\",\"subject\":\"防災通知連携\"},{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"防災通知連携\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"危機管理課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"デジタル推進室\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"危機管理会議\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"4,800\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"5,100,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算は千円、見積は円。予算と見積を取り違えない。\\\"}]}\",\"unit_id\":\"source-unit-d4169592c56c9f5f0791f5e352e2bfc8c8f48dba3ddceee76230869d321d9d95\"}],\"object\":\"4,800\",\"predicate\":\"budgetAmount\",\"status\":\"asserted\",\"subject\":\"防災通知連携\"},{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"学校施設予約\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"教育施設課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"未定\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"0\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"1,600,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算0は無償実証として承認済み。支援担当の空欄は未記載であり未定ではない。\\\"}]}\",\"unit_id\":\"source-unit-fe143abcdaf73b43dd4dad3e92514cdc890eefb5a82eebb9a32b82334d8ae9e9\"}],\"object\":\"教育施設課\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"学校施設予約\"},{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"学校施設予約\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"教育施設課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"未定\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"0\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"1,600,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算0は無償実証として承認済み。支援担当の空欄は未記載であり未定ではない。\\\"}]}\",\"unit_id\":\"source-unit-fe143abcdaf73b43dd4dad3e92514cdc890eefb5a82eebb9a32b82334d8ae9e9\"}],\"object\":null,\"predicate\":\"approvedBy\",\"status\":\"unknown\",\"subject\":\"学校施設予約\"},{\"evidence\":[{\"quote\":\"{\\\"cells\\\":[{\\\"column\\\":1,\\\"header\\\":\\\"事業名\\\",\\\"value\\\":\\\"学校施設予約\\\"},{\\\"column\\\":2,\\\"header\\\":\\\"年度\\\",\\\"value\\\":\\\"令和8年度\\\"},{\\\"column\\\":3,\\\"header\\\":\\\"対象範囲\\\",\\\"value\\\":\\\"実証運用\\\"},{\\\"column\\\":4,\\\"header\\\":\\\"主担当\\\",\\\"value\\\":\\\"教育施設課\\\"},{\\\"column\\\":5,\\\"header\\\":\\\"支援担当\\\",\\\"value\\\":\\\"\\\"},{\\\"column\\\":6,\\\"header\\\":\\\"承認担当\\\",\\\"value\\\":\\\"未定\\\"},{\\\"column\\\":7,\\\"header\\\":\\\"承認済予算（千円）\\\",\\\"value\\\":\\\"0\\\"},{\\\"column\\\":8,\\\"header\\\":\\\"参考見積（円）\\\",\\\"value\\\":\\\"1,600,000\\\"},{\\\"column\\\":9,\\\"header\\\":\\\"備考\\\",\\\"value\\\":\\\"全て架空。予算0は無償実証として承認済み。支援担当の空欄は未記載であり未定ではない。\\\"}]}\",\"unit_id\":\"source-unit-fe143abcdaf73b43dd4dad3e92514cdc890eefb5a82eebb9a32b82334d8ae9e9\"}],\"object\":\"0\",\"predicate\":\"budgetAmount\",\"status\":\"asserted\",\"subject\":\"学校施設予約\"}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 1769,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 2113,
+    "output_tokens_details": {
+      "reasoning_tokens": 99
+    },
+    "total_tokens": 3882
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 5628,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 5610,
+        "check_offset": 0
+      }
+    }
+  ]
+}

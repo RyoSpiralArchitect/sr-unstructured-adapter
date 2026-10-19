@@ -1,0 +1,228 @@
+{
+  "metadata": {},
+  "top_logprobs": 0,
+  "temperature": 1,
+  "top_p": 0.98,
+  "service_tier": "default",
+  "prompt_cache_retention": "24h",
+  "model": "gpt-5.5",
+  "reasoning": {
+    "effort": "low",
+    "context": "current_turn",
+    "mode": "standard"
+  },
+  "background": false,
+  "max_output_tokens": 12000,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "source_relations",
+      "schema": {
+        "$defs": {
+          "Candidate": {
+            "additionalProperties": false,
+            "properties": {
+              "evidence": {
+                "items": {
+                  "$ref": "#/$defs/Quote"
+                },
+                "type": "array"
+              },
+              "object": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "predicate": {
+                "enum": [
+                  "managedBy",
+                  "supportedBy",
+                  "approvedBy",
+                  "budgetAmount"
+                ],
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "asserted",
+                  "denied",
+                  "unknown",
+                  "ambiguous"
+                ],
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "subject",
+              "predicate",
+              "object",
+              "status",
+              "evidence"
+            ],
+            "type": "object"
+          },
+          "Quote": {
+            "additionalProperties": false,
+            "properties": {
+              "quote": {
+                "type": "string"
+              },
+              "unit_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "unit_id",
+              "quote"
+            ],
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "assertions": {
+            "items": {
+              "$ref": "#/$defs/Candidate"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "assertions"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tools": [],
+  "tool_choice": "auto",
+  "truncation": "disabled",
+  "id": "resp_0cd4e6d1e734c573016ad57d97c0708197b45a9a12c2e65b58",
+  "object": "response",
+  "status": "completed",
+  "created_at": 1792376215,
+  "completed_at": 1792376228,
+  "error": null,
+  "incomplete_details": null,
+  "output": [
+    {
+      "type": "reasoning",
+      "id": "rs_0cd4e6d1e734c573016ad57d98bfc48197abd1a8e752e9e048",
+      "response_id": "resp_0cd4e6d1e734c573016ad57d97c0708197b45a9a12c2e65b58",
+      "encrypted_content": "gAAAAABq1X2k0ab1Pp5l9EdzAc7CKzPrtmRMxu2KKjIGKcgRbu0JpBk3yL74jL9mLx8sHD0aOTeLBYnnqyDPyl0VVjUlFHU6Ry40o1rKhUgQYrFcBApm6m42qUvfmLpu6UuKrVuUgjxJN2Qncrf9hnoFKQN6gAOh2Mv7CqR0XZy7BXAbzMv880rCP_eUmvV_tc3WRRgecaLU0qGEjSjJI8R2oCPxe_fOhYL6NGkZLfxIzOFZZ6ap0xvV3wpcGz5UCC4g-6g8RGMVKYssOO1RAcQ2iDOOS4TJy7ach6MfHt2ML8Za3u8gIHcVMEJTnSviPS8POAHkglY5sz4y1j-z7LPpWD0xxQt2IvJurKHQfxci7eTafu7D7_nQiSGyVLVXcHgoamsgPBJlchjkyQ3-fcbu9GrPrLB_8e_1N49AqGEdg7ujrPG9fvVLyIQnvYeFJbcjTBykb1E_5VycJKFNA06YzKtF7FX4JwRkgUHu2Q_U5rchMOjZMpo6uvNkpLiv-luiADY4iNw1rC6H26ygNaAtfvfWCAdAFAdy556Mjc_VsZTBLaj2NzX4cvfzttDlkVLneBKAlTiChyllwe9fLRJhqm_HuyIjUCNO7tyWJvrtYhbbMvTCktYaej1b9BxoKRoyQARejFADLhC3lEseES0R2KbVZMZtv0J13MVaQMS0qcnDNS-jWNjlZBOkJOFFbpZeSNsDrIAP9MBt1O4Q5DHmwev9KgTuBblboK6zAc_BCqGU86PGAFAaZK8V76nvcECjfwY6_Ac2KHFJCfG8UyDHdJQI2trAV02zQ7iaIhEkmiJKXs3BGJTVKYIPkL16UAZfgzv1hz02cWQ-JK2NyVg5dmybXHQKUIBysMfN3LovvU1-bpiBdJudf2IQVz2zEEzh0mF0-iX4TJ4_urYMtA6nfSxVNd7AjZ58HR8bEnLEqS1SXMq4pyNAqMqFwd225h675dw0JcORc5gFV92mnUESNnKknrMi6YGE3oqiKYT_NlNoakMUTh3imKtn3LLZJYfkDwJmunecBsezl3CGP341EZk-lWeVQyVMmtwVBck-58zgUWS923L-GBuMcptCR0qTQ2LUQOxGiNQZsKX6cAq4yT3wMivlkMMmRLNYMYi0rQEg2E2dEr2YqCodVFCry-gusVFn1d1xO9U1CnmcsOYUGtvCanjwtvZIC02IARs6d_sQJGaUVZehF7_zZQhnLgvlc3vQyR1VFE3b_jKd0gQUpKx6-R7mHiZXgfUSwqF0ZwBtErDL1-OvSeXAeg4ibsDbgV7gdUjp54bWYMAvOsyjEyJCzTOjbZRQR54eOOPOJWnatmXsjleYtSQGVGSYpt333bKkAHYpdW7V5j2O4aB7KbDy3y17DoAqeR8_I9PPEolFGzhStlguYXxgQj9ERy-PAU84yHjdfOaZ1Eshg4EvNYNH1hooiOKkYryGddWsbqAYbqLmLkqr755MbqvMpQgOxJ-988HT8c5OGuZ33Xj33RPuUf22RZZKZhBbt2wTtZqcJysnWjLM1zf4iZ0poP2djYKEKigYKyH-ulJCtMLuIXSqsKEHk1USmm4hvcckvdwGhcArEEdhQ4AuavmwW2wz4MYtQFyeH5J8ILtlm6TaelztWRNK4ZgXh8tHze6kdTjH97WvvqODs8BAEYXLuvMeNY2v1P8ZMS83BRhosOfdg8nYkt5NW-fj3IKKITqDTsGKNilG4jggPSMifqSDswhRLRt9KOaB8JuIF1i9EMslycnTI5cwii-eVa_7gV1lFWNLBSsW8LQeH_ykEb0Oi0NhSKjVLROClHriiZPQcW9AYGGXd5AqBRi57ovRpyioTkQ3dHjetGw9gJ0lvtuAi0gM-0eu7hcRWnXiJpucFi14MhxDe8PWA_E7wEjccArV7H1kedWITV6iDy-X9n8xdFUR4fUvPs_6PXkChoiIy1TfKgAlawyzcgy8TT8DBU0s2w6EhWXlT8SLloWrGl9fTl1XFBbWvrKkqtoxinxomqbgjcJ-SaYCM50JsCXBBPp7gJoEHVIX2OjKdlRgnMLnwjC_9Y-utxpwogU8Co7bnurRFpuJSolHA4bX14OZgHy1mWIeSnDoeC1eW9WSsWJKif6yOVpYZDqRDwaNDxNVpauCAJrxAsQSxRsrDPjK7N7Re2g9EvOhuIn9jb-4iWo8QoBuigaVVPxFT0d4g8yJNlp5JNE_ypjeKuNFoWDqTmudPqcdcZKg79UTMsil4JxGg0GXl4UCoYHhQe-gRmGplMS7XSCDBQ-Qjwzui2qV4qO7AzGfTdPjSyzGKdF7ELDMuJsXS0XiEaJGGHKFFlg44snFvcj3Qr3FoJUUOxPVyvldemmxzhqLBjtj_zjCoENZS2DtSjy4S2VmRHRfEN7c1NJ9FORgET0lRJI4iyNE0EiuNJAz867LQ92HWb6YgE_A1KkiNc4CVGP_gvCB05JFddYjnVoUa39nXyOk3twwqzZ1FKDTkH5H2Q09f3xhr6Cl2iHzrFMsSaKt0NbRiGYogeGdZwVKc1yDxl4IjqJ0SSV4ruhJhM9b_J8DnYE4Kokg5MZJMA4DFQP-76GHBhvXNlVXtV5GbaF48M9ig5e_bgIPKF7iy_qmbt85dvsXAE6xZvX5piFf3T8eoGpJMxRUE_JBabr4qYsvCKXWdr5kCvpoXebrSVBesaeLsuyA6Yy7QrMPAiAiGhu71KdcixO2ghaKYjBzkuxNV6kEwNYNy2N2EqbtK0tO2WyD8CpBPSN5uj1drdNuXBNOh25aayGce7d8h2Vf2NSoTbbPQ0nXoZpy9HPrxbqzP-ji_j8pZGbfsc3WEMbIHsspseGbgRVfaMa3WvVUb19xAJHsLIEQ5IdJ0Q6b4SnHg5vRFymGJWdL00nUB4nCFyoLrIv4So6_6y2T-dphWfJCOZxeJ07BQivkfbs5LqTrcK_q-k8ea7FEkFUZWlTmQEgyAhECzSVlGUGzp0uv3Sg_scH0v4szLBZ5MWUBhIcfN48MvfK4DIzSRMsbrbuykWvwfbIHyiE9G0Z2NVlDw7l7PSdNQWMDPXvGAOPtCRZ4KarJlZXz2e-5Napvued3cLEh06x3r9RhLp6_I5gh-lZb67qEUq32LH4SARt6gqMQ5ECAnTp1Q1y_hFsVMlt9ltHmLeeo-JEoub-vdOz3ijp2EZ-vUSZsncgjbKjO66RNc00BCDiX-zDokNNPFe2ZPZ_VmZgcROPFzZGi_ulb5Hol59u9ygUeFR3DfiBZGx4SPapC3To32NRaFPj9zdWiybMjJ5O0GpuFRMyK7LVzmLwBItPEn5AZHIebDNDBN-2kPYJa-pC4SDlmCrrNV7HZNOtITqFOSfcmi_L5IRbUarSCRQZQbb-ZWGBrjwJzWd7B74MM3OHRXOWaG0DsTdtfOQkYz3-jhKq4iXd1D4il5yzK6ywj4iw_qjyUOOD5MuT_iAu5UBRYJijwQMIMT9zkhS2XYwOs0UlqwSabdQYghdpt11rHrHLAeaD2afoY73QJDX_QIUoUy7t-8JSLG6Ha6XPL0AZSEfiaivAAS69bAE6tA8l9EL99O8un6AhtHCvdpYO7DZseOVaZCfrIhm3tJdhu8_KBAwk4gX-eTMrqOdesPiofNCTby0M4ttV0SnMsgrzl2Sx60DS7WsY90Jq3vhWudfLDLztHSsptFxoQ4Vu6ir8knvi0M9xolK5YdYLjAhg=",
+      "summary": [],
+      "content": []
+    },
+    {
+      "type": "message",
+      "id": "msg_0cd4e6d1e734c573016ad57d9d348c8197a0c40005f5f59e34",
+      "response_id": "resp_0cd4e6d1e734c573016ad57d97c0708197b45a9a12c2e65b58",
+      "phase": "final_answer",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"assertions\":[{\"evidence\":[{\"quote\":\"| 住民窓口刷新 | 市民サービス課 | デジタル推進室 | 政策調整会議 |\",\"unit_id\":\"source-unit-1ff9fcebda39f75b3239fff584d6a69ddbba9a42147bfd73587c7c9d3c5d5032\"}],\"object\":\"市民サービス課\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"住民窓口刷新\"},{\"evidence\":[{\"quote\":\"| 住民窓口刷新 | 市民サービス課 | デジタル推進室 | 政策調整会議 |\",\"unit_id\":\"source-unit-1ff9fcebda39f75b3239fff584d6a69ddbba9a42147bfd73587c7c9d3c5d5032\"}],\"object\":\"デジタル推進室\",\"predicate\":\"supportedBy\",\"status\":\"asserted\",\"subject\":\"住民窓口刷新\"},{\"evidence\":[{\"quote\":\"| 住民窓口刷新 | 市民サービス課 | デジタル推進室 | 政策調整会議 |\",\"unit_id\":\"source-unit-1ff9fcebda39f75b3239fff584d6a69ddbba9a42147bfd73587c7c9d3c5d5032\"}],\"object\":\"政策調整会議\",\"predicate\":\"approvedBy\",\"status\":\"asserted\",\"subject\":\"住民窓口刷新\"},{\"evidence\":[{\"quote\":\"| 給付申請オンライン化 | 福祉企画課 | 外部事業者は支援担当ではない | 審査部会または政策調整会議（未決定） |\",\"unit_id\":\"source-unit-b17f63505fa4f5f7d9653028b0f4146fdc401ce428976dbb9906b1270d11578b\"}],\"object\":\"福祉企画課\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"給付申請オンライン化\"},{\"evidence\":[{\"quote\":\"| 給付申請オンライン化 | 福祉企画課 | 外部事業者は支援担当ではない | 審査部会または政策調整会議（未決定） |\",\"unit_id\":\"source-unit-b17f63505fa4f5f7d9653028b0f4146fdc401ce428976dbb9906b1270d11578b\"}],\"object\":\"外部事業者\",\"predicate\":\"supportedBy\",\"status\":\"denied\",\"subject\":\"給付申請オンライン化\"},{\"evidence\":[{\"quote\":\"| 給付申請オンライン化 | 福祉企画課 | 外部事業者は支援担当ではない | 審査部会または政策調整会議（未決定） |\",\"unit_id\":\"source-unit-b17f63505fa4f5f7d9653028b0f4146fdc401ce428976dbb9906b1270d11578b\"}],\"object\":null,\"predicate\":\"approvedBy\",\"status\":\"ambiguous\",\"subject\":\"給付申請オンライン化\"},{\"evidence\":[{\"quote\":\"次表の金額単位は千円。承認済予算と参考見積は別の値であり、参考見積を予算に転記しない。\",\"unit_id\":\"source-unit-aeb442bd3d08b59095c3cb78b1121cfd0221397998aed67a0408b0bf477d296f\"},{\"quote\":\"| 住民窓口刷新 | 12,500 | 13,200 | 消費税込み。令和8年度の上限額。 |\",\"unit_id\":\"source-unit-3debf772589e8670c97a67af08858aa5d9276d5b1ade8e671286774b27bafe96\"}],\"object\":\"12,500\",\"predicate\":\"budgetAmount\",\"status\":\"asserted\",\"subject\":\"住民窓口刷新\"},{\"evidence\":[{\"quote\":\"次表の金額単位は千円。承認済予算と参考見積は別の値であり、参考見積を予算に転記しない。\",\"unit_id\":\"source-unit-aeb442bd3d08b59095c3cb78b1121cfd0221397998aed67a0408b0bf477d296f\"},{\"quote\":\"| 給付申請オンライン化 | 未定 | 8,400 | 参考見積のみ受領。未定を0と扱わない。 |\",\"unit_id\":\"source-unit-1f766cff6dd84e467cba585524d18deec125a38b57efd82c726da64fa70e27c1\"}],\"object\":null,\"predicate\":\"budgetAmount\",\"status\":\"unknown\",\"subject\":\"給付申請オンライン化\"},{\"evidence\":[{\"quote\":\"【旧版・2026年6月30日時点】住民窓口刷新の主担当は総務課であった。この記載は旧体制の履歴であり、現行体制を上書きしない。\",\"unit_id\":\"source-unit-e7759ddfe4f8d301a5351810ca7c01d564b3511ec1557e88260c5b1d098b9aab\"}],\"object\":\"総務課\",\"predicate\":\"managedBy\",\"status\":\"asserted\",\"subject\":\"住民窓口刷新\"},{\"evidence\":[{\"quote\":\"住民窓口刷新の主担当は、2027年4月の本格運用への移行が承認された場合に限り、運用管理課に移す予定である。移行承認は未了であり、運用管理課への移管は未決定である。\",\"unit_id\":\"source-unit-1158085c3e654def727bb7c8396cb26b48955685a479f99ba27c43969a4520bb\"}],\"object\":null,\"predicate\":\"managedBy\",\"status\":\"ambiguous\",\"subject\":\"住民窓口刷新\"},{\"evidence\":[{\"quote\":\"給付申請オンライン化の承認担当は未決定であり、審査部会と政策調整会議の候補を確定した組織として列挙しない。\",\"unit_id\":\"source-unit-2050fd18186e608ac9cc6ee29aee685f22931b2f0ed2658939ea8683d9f727cb\"}],\"object\":null,\"predicate\":\"approvedBy\",\"status\":\"unknown\",\"subject\":\"給付申請オンライン化\"}]}",
+          "annotations": [],
+          "logprobs": []
+        }
+      ],
+      "status": "completed"
+    }
+  ],
+  "instructions": null,
+  "usage": {
+    "input_tokens": 2962,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens": 1884,
+    "output_tokens_details": {
+      "reasoning_tokens": 399
+    },
+    "total_tokens": 4846
+  },
+  "parallel_tool_calls": true,
+  "agent_reference": null,
+  "content_filters": [
+    {
+      "blocked": false,
+      "source_type": "prompt",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 7947,
+        "check_offset": 0
+      }
+    },
+    {
+      "blocked": false,
+      "source_type": "completion",
+      "content_filter_results": {
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "protected_material_text": {
+          "filtered": false,
+          "detected": false
+        },
+        "protected_material_code": {
+          "filtered": false,
+          "detected": false
+        }
+      },
+      "content_filter_raw": [],
+      "content_filter_offsets": {
+        "start_offset": 0,
+        "end_offset": 4758,
+        "check_offset": 0
+      }
+    }
+  ]
+}
