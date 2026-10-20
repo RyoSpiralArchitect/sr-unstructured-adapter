@@ -198,3 +198,89 @@ Official protocol references: [OneLake access and authentication](https://learn.
 [managed-folder restrictions](https://learn.microsoft.com/en-us/fabric/onelake/onelake-api-parity),
 [schema-scoped table loading](https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/tables/load-schema-table%28beta%29),
 and [Delta metadata API](https://learn.microsoft.com/en-us/fabric/onelake/table-apis/delta-table-apis-get-started).
+
+## Diagram images as ordinary tables
+
+The opt-in image workflow preserves visible labels, approximate image regions, table
+roles, labeled ownership percentages, connector uncertainty and legend context. It
+uses an explicitly selected Foundry deployment and never publishes to Search.
+
+```bash
+sr-adapt knowledge visual diagram.png --page-label 55 \
+  --project-endpoint https://YOUR.services.ai.azure.com/api/projects/YOUR_PROJECT \
+  --model YOUR_DEPLOYMENT --out image-candidates --execute
+sr-adapt knowledge fabric image-candidates --mode visual \
+  --target target.json --out image-tables
+sr-adapt knowledge fabric-publish image-tables --target target.json \
+  --receipt publication.json --execute
+sr-adapt knowledge fabric-status image-tables --target target.json \
+  --receipt publication.json
+```
+
+Omit `--execute` to save an inference plan without a model call. `visual` accepts
+PNG, JPEG and single-frame WebP (16 MiB, 16 million pixels, 16,384 pixels per side;
+EXIF orientation must already be normalized). Run each image separately; the Fabric
+export accepts up to 20 completed candidate folders. Page labels are caller-supplied
+provenance, not automatic verification of slide numbering.
+
+The default `--strategy grounded` first inventories labeled items, then sends the
+**same image again** with that inventory to propose relations. `--strategy direct`
+provides a one-call comparator with the same image, deployment and final candidate
+schema. The strategies have different call/token budgets; a single comparison is
+exploratory and does not establish an accuracy improvement.
+
+Five ordinary Parquet tables use scalar string/integer columns only:
+
+| Table | Content |
+| --- | --- |
+| `images` | Image hash/name, page label, dimensions, strategy, model and extraction status |
+| `items` | Occurrence-scoped IDs, literal labels, proposed types and image regions |
+| `relations` | Subject/predicate/object, literal qualification, direction, support, review status |
+| `evidence` | One row per relation/item link with the item's label and region |
+| `limitations` | Reported reading and interpretation limitations |
+
+An optional `--review review.json` on `knowledge fabric --mode visual` adds a sixth
+scalar `reviews` table. A finding may flag an image coverage gap, an item reading,
+or a relation interpretation. Item findings also flag relations citing that item;
+the original label and raw response remain intact. This records review concerns,
+not automatic corrections or approvals. The reviewer identity must be explicit
+(for example `assistant_visual_spot_check`, not `human` for an agent review).
+
+```json
+{"version":1,"reviewer":"assistant_visual_spot_check","findings":[
+  {"package_id":"<package hash from extraction receipt>","reference_kind":"item",
+   "reference_id":"n12","finding":"text_mismatch","detail":"The company label needs another reading."}
+]}
+```
+
+`reference_kind` is `image`, `item`, or `relation`; image references use null.
+`finding` is `text_mismatch`, `unsupported_relation`, `ambiguous_relation`, or
+`coverage_gap`. References are checked against the selected packages, included in
+the snapshot hash and replayed during verification. Flagged relations have
+`review_status=model_candidate_needs_review`; all other relations remain unreviewed.
+
+All coordinates are model-proposed integers on a 0–1000 scale, origin at top left.
+They are **not native PowerPoint geometry**. Text readings, box coordinates, color
+matching and relationship interpretations remain unreviewed model candidates.
+`support=explicit` means the model reported explicit support; it is not an independent
+verification. Every relation retains `review_status=unreviewed_model_candidate`.
+Matching text never automatically merges occurrences or entities across images.
+Numeric annotations remain literal strings, preserving `約`, `%`, units and explicit
+zero; no percentage or headcount arithmetic is performed.
+
+The exporter verifies endpoint/evidence references, literal value inclusion and exact
+replay from saved requests/responses. It rejects incomplete/refused output and altered
+projections. These are structural checks, **not visual correctness or semantic accuracy
+checks**. Empty tables retain their local schema but are not submitted for loading.
+
+Original selected images, raw model responses, request contracts and verification
+manifests accompany the scalar tables in the same immutable OneLake snapshot. JSON
+is used only for internal provenance/receipts, not for nested table payload columns.
+This publishes the selected images to the explicitly configured Fabric workspace;
+keep sensitive exports and source data out of public Git repositories. There are no
+hidden retries; an uncertain transport result is retained as `unknown` and must be
+inspected before explicitly starting a separate run.
+
+Inference follows the [Foundry structured-output Responses contract](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/structured-outputs?view=foundry-classic).
+Publication reuses the existing [Fabric schema-scoped Parquet load](https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/tables/load-schema-table%28beta%29)
+and exact Delta readback workflow.

@@ -24,6 +24,14 @@ def add_parser(subparsers):
     narrative.add_argument("--model", required=True)
     narrative.add_argument("--out", required=True, type=Path)
     narrative.add_argument("--execute", action="store_true")
+    visual = commands.add_parser("visual", help="Extract unreviewed image relation candidates with visual regions")
+    visual.add_argument("source", type=Path)
+    visual.add_argument("--project-endpoint", required=True)
+    visual.add_argument("--model", required=True)
+    visual.add_argument("--page-label", required=True)
+    visual.add_argument("--strategy", choices=("grounded", "direct"), default="grounded")
+    visual.add_argument("--out", required=True, type=Path)
+    visual.add_argument("--execute", action="store_true")
     sqlite = commands.add_parser("sqlite", help="Atomically insert a verified bundle into SQLite")
     sqlite.add_argument("bundle", type=Path)
     sqlite.add_argument("--database", type=Path, required=True)
@@ -58,10 +66,11 @@ def add_parser(subparsers):
     fabric.add_argument("bundles", nargs="+", type=Path)
     fabric.add_argument("--out", required=True, type=Path)
     fabric.add_argument("--target", required=True, type=Path)
-    fabric.add_argument("--mode", choices=("knowledge", "tabular"), default="knowledge",
-                        help="tabular: scalar columns from selected native PPTX slides, without model inference")
+    fabric.add_argument("--mode", choices=("knowledge", "tabular", "visual"), default="knowledge",
+                        help="tabular: native PPTX slides; visual: saved image candidates, all scalar columns")
     fabric.add_argument("--slides", nargs="+", type=int, help="One-based physical PPTX slide numbers (tabular mode)")
     fabric.add_argument("--page-labels", nargs="+", help="Optional printed page labels, aligned with --slides")
+    fabric.add_argument("--review", type=Path, help="Optional review findings JSON (visual mode only; exports scalar review rows)")
     for command in ("fabric-publish", "fabric-status"):
         fabric_action = commands.add_parser(command, help="Publish or inspect an explicit Fabric snapshot receipt")
         fabric_action.add_argument("bundle", type=Path)
@@ -85,6 +94,10 @@ def handle(args):
             from .narrative_runtime import extract_narrative
             result = extract_narrative(args.source, ontology=NarrativeOntology.model_validate_json(args.ontology.read_bytes()),
                 endpoint=args.project_endpoint, model=args.model, destination=args.out, execute=args.execute)
+        elif args.knowledge_command == "visual":
+            from .visual_runtime import extract_visual
+            result = extract_visual(args.source, args.out, endpoint=args.project_endpoint, model=args.model,
+                page_label=args.page_label, strategy=args.strategy, execute=args.execute)
         elif args.knowledge_command == "sqlite":
             result = write_sqlite(args.bundle, args.database)
         elif args.knowledge_command == "adls":
@@ -115,6 +128,8 @@ def handle(args):
         elif args.knowledge_command == "fabric":
             from .fabric import FabricTarget, export_fabric
             target = FabricTarget.model_validate_json(args.target.read_bytes())
+            if args.review is not None and args.mode != "visual":
+                raise ValueError("Review findings require --mode visual")
             if args.mode == "tabular":
                 from .fabric_tabular import export_tabular
                 if len(args.bundles) != 1 or args.bundles[0].suffix.lower() != ".pptx":
@@ -124,7 +139,12 @@ def handle(args):
             else:
                 if args.slides is not None or args.page_labels is not None:
                     raise ValueError("Slide selection requires --mode tabular")
-                result = export_fabric(args.bundles, args.out, target=target)
+                if args.mode == "visual":
+                    from .fabric_visual import export_visual
+                    result = export_visual(args.bundles, args.out, target=target,
+                                           review=json.loads(args.review.read_bytes()) if args.review else None)
+                else:
+                    result = export_fabric(args.bundles, args.out, target=target)
         elif args.knowledge_command in {"fabric-publish", "fabric-status"}:
             from .fabric import FabricTarget
             from .fabric_runtime import fabric_status, publish_fabric
