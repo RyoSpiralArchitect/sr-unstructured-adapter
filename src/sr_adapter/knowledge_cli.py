@@ -58,6 +58,10 @@ def add_parser(subparsers):
     fabric.add_argument("bundles", nargs="+", type=Path)
     fabric.add_argument("--out", required=True, type=Path)
     fabric.add_argument("--target", required=True, type=Path)
+    fabric.add_argument("--mode", choices=("knowledge", "tabular"), default="knowledge",
+                        help="tabular: scalar columns from selected native PPTX slides, without model inference")
+    fabric.add_argument("--slides", nargs="+", type=int, help="One-based physical PPTX slide numbers (tabular mode)")
+    fabric.add_argument("--page-labels", nargs="+", help="Optional printed page labels, aligned with --slides")
     for command in ("fabric-publish", "fabric-status"):
         fabric_action = commands.add_parser(command, help="Publish or inspect an explicit Fabric snapshot receipt")
         fabric_action.add_argument("bundle", type=Path)
@@ -110,7 +114,17 @@ def handle(args):
             result = publish_foundry(args.bundle, target=FoundryTarget.model_validate_json(args.target.read_bytes()), receipt=args.receipt)
         elif args.knowledge_command == "fabric":
             from .fabric import FabricTarget, export_fabric
-            result = export_fabric(args.bundles, args.out, target=FabricTarget.model_validate_json(args.target.read_bytes()))
+            target = FabricTarget.model_validate_json(args.target.read_bytes())
+            if args.mode == "tabular":
+                from .fabric_tabular import export_tabular
+                if len(args.bundles) != 1 or args.bundles[0].suffix.lower() != ".pptx":
+                    raise ValueError("Tabular mode requires one PPTX and explicit --slides")
+                result = export_tabular(args.bundles[0], args.out, target=target,
+                                        slides=args.slides, page_labels=args.page_labels)
+            else:
+                if args.slides is not None or args.page_labels is not None:
+                    raise ValueError("Slide selection requires --mode tabular")
+                result = export_fabric(args.bundles, args.out, target=target)
         elif args.knowledge_command in {"fabric-publish", "fabric-status"}:
             from .fabric import FabricTarget
             from .fabric_runtime import fabric_status, publish_fabric

@@ -1,5 +1,79 @@
 # Grounded knowledge in an existing Fabric lakehouse
 
+## Native PowerPoint as ordinary tables
+
+For a diagram whose labels and connectors are native PowerPoint objects, use
+`--mode tabular`. This mode needs no model call or ontology mapping. It produces
+ordinary string, integer and boolean columns in Parquet, then loads Delta tables
+through the same explicit publisher and readback checks described below. There
+are no `payload_json`, `evidence_json`, array or nested columns to unpack in SQL.
+
+```bash
+sr-adapt knowledge fabric architecture.pptx --mode tabular \
+  --slides 57 58 --page-labels 56 57 \
+  --target fabric-target.json --out artifacts/architecture-tables
+sr-adapt knowledge fabric-publish artifacts/architecture-tables \
+  --target fabric-target.json --receipt artifacts/architecture-attempt-01.json --execute
+sr-adapt knowledge fabric-status artifacts/architecture-tables \
+  --target fabric-target.json --receipt artifacts/architecture-attempt-01.json
+```
+
+`--slides` always uses one-based positions in the presentation's slide order.
+`--page-labels` records optional printed page labels supplied by the caller; it
+does not change slide selection or claim OCR verification of those labels. This
+distinction matters when a cover offsets the printed numbering. Explicitly
+selected hidden slides are included and marked `hidden=true`.
+
+| Table | Contents |
+| --- | --- |
+| `pages` | Document hash/name, physical slide number, printed label, native title when available, hidden flag, page size, object/connection counts and unsupported-element count |
+| `objects` | Page-scoped object ID, original shape ID, parent group ID, kind, name, literal text, explicit geometry and raw fill token |
+| `connections` | Connector ID, start/end shape IDs, joined object IDs/text when available, attachment status, explicit arrow tokens and interpretation scope |
+| `cells` | Native table ID, one-based physical row/column, merge spans/flags and literal text, including blanks and zero |
+
+All four schemas are retained in the local export. Only nonempty tables receive
+a cloud Load request. Snapshots use the existing `sr_<snapshot>_<kind>` names;
+new exports never replace an existing table. Join objects by `object_id`, not by
+label: repeated labels and shape IDs on different slides remain distinct.
+
+`connections.endpoint_status` is `attached` when both referenced objects exist,
+`partial` when just one endpoint is declared, `unattached` when neither is
+declared, and `dangling` when a declared ID is absent. Missing endpoint IDs/text
+remain null. Attached endpoints can themselves be unlabelled shapes or groups.
+Start/end are drawing endpoints, **not** inferred data-flow direction. The
+`interpretation` column is `native_connector_only`; a connector does not prove a
+business dependency, system ownership, failover relationship or ontology edge.
+
+Geometry is in the immediate parent's EMU coordinates, with group transforms
+preserved in separate child-coordinate columns. Rotation uses OOXML units of
+1/60000 degree. Missing inherited geometry/style remains null. Fill values are
+raw direct OOXML tokens, not rendered colors (theme transforms and inheritance
+are not resolved). Text preserves paragraph boundaries; no category, missing
+label or connection is inferred from proximity. Unsupported elements are counted.
+Picture text, diagrams embedded as images, slide masters/layouts, animations and
+speaker notes are not extracted by this first native mode.
+
+The exporter accepts a deck up to 64 MiB, with bounded ZIP expansion and XML
+parsing, and 1–20 explicit slides. It copies only the selected slide XML for
+reconstruction, not the original deck or unselected slides. JSON files inside
+the snapshot are internal manifests and delivery metadata, not the queryable
+table payload. The original deck hash is provenance recorded at local extraction;
+it does not certify that a remote SharePoint version has identical bytes.
+
+For example, after the SQL endpoint has discovered the tables:
+
+```sql
+SELECT page_label, start_text, end_text, endpoint_status, head_arrow, tail_arrow
+FROM dbo.sr_<snapshot>_connections
+ORDER BY slide, connector_id;
+```
+
+Parquet/Delta readback verifies the structural projection. It does not establish
+semantic accuracy or SQL endpoint synchronization. Use separate visual/model
+evaluation when interpreting the meaning of diagram colors, arrows or containers.
+
+## Ontology knowledge packages
+
 The Fabric path loads the same verified knowledge packages used by the Foundry IQ
 bridge into an existing **schema-enabled** lakehouse. It retains directed relations,
 source-scoped entity identity, explicit missingness, ontology records, and source
