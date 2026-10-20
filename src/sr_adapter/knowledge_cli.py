@@ -71,6 +71,13 @@ def add_parser(subparsers):
     fabric.add_argument("--slides", nargs="+", type=int, help="One-based physical PPTX slide numbers (tabular mode)")
     fabric.add_argument("--page-labels", nargs="+", help="Optional printed page labels, aligned with --slides")
     fabric.add_argument("--review", type=Path, help="Optional review findings JSON (visual mode only; exports scalar review rows)")
+    iq = commands.add_parser("fabric-iq", help="Prepare a snapshot-bound Fabric Data Agent / Foundry IQ blueprint (local only)")
+    iq.add_argument("bundle", type=Path, help="Verified visual Fabric export")
+    iq.add_argument("--fabric-target", required=True, type=Path)
+    iq.add_argument("--foundry-target", required=True, type=Path)
+    iq.add_argument("--retrieval-model", type=Path, help="Explicit KB planning-model JSON; separate from prompt model")
+    iq.add_argument("--data-agent-id", help="Existing published Fabric Data Agent GUID; omit for an unconfigured blueprint")
+    iq.add_argument("--out", required=True, type=Path)
     for command in ("fabric-publish", "fabric-status"):
         fabric_action = commands.add_parser(command, help="Publish or inspect an explicit Fabric snapshot receipt")
         fabric_action.add_argument("bundle", type=Path)
@@ -115,6 +122,16 @@ def handle(args):
                     raise ValueError("Execution requires --receipt and --host")
                 result = write_databricks(args.bundle, host=args.host, token=os.getenv("DATABRICKS_TOKEN", ""),
                     table=args.table, warehouse_id=args.warehouse_id, receipt=args.receipt)
+        elif args.knowledge_command == "fabric-iq":
+            from .fabric import FabricTarget
+            from .fabric_iq import FabricIQRetrievalModel, export_fabric_iq
+            from .foundry import FoundryTarget
+            result = export_fabric_iq(args.bundle, args.out,
+                fabric_target=FabricTarget.model_validate_json(args.fabric_target.read_bytes()),
+                foundry_target=FoundryTarget.model_validate_json(args.foundry_target.read_bytes()),
+                data_agent_id=args.data_agent_id,
+                retrieval_model=FabricIQRetrievalModel.model_validate_json(args.retrieval_model.read_bytes())
+                if args.retrieval_model else None)
         elif args.knowledge_command == "foundry":
             from .foundry import FoundryTarget, export_foundry
             target = FoundryTarget.model_validate_json(args.target.read_bytes()) if args.target else None
