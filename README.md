@@ -26,6 +26,11 @@ Foundry retrieval, frozen direct-source comparisons and offline replay, with
 token overhead and evaluation limits retained.
 
 ## Why this adapter?
+The [Fabric IQ blueprint](docs/fabric-iq.md) prepares a Fabric Data Agent,
+Foundry IQ knowledge base, and prompt agent over one verified visual-table
+snapshot. It keeps image evidence and review findings in scope and generates
+configuration locally; live retrieval and user permissions require separate validation.
+
 - **Streaming document pipeline** – Detects formats, parses into blocks, normalises text, and applies recipes with streaming output where the parser supports it. Memory use still depends on the document library and format.
 - **Native acceleration** – Visual layout and text normalisation are executed by C++ kernels orchestrated through a shared runtime for deterministic telemetry and warm-up.
 - **LLM escalation built-in** – Drivers share circuit breakers, exponential backoff with jitter, streaming + async APIs, and telemetry hooks while routing low-confidence spans to Azure OpenAI, OpenAI, Anthropic, Docker, or local vLLM endpoints before normalising responses.
