@@ -70,6 +70,7 @@ def add_parser(subparsers):
                         help="tabular: native PPTX slides; visual: saved image candidates, all scalar columns")
     fabric.add_argument("--slides", nargs="+", type=int, help="One-based physical PPTX slide numbers (tabular mode)")
     fabric.add_argument("--page-labels", nargs="+", help="Optional printed page labels, aligned with --slides")
+    fabric.add_argument("--review", type=Path, help="Optional review findings JSON (visual mode only; exports scalar review rows)")
     for command in ("fabric-publish", "fabric-status"):
         fabric_action = commands.add_parser(command, help="Publish or inspect an explicit Fabric snapshot receipt")
         fabric_action.add_argument("bundle", type=Path)
@@ -127,6 +128,8 @@ def handle(args):
         elif args.knowledge_command == "fabric":
             from .fabric import FabricTarget, export_fabric
             target = FabricTarget.model_validate_json(args.target.read_bytes())
+            if args.review is not None and args.mode != "visual":
+                raise ValueError("Review findings require --mode visual")
             if args.mode == "tabular":
                 from .fabric_tabular import export_tabular
                 if len(args.bundles) != 1 or args.bundles[0].suffix.lower() != ".pptx":
@@ -138,7 +141,8 @@ def handle(args):
                     raise ValueError("Slide selection requires --mode tabular")
                 if args.mode == "visual":
                     from .fabric_visual import export_visual
-                    result = export_visual(args.bundles, args.out, target=target)
+                    result = export_visual(args.bundles, args.out, target=target,
+                                           review=json.loads(args.review.read_bytes()) if args.review else None)
                 else:
                     result = export_fabric(args.bundles, args.out, target=target)
         elif args.knowledge_command in {"fabric-publish", "fabric-status"}:

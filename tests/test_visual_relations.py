@@ -260,3 +260,40 @@ def test_version_one_receipts_remain_replayable(source, tmp_path):
     assert verify_visual(folder)[0]["config"]["version"] == 1
     export_visual([folder], tmp_path / "fabric", target=TARGET)
     assert verify_fabric(tmp_path / "fabric", target=TARGET)[0]["status"] == "complete"
+
+
+def test_review_preserves_readings_and_flags_linked_relations(source, tmp_path):
+    run(source, tmp_path / "run")
+    package, _ = verify_visual(tmp_path / "run")
+    review = {"version": 1, "reviewer": "assistant_visual_spot_check", "findings": [
+        {"package_id": package["package_id"], "reference_kind": "item", "reference_id": "n1",
+         "finding": "text_mismatch", "detail": "Visible text needs another reading."}]}
+    export_visual([tmp_path / "run"], tmp_path / "fabric", target=TARGET, review=review)
+    _, files, plan = verify_fabric(tmp_path / "fabric", target=TARGET)
+    assert len(plan["tables"]) == 6 and json.loads(files["review.json"]) == review
+    relations = pq.read_table(tmp_path / "fabric/tables/relations.parquet").to_pylist()
+    assert relations[0]["subject_label"] == "共通システム"
+    assert relations[0]["review_status"] == "model_candidate_needs_review"
+    assert pq.read_table(tmp_path / "fabric/tables/reviews.parquet").num_rows == 1
+    review["findings"][0]["reference_id"] = "n999"
+    with pytest.raises(ValueError, match="reference"):
+        export_visual([tmp_path / "run"], tmp_path / "bad", target=TARGET, review=review)
+
+
+def test_review_rehash_cannot_retarget_a_finding(source, tmp_path):
+    run(source, tmp_path / "run")
+    package, _ = verify_visual(tmp_path / "run")
+    review = {"version": 1, "reviewer": "reviewer", "findings": [
+        {"package_id": package["package_id"], "reference_kind": "relation", "reference_id": "r1",
+         "finding": "ambiguous_relation", "detail": "The line is ambiguous."}]}
+    folder = tmp_path / "fabric"
+    export_visual([tmp_path / "run"], folder, target=TARGET, review=review)
+    review["findings"][0]["reference_kind"] = "image"
+    review["findings"][0]["reference_id"] = None
+    payload = canonical_json(review)
+    (folder / "review.json").write_bytes(payload)
+    manifest = json.loads((folder / "manifest.json").read_bytes())
+    manifest["files"]["review.json"] = {"bytes": len(payload), "sha256": sha256(payload)}
+    (folder / "manifest.json").write_bytes(canonical_json(manifest))
+    with pytest.raises(ValueError):
+        verify_fabric(folder, target=TARGET)

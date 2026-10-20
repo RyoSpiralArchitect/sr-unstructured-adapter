@@ -239,6 +239,26 @@ Five ordinary Parquet tables use scalar string/integer columns only:
 | `evidence` | One row per relation/item link with the item's label and region |
 | `limitations` | Reported reading and interpretation limitations |
 
+An optional `--review review.json` on `knowledge fabric --mode visual` adds a sixth
+scalar `reviews` table. A finding may flag an image coverage gap, an item reading,
+or a relation interpretation. Item findings also flag relations citing that item;
+the original label and raw response remain intact. This records review concerns,
+not automatic corrections or approvals. The reviewer identity must be explicit
+(for example `assistant_visual_spot_check`, not `human` for an agent review).
+
+```json
+{"version":1,"reviewer":"assistant_visual_spot_check","findings":[
+  {"package_id":"<package hash from extraction receipt>","reference_kind":"item",
+   "reference_id":"n12","finding":"text_mismatch","detail":"The company label needs another reading."}
+]}
+```
+
+`reference_kind` is `image`, `item`, or `relation`; image references use null.
+`finding` is `text_mismatch`, `unsupported_relation`, `ambiguous_relation`, or
+`coverage_gap`. References are checked against the selected packages, included in
+the snapshot hash and replayed during verification. Flagged relations have
+`review_status=model_candidate_needs_review`; all other relations remain unreviewed.
+
 All coordinates are model-proposed integers on a 0–1000 scale, origin at top left.
 They are **not native PowerPoint geometry**. Text readings, box coordinates, color
 matching and relationship interpretations remain unreviewed model candidates.

@@ -24,15 +24,17 @@ COLUMNS = {
     "limitations": (COMMON + " stage limitation_index description").split(),
 }
 INTS = set((BOX + " width_px height_px contract_version observation_count relation_count evidence_order limitation_index").split())
+REVIEW_COLUMNS = (COMMON + " finding_id reference_kind reference_id finding detail reviewer").split()
 
 
 def _schema(kind):
     import pyarrow as pa
     return pa.schema([pa.field(c, pa.int64() if c in INTS else pa.string(),
-                              nullable=c in {"value_text", "project_endpoint"}) for c in COLUMNS[kind]])
+                              nullable=c in {"value_text", "project_endpoint", "reference_id"})
+                      for c in (REVIEW_COLUMNS if kind == "reviews" else COLUMNS[kind])])
 
 
-def _projection(packages):
+def _projection(packages, review=None):
     rows = {kind: [] for kind in COLUMNS}
     seen = set()
     for package in packages:
@@ -68,9 +70,48 @@ def _projection(packages):
         for stage in ("inventory", "relations"):
             for index, description in enumerate(package[stage]["limitations"], 1):
                 rows["limitations"].append(dict(common, stage=stage, limitation_index=index, description=description))
+    if review is not None:
+        _apply_review(rows, packages, review)
     for group in rows.values():
         group.sort(key=canonical_json)
     return rows
+
+
+def _apply_review(rows, packages, review):
+    """Keep review findings separate; never replace a model reading or approve a claim."""
+    if (not isinstance(review, dict) or set(review) != {"version", "reviewer", "findings"}
+            or type(review["version"]) is not int or review["version"] != 1
+            or not isinstance(review["reviewer"], str) or not 1 <= len(review["reviewer"].strip()) <= 200
+            or not isinstance(review["findings"], list) or not 1 <= len(review["findings"]) <= 500):
+        raise ValueError("Invalid visual review record")
+    by_id = {p["package_id"]: p for p in packages}
+    rows["reviews"] = []
+    for index, finding in enumerate(review["findings"], 1):
+        if (not isinstance(finding, dict) or set(finding) != {"package_id", "reference_kind", "reference_id", "finding", "detail"}
+                or finding["package_id"] not in by_id or finding["reference_kind"] not in {"image", "item", "relation"}
+                or finding["finding"] not in {"text_mismatch", "unsupported_relation", "ambiguous_relation", "coverage_gap"}
+                or not isinstance(finding["detail"], str) or not 1 <= len(finding["detail"].strip()) <= 2000):
+            raise ValueError("Invalid visual review finding")
+        p = by_id[finding["package_id"]]
+        kind, ref = finding["reference_kind"], finding["reference_id"]
+        valid = ({n["id"] for n in p["inventory"]["observations"]} if kind == "item"
+                 else {r["id"] for r in p["relations"]["relations"]} if kind == "relation" else {None})
+        if ref not in valid:
+            raise ValueError("Review reference does not exist in selected image")
+        scoped = p["package_id"] + ":" + ref if ref is not None else None
+        common = next({c: row[c] for c in COMMON.split()} for row in rows["images"] if row["package_id"] == p["package_id"])
+        rows["reviews"].append(dict(common, finding_id=f"finding-{index}", reference_kind=kind,
+            reference_id=scoped, finding=finding["finding"], detail=finding["detail"], reviewer=review["reviewer"]))
+        if kind == "item":
+            for row in [*rows["items"], *rows["evidence"]]:
+                if row["item_id"] == scoped:
+                    row["reading_status"] = "model_proposed_needs_review"
+        affected = {row["relation_id"] for row in rows["evidence"] if kind == "item" and row["item_id"] == scoped}
+        if kind == "relation":
+            affected.add(scoped)
+        for row in rows["relations"]:
+            if row["relation_id"] in affected:
+                row["review_status"] = "model_candidate_needs_review"
 
 
 def _snapshot(packages, rows):
@@ -78,7 +119,7 @@ def _snapshot(packages, rows):
                                  "tables": {k: rows_digest(v) for k, v in rows.items()}}))
 
 
-def export_visual(bundles, destination, *, target):
+def export_visual(bundles, destination, *, target, review=None):
     import pyarrow as pa
     import pyarrow.parquet as pq
     if not 1 <= len(bundles) <= 20:
@@ -88,10 +129,12 @@ def export_visual(bundles, destination, *, target):
         package, sources = verify_visual(bundle)
         packages.append(package)
         files.update({f"sources/{package['package_id']}/{n}": v for n, v in sources.items()})
-    rows = _projection(packages)
+    rows = _projection(packages, review)
     snapshot = _snapshot(packages, rows)
     files["target.json"] = canonical_json(target.model_dump(mode="json"))
     files["deployment-plan.json"] = canonical_json(_plan(snapshot, {k: v for k, v in rows.items() if v}, target))
+    if review is not None:
+        files["review.json"] = canonical_json(review)
     for kind, group in rows.items():
         output = io.BytesIO()
         pq.write_table(pa.Table.from_pylist(group, schema=_schema(kind)), output)
@@ -137,6 +180,11 @@ def verify_visual_fabric(folder, *, target):
             raise ValueError("Visual snapshot size/hash mismatch")
         files[name] = data
     packages, expected_names = [], {"target.json", "deployment-plan.json"} | {f"tables/{k}.parquet" for k in COLUMNS}
+    review = json.loads(files["review.json"]) if "review.json" in files else None
+    if "review.json" in files:
+        if review is None:
+            raise ValueError("A saved review cannot be null")
+        expected_names.update({"review.json", "tables/reviews.parquet"})
     for key in keys:
         prefix = f"sources/{key}/"
         source_files = {n[len(prefix):]: v for n, v in files.items() if n.startswith(prefix)}
@@ -147,7 +195,7 @@ def verify_visual_fabric(folder, *, target):
             raise ValueError("Visual source receipt mismatch")
         packages.append(package)
         expected_names.update(prefix + n for n in [*source_files, "manifest.json"])
-    rows = _projection(packages)
+    rows = _projection(packages, review)
     snapshot = _snapshot(packages, rows)
     plan = _plan(snapshot, {k: v for k, v in rows.items() if v}, target)
     if (set(files) != expected_names or manifest["snapshot_id"] != snapshot
