@@ -169,6 +169,9 @@ def verify_fabric(folder, *, target: FabricTarget):
     if manifest.get("schema_version") == 2 and manifest.get("mode") == "pptx_tabular":
         from .fabric_tabular import verify_tabular
         return verify_tabular(folder, target=target)
+    if manifest.get("schema_version") == 3 and manifest.get("mode") == "visual_tabular":
+        from .fabric_visual import verify_visual_fabric
+        return verify_visual_fabric(folder, target=target)
     if manifest.get("schema_version") != 1 or manifest.get("status") != "complete":
         raise ValueError("Incomplete Fabric export")
     keys = manifest["package_hashes"]
