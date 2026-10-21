@@ -409,7 +409,8 @@ def test_recorded_gpt55_audit_and_comparison_replay_without_network():
     audit = probe.replay_audit(artifacts / "audit", allow_code_drift=True)
     provenance = audit.pop("replay_provenance")
     assert {c["file"] for c in provenance["changes"]} == {
-        "runner.py", "sr_adapter/narrative.py", "sr_adapter/narrative_runtime.py"}
+        "runner.py", "sr_adapter/narrative.py", "sr_adapter/narrative_runtime.py",
+        "sr_adapter/relation_sources.py"}
     assert provenance["model_requests"] == 0 and provenance["frozen_files_unchanged"] is True
     assert audit == json.loads((artifacts / "audit/report.json").read_bytes())
     comparison = artifacts / "comparison"
