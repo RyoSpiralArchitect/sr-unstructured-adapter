@@ -482,6 +482,23 @@ def _word_merge(cell: ET.Element, name: str) -> str:
     return value
 
 
+def _word_table_items(parent: ET.Element, item: str, units: _Units):
+    """Unwrap row/cell content controls without changing physical grid order."""
+    for child in parent:
+        tag = child.tag.removeprefix("{" + _W + "}")
+        if tag == item:
+            yield child
+        elif tag in ("sdt", "sdtContent", "customXml", "ins", "moveTo"):
+            if tag in ("ins", "moveTo"):
+                units.warn("DOCX deleted and moved-from revisions are omitted; current inserted text is included.")
+            yield from _word_table_items(child, item, units)
+        elif tag in ("del", "moveFrom"):
+            units.warn("DOCX deleted and moved-from revisions are omitted; current inserted text is included.")
+        elif tag not in ("tblPr", "tblGrid", "trPr", "sdtPr", "sdtEndPr", "bookmarkStart", "bookmarkEnd",
+                          "proofErr", "permStart", "permEnd"):
+            units.warn("DOCX unsupported table wrappers are not extracted.")
+
+
 def _read_word_body(body: ET.Element, units: _Units, part: str) -> None:
     table_number = 0
 
@@ -507,12 +524,9 @@ def _read_word_body(body: ET.Element, units: _Units, part: str) -> None:
         table_number += 1
         number = table_number
         columns = element.findall("w:tblGrid/w:gridCol", _NS)
-        rows = element.findall("w:tr", _NS)
+        rows = list(_word_table_items(element, "tr", units))
         if not columns or not rows:
             raise ValueError("DOCX table has no cell grid")
-        if any(child.tag not in {"{" + _W + "}" + tag for tag in ("tblPr", "tblGrid", "tr")}
-               for child in element):
-            units.warn("DOCX unsupported table wrappers are not extracted.")
         parsed_rows = []
         headers = []
         for row_number, row in enumerate(rows, 1):
@@ -523,10 +537,7 @@ def _read_word_body(body: ET.Element, units: _Units, part: str) -> None:
             is_header = header_value in ("1", "true", "on")
             column = 1 + _word_int(row, "w:trPr/w:gridBefore", 0)
             cells = []
-            if any(child.tag not in {"{" + _W + "}" + tag for tag in ("trPr", "tc")}
-                   for child in row):
-                units.warn("DOCX unsupported table row wrappers are not extracted.")
-            for physical_cell, cell in enumerate(row.findall("w:tc", _NS), 1):
+            for physical_cell, cell in enumerate(_word_table_items(row, "tc", units), 1):
                 span = _word_int(cell, "w:tcPr/w:gridSpan", 1, positive=True)
                 if column + span - 1 > len(columns):
                     raise ValueError("DOCX table cell exceeds its column grid")

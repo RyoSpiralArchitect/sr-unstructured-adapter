@@ -101,6 +101,20 @@ def test_docx_omitted_grid_columns_and_legacy_horizontal_merges_are_explicit():
     assert all(u['locator']['header_context'] == [] for u in units)
 
 
+def test_docx_row_and_cell_content_controls_preserve_grid_headers_and_order():
+    def control(content):
+        return '<w:sdt><w:sdtPr/><w:sdtContent>' + content + '</w:sdtContent></w:sdt>'
+    header = row([cell('Project'), cell('Owner')], '<w:tblHeader/>')
+    ordinary = table([header, row([cell('A'), cell('B')]), row([cell('C'), cell('D')])])
+    wrapped = table([control(header), control(row([control(cell('A')), control(cell('B'))])),
+                     row([cell('C'), control(cell('D'))])])
+    expected = read_source(package(ordinary), 'ordinary.docx')
+    result = read_source(package(wrapped), 'wrapped.docx')
+    assert [(u['text'], u['locator']) for u in result['units']] == [
+        (u['text'], u['locator']) for u in expected['units']]
+    assert result['warnings'] == expected['warnings']
+
+
 def test_docx_hyperlink_text_fields_revisions_and_content_controls_without_fetch(monkeypatch):
     def forbidden(*args, **kwargs):
         raise AssertionError('Network is not permitted for DOCX parsing')
