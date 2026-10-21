@@ -21,6 +21,9 @@ also turns Markdown/text, CSV, DOCX, PPTX and images into relation CSV tables us
 existing Foundry model. It preserves positive, negative, unknown and ambiguous
 claims with their source evidence, and publishes them through the same Foundry IQ
 bridge. Model interpretation and image transcription remain explicitly unverified.
+Saved document relations also export as [ordinary Fabric tables](docs/fabric-lakehouse.md)
+with `knowledge fabric --mode narrative`, preserving negation, source locations and
+optional nonliteral model labels without another model call.
 The [GPT-5.5 synthetic pilot](docs/narrative-foundry-2026-10-17.md) includes live
 Foundry retrieval, frozen direct-source comparisons and offline replay, with
 token overhead and evaluation limits retained.
