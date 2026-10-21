@@ -50,6 +50,61 @@ def test_table_reproduces_original_evidence_and_candidate_scope(ontology, tmp_pa
     assert "semantic validation: not performed" in narrative_cards(files)[0]["content"]
 
 
+def test_preserve_policy_keeps_nonliteral_labels_without_rewriting_quotes(ontology, tmp_path):
+    row = candidate()
+    row["subject"] = "Project A"
+    kwargs = dict(data=b'A is managed by B.', source_name="source.txt", ontology=ontology,
+                  model="gpt-5.5", response=response([row]))
+    with pytest.raises(ValueError, match="literally"):
+        render_narrative(**kwargs)
+    manifest, files = render_narrative(**kwargs, label_policy="preserve")
+    save_narrative(tmp_path / "bundle", manifest, files)
+    assert verify_narrative(tmp_path / "bundle") == (manifest, files)
+    actual = json.loads(files["assertions.json"])[0]
+    assert actual["subject"] == "Project A"
+    assert actual["subject_label_match"] is False and actual["object_label_match"] is True
+    assert actual["grounding"] == "source_text_verified"
+    assert actual["evidence"][0]["quote"] == "A is managed by B."
+    assert json.loads(files["extraction.json"])["label_policy"] == "preserve"
+    assert "nonliteral label is an unverified model interpretation" in narrative_cards(files)[0]["content"]
+    csv_row = next(csv.DictReader(io.StringIO(files["relations.csv"].decode())))
+    assert csv_row["subject_label_match"] == "False"
+    # The opt-in policy does not relax evidence validation.
+    row["evidence"][0]["quote"] = "Project A is managed by B."
+    with pytest.raises(ValueError, match="full source unit"):
+        render_narrative(**{**kwargs, "response": response([row])}, label_policy="preserve")
+
+
+def test_preserve_policy_changes_identity_and_relabelled_bundle_rejects(ontology):
+    literal, _ = bundle(ontology)
+    preserved, files = render_narrative(data=b'A is managed by B.', source_name="source.txt", ontology=ontology,
+        model="gpt-5.5", response=response([candidate()]), label_policy="preserve")
+    assert literal["package_id"] != preserved["package_id"]
+    config = json.loads(files["extraction.json"])
+    config.pop("label_policy")
+    files["extraction.json"] = canonical_json(config) + b"\n"
+    preserved["files"]["extraction.json"] = {"bytes": len(files["extraction.json"]), "sha256": sha256(files["extraction.json"])}
+    files["manifest.json"] = canonical_json(preserved) + b"\n"
+    with pytest.raises(ValueError, match="reproduce"):
+        verify_narrative_payloads(files)
+
+
+def test_runtime_preserve_policy_is_recorded_before_request_and_applied(ontology, tmp_path):
+    source = tmp_path / "source.txt"
+    source.write_bytes(b'A is managed by B.')
+    out = tmp_path / "attempt"
+    row = candidate()
+    row["subject"] = "Project A"
+    def handler(request):
+        assert json.loads((out / 'receipt.json').read_bytes())["label_policy"] == "preserve"
+        return httpx.Response(200, json=response([row]))
+    result = extract_narrative(source, ontology=ontology, endpoint="https://unit.services.ai.azure.com/api/projects/test",
+        model="gpt-5.5", destination=out, execute=True, label_policy="preserve",
+        credential=SimpleNamespace(get_token=lambda _: SimpleNamespace(token="fake")), transport=httpx.MockTransport(handler))
+    assert result["status"] == "complete"
+    assert json.loads(verify_narrative(out / "bundle")[1]["assertions.json"])[0]["subject_label_match"] is False
+
+
 @pytest.mark.parametrize("status,object,text", [
     ("denied", "B", b'A is not managed by B.'), ("unknown", None, b'A manager is unknown.'),
     ("ambiguous", None, b'A may be managed by B or C; no decision.')])

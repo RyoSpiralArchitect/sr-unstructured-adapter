@@ -170,9 +170,17 @@ def _json(data):
     return canonical_json(data) + b"\n"
 
 
+def validate_label_policy(value: str) -> str:
+    if value not in ("literal", "preserve"):
+        raise ValueError("Label policy must be literal or preserve")
+    return value
+
+
 def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntology, model: str,
                      response: dict, transcription_response: dict | None = None,
-                     instructions_version: int = EXTRACTION_INSTRUCTIONS_VERSION) -> tuple[dict, dict[str, bytes]]:
+                     instructions_version: int = EXTRACTION_INSTRUCTIONS_VERSION,
+                     label_policy: str = "literal") -> tuple[dict, dict[str, bytes]]:
+    validate_label_policy(label_policy)
     transcription = _json_response(transcription_response) if transcription_response is not None else None
     source = read_source(data, source_name, transcription=transcription)
     if source["needs_transcription"]:
@@ -182,6 +190,10 @@ def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntolo
     candidates = Candidates.model_validate(_json_response(response), strict=True)
     request = extraction_request(source, ontology, model, instructions_version=instructions_version)
     package_id = identifier("narrative", source, ontology.model_dump(mode="json"), request, response, transcription_response)
+    # Keep existing literal bundles byte-identical. Acceptance policy is local,
+    # never a rewrite of the saved model request or a claim of semantic grounding.
+    if label_policy != "literal":
+        package_id = identifier("narrative", package_id, {"label_policy": label_policy})
     units = {unit["id"]: unit for unit in source["units"]}
     predicates = {p.id: p for p in ontology.predicates}
     rows, seen = [], set()
@@ -205,7 +217,9 @@ def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntolo
                              for field in ("header", "value"))
             else:
                 texts.append(item["quote"])
-        if any(not any(label in text for text in texts) for label in [candidate.subject, candidate.object] if label is not None):
+        matches = {role + "_label_match": None if label is None else any(label in text for text in texts)
+                   for role, label in (("subject", candidate.subject), ("object", candidate.object))}
+        if label_policy == "literal" and False in matches.values():
             raise ValueError("Entity/value labels must occur literally in their quoted evidence")
         key = canonical_json(candidate.model_dump(mode="json"))
         if key in seen:
@@ -221,10 +235,13 @@ def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntolo
             "subject_type": ontology.namespace + rule.subject_type, "object_type": ontology.namespace + rule.object_type,
             "subject_mention_id": identifier("mention", assertion_id, "subject"),
             "object_mention_id": identifier("mention", assertion_id, "object") if candidate.object is not None else None,
-            "interpretation": "model_candidate", "grounding": grounding, "evidence": evidence})
+            "interpretation": "model_candidate", "grounding": grounding, "evidence": evidence,
+            **(matches if label_policy == "preserve" else {})})
     table = io.StringIO(newline="")
     columns = ["assertion_id", "subject", "predicate", "object", "status", "subject_type", "object_type", "grounding",
                "interpretation", "source_name", "source_sha256", "evidence_json"]
+    if label_policy == "preserve":
+        columns.extend(["subject_label_match", "object_label_match"])
     writer = csv.DictWriter(table, columns, lineterminator="\n")
     writer.writeheader()
     for row in rows:
@@ -237,7 +254,8 @@ def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntolo
         "relations.csv": table.getvalue().encode(),
         "extraction.json": _json({"source_name": source_name, "model_deployment": model,
             "response_model": response["model"], "semantic_validation": "not_performed", "identity_scope": "source_assertion_mention",
-            **({"instructions_version": instructions_version} if instructions_version != 1 else {})})}
+            **({"instructions_version": instructions_version} if instructions_version != 1 else {}),
+            **({"label_policy": label_policy} if label_policy != "literal" else {})})}
     if transcription_response is not None:
         original = read_source(data, source_name)
         files.update({"transcription-request.json": _json(transcription_request(data, original, model)),
@@ -266,7 +284,7 @@ def verify_narrative_payloads(files: dict[str, bytes]) -> dict:
         ontology=NarrativeOntology.model_validate_json(files["ontology.json"]), model=config["model_deployment"],
         response=json.loads(files["response.json"]),
         transcription_response=json.loads(files["transcription-response.json"]) if "transcription-response.json" in files else None,
-        instructions_version=config.get("instructions_version", 1))
+        instructions_version=config.get("instructions_version", 1), label_policy=config.get("label_policy", "literal"))
     if manifest != expected_manifest or files != expected_files:
         raise ValueError("Narrative bundle does not reproduce from saved source and model responses")
     return manifest
@@ -312,6 +330,10 @@ def narrative_cards(files: dict[str, bytes]) -> list[dict]:
             f"assertion_id={row['assertion_id']}",
             "Full original evidence units (conditions and exceptions remain authoritative):",
             canonical_json(row["evidence"]).decode()]
+        if "subject_label_match" in row:
+            content.insert(2, "Label policy: preserve model labels; literal matches to quoted evidence: "
+                f"subject={row['subject_label_match']}, object={row['object_label_match']}. "
+                "A nonliteral label is an unverified model interpretation, not an exact source name.")
         card = {"package_id": manifest["package_id"], "source_sha256": source["source_sha256"],
             "source_name": source["source_name"], "title": row["subject"] + " / " + row["predicate_label"],
             "content": "\n".join(content), "entity_labels": [row["subject"]] + ([row["object"]] if row["object"] is not None else []),

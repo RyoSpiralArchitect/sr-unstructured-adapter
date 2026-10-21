@@ -10,12 +10,35 @@ This path does not require Fabric or Databricks.
 
 This is candidate extraction, not automatic truth or ontology certification.
 `source_text_verified` means that a quotation exactly reproduces a source unit
-extracted from the saved original bytes. The subject/object must appear literally
+extracted from the saved original bytes. By default the subject/object must appear literally
 in the evidence (the raw header/value strings for CSV/TSV cells, before JSON
 escaping), but this cannot detect every semantic error, including reversal,
 misread negation or a wrong predicate. Assess those separately against reviewed
 source material. `model_transcription_unverified` means the text came from a
 model reading an image; matching that transcript does not validate the pixels.
+
+For a PoC that should retain model labels even when they paraphrase the source,
+pass `--label-policy preserve` to `knowledge narrative` (or `label_policy="preserve"`
+to `extract_narrative` / `render_narrative`). The original labels and complete
+quotes are preserved, with `subject_label_match` and `object_label_match` columns
+indicating literal occurrence in the cited evidence. A null object has a null
+match flag. False is an unverified interpretation, not certified normalization.
+Quote mismatches, undeclared predicates, invalid statuses, incomplete responses
+and duplicate assertions still reject. The model request remains unchanged;
+this option controls acceptance, not extraction instructions. Default `literal`
+bundles retain their previous bytes, identities and verification behavior.
+
+A completed response from a failed literal attempt can be replayed offline with
+`render_narrative(..., response=saved_response, label_policy="preserve")`, then
+`save_narrative(new_folder, manifest, files)`. Supply the saved original bytes,
+source name, ontology, model and instruction version; keep the failed receipt.
+No model retry is needed. The acceptance policy changes the new bundle identity
+and is checked again during verification.
+
+Use `knowledge fabric <bundle> --mode narrative` for
+[ordinary Fabric tables](fabric-lakehouse.md#word-and-other-document-relations-as-ordinary-tables).
+This exports relations, entity mentions, source evidence and locator details as
+scalar columns rather than JSON fields, retaining the same assertion statuses.
 
 New extractions use instruction version 2. It asks for the applicable table
 headers, unit captions, dates, scope and footnotes in each assertion's evidence,

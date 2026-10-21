@@ -10,7 +10,7 @@ import httpx
 from .knowledge import sha256
 from .knowledge_store import atomic_json
 from .narrative import (EXTRACTION_INSTRUCTIONS_VERSION, NarrativeOntology, _json_response, extraction_request,
-                        render_narrative, save_narrative, transcription_request)
+                        render_narrative, save_narrative, transcription_request, validate_label_policy)
 from .relation_sources import read_source
 from .tables import canonical_json
 
@@ -28,7 +28,9 @@ def project_endpoint(value: str) -> str:
 def extract_narrative(source_path: str | Path, *, ontology: NarrativeOntology, endpoint: str,
                       model: str, destination: str | Path, execute: bool = False,
                       credential=None, transport=None,
-                      instructions_version: int = EXTRACTION_INSTRUCTIONS_VERSION) -> dict:
+                      instructions_version: int = EXTRACTION_INSTRUCTIONS_VERSION,
+                      label_policy: str = "literal") -> dict:
+    validate_label_policy(label_policy)
     endpoint = project_endpoint(endpoint)
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", model):
         raise ValueError("Invalid model deployment name")
@@ -42,6 +44,7 @@ def extract_narrative(source_path: str | Path, *, ontology: NarrativeOntology, e
         "model_deployment": model, "source_name": path.name, "source_sha256": sha256(data),
         "ontology_sha256": sha256(canonical_json(ontology.model_dump(mode="json"))),
         "instructions_version": instructions_version,
+        "label_policy": label_policy,
         "planned_model_requests": 2 if source["needs_transcription"] else 1,
         "automatic_retries": 0, "requests": [], "publication": "not_performed"}
     receipt_path = root / "receipt.json"
@@ -86,7 +89,8 @@ def extract_narrative(source_path: str | Path, *, ontology: NarrativeOntology, e
                 source = read_source(data, path.name, transcription=_json_response(transcription_response))
             raw = send("extraction", extraction_request(source, ontology, model, instructions_version=instructions_version))
         manifest, files = render_narrative(data=data, source_name=path.name, ontology=ontology, model=model,
-            response=raw, transcription_response=transcription_response, instructions_version=instructions_version)
+            response=raw, transcription_response=transcription_response, instructions_version=instructions_version,
+            label_policy=label_policy)
         save_narrative(root / "bundle", manifest, files)
         receipt.update(status="complete", package_id=manifest["package_id"], assertion_count=manifest["assertion_count"],
             bundle_manifest_sha256=sha256((root / "bundle/manifest.json").read_bytes()), semantic_validation="not_performed")

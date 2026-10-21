@@ -24,6 +24,8 @@ def add_parser(subparsers):
     narrative.add_argument("--model", required=True)
     narrative.add_argument("--out", required=True, type=Path)
     narrative.add_argument("--execute", action="store_true")
+    narrative.add_argument("--label-policy", choices=("literal", "preserve"), default="literal",
+                           help="preserve: retain nonliteral model labels with explicit match columns")
     visual = commands.add_parser("visual", help="Extract unreviewed image relation candidates with visual regions")
     visual.add_argument("source", type=Path)
     visual.add_argument("--project-endpoint", required=True)
@@ -66,8 +68,8 @@ def add_parser(subparsers):
     fabric.add_argument("bundles", nargs="+", type=Path)
     fabric.add_argument("--out", required=True, type=Path)
     fabric.add_argument("--target", required=True, type=Path)
-    fabric.add_argument("--mode", choices=("knowledge", "tabular", "visual"), default="knowledge",
-                        help="tabular: native PPTX slides; visual: saved image candidates, all scalar columns")
+    fabric.add_argument("--mode", choices=("knowledge", "tabular", "visual", "narrative"), default="knowledge",
+                        help="tabular: native PPTX; visual: image candidates; narrative: document relations, all scalar columns")
     fabric.add_argument("--slides", nargs="+", type=int, help="One-based physical PPTX slide numbers (tabular mode)")
     fabric.add_argument("--page-labels", nargs="+", help="Optional printed page labels, aligned with --slides")
     fabric.add_argument("--review", type=Path, help="Optional review findings JSON (visual mode only; exports scalar review rows)")
@@ -100,7 +102,8 @@ def handle(args):
             from .narrative import NarrativeOntology
             from .narrative_runtime import extract_narrative
             result = extract_narrative(args.source, ontology=NarrativeOntology.model_validate_json(args.ontology.read_bytes()),
-                endpoint=args.project_endpoint, model=args.model, destination=args.out, execute=args.execute)
+                endpoint=args.project_endpoint, model=args.model, destination=args.out, execute=args.execute,
+                label_policy=args.label_policy)
         elif args.knowledge_command == "visual":
             from .visual_runtime import extract_visual
             result = extract_visual(args.source, args.out, endpoint=args.project_endpoint, model=args.model,
@@ -160,6 +163,9 @@ def handle(args):
                     from .fabric_visual import export_visual
                     result = export_visual(args.bundles, args.out, target=target,
                                            review=json.loads(args.review.read_bytes()) if args.review else None)
+                elif args.mode == "narrative":
+                    from .fabric_narrative import export_narrative_fabric
+                    result = export_narrative_fabric(args.bundles, args.out, target=target)
                 else:
                     result = export_fabric(args.bundles, args.out, target=target)
         elif args.knowledge_command in {"fabric-publish", "fabric-status"}:

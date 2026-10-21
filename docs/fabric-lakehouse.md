@@ -1,5 +1,65 @@
 # Grounded knowledge in an existing Fabric lakehouse
 
+## Word and other document relations as ordinary tables
+
+`--mode narrative` exports a saved [narrative relation bundle](narrative-relations-foundry.md),
+including DOCX body paragraphs and table cells, into scalar Parquet tables.
+It replays the source and saved model response locally; it makes no model calls.
+
+```bash
+sr-adapt knowledge fabric artifacts/narrative/requirements/bundle --mode narrative \
+  --target fabric-target.json --out artifacts/requirements-tables
+sr-adapt knowledge fabric-publish artifacts/requirements-tables \
+  --target fabric-target.json --receipt artifacts/requirements-attempt-01.json --execute
+sr-adapt knowledge fabric-status artifacts/requirements-tables \
+  --target fabric-target.json --receipt artifacts/requirements-attempt-01.json
+```
+
+| Table | Contents |
+| --- | --- |
+| `documents` | Source name/hash, model, acceptance policy, counts and interpretation scope |
+| `entities` | Subject/object mentions, type, label and literal-match flag; no name-based entity merging |
+| `relations` | Subject, predicate, object, **assertion_status**, literal-match flags and exact mention IDs |
+| `evidence` | All source units in order, full text, and ordinary DOCX part/paragraph/table/row/column columns |
+| `evidence_links` | Ordered relation-to-unit links for the actual cited evidence |
+| `locations` | Full locator details as JSON Pointer paths plus scalar `value_type`/`value_text` columns; includes header context and merge markers |
+| `limitations` | Source reader warnings, such as untranscribed Word drawings |
+
+Join within `package_id`: relation subject/object IDs to `entities.entity_id`,
+`evidence_links.relation_id` to `relations.relation_id`, and `unit_id` to
+`evidence.unit_id` / `locations.unit_id`. Evidence includes uncited source context;
+only `evidence_links` identifies support actually selected by the model. DOCX
+paragraph numbers are local to a body/cell; use the full locator, not a guessed
+rendered page number. Source bytes and replay files accompany the snapshot under
+OneLake Files, while queryable tables contain no JSON or nested columns.
+
+Preserve `assertion_status`: `denied` is a negative statement, and `unknown` /
+`ambiguous` have null objects. Neither nulls nor missing relations mean denial.
+`grounding=source_text_verified` checks quotations only; it is not a correctness
+score. With the explicit `--label-policy preserve` extraction option, nonliteral
+model labels remain visible with false match flags. The default policy continues
+to reject those labels. No relation is promoted to a verified business fact.
+
+```sql
+SELECT subject_label, predicate_label, object_label, assertion_status,
+       subject_label_match, object_label_match
+FROM dbo.sr_<snapshot>_relations;
+
+SELECT r.subject_label, r.predicate_label, r.object_label, r.assertion_status,
+       e.text, e.part, e.table_index, e.row_index, e.column_index, e.paragraph
+FROM dbo.sr_<snapshot>_relations r
+JOIN dbo.sr_<snapshot>_evidence_links l
+  ON l.package_id = r.package_id AND l.relation_id = r.relation_id
+JOIN dbo.sr_<snapshot>_evidence e
+  ON e.package_id = l.package_id AND e.unit_id = l.unit_id;
+```
+
+The existing explicit publisher creates only absent snapshot tables and verifies
+their complete Delta row content. Empty table schemas stay in the local export
+but receive no Load request. Rehashed derived-table edits reject on replay.
+This path accepts 1–20 bundles within the 64 MiB export bound. Table registration
+alone does not configure a Fabric Data Agent or establish native IQ retrieval.
+
 ## Native PowerPoint as ordinary tables
 
 For a diagram whose labels and connectors are native PowerPoint objects, use
