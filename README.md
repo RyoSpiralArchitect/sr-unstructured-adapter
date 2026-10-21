@@ -17,7 +17,7 @@ direction, missing values, and cell evidence. Export locally with
 and `foundry-publish --execute` opt into cloud configuration.
 
 The [document relation extraction path](docs/narrative-relations-foundry.md)
-also turns Markdown/text, CSV, PPTX and images into relation CSV tables using an
+also turns Markdown/text, CSV, DOCX, PPTX and images into relation CSV tables using an
 existing Foundry model. It preserves positive, negative, unknown and ambiguous
 claims with their source evidence, and publishes them through the same Foundry IQ
 bridge. Model interpretation and image transcription remain explicitly unverified.

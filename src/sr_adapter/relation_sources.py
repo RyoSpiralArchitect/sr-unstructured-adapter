@@ -3,7 +3,9 @@
 
 All line, slide, row and column locators are one-based. CSV ``row`` counts
 logical records including the header; ``line_start/end`` count physical lines.
-PPTX text boxes retain paragraph boundaries, and table units retain physical
+DOCX paragraphs and table cells retain document order, explicit header rows and
+merge markers; Word pagination is not inferred. PPTX text boxes retain paragraph
+boundaries, and table units retain physical
 cell positions and merge flags without inferring headers. Image transcript
 locators identify supplied transcript lines, never pixel bounding boxes.
 
@@ -38,14 +40,16 @@ _MAX_XML_DEPTH = 128
 _MAX_IMAGE_PIXELS = 16_000_000
 _MAX_IMAGE_SIDE = 16_384
 
+_W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 _P = "http://schemas.openxmlformats.org/presentationml/2006/main"
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 _R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 _PACKAGE_R = "http://schemas.openxmlformats.org/package/2006/relationships"
 _CONTENT_TYPES = "http://schemas.openxmlformats.org/package/2006/content-types"
 _STRICT_R = "http://purl.oclc.org/ooxml/officeDocument/relationships"
-_NS = {"p": _P, "a": _A, "r": _R}
+_NS = {"p": _P, "a": _A, "r": _R, "w": _W}
 _STRICT_NAMESPACES = {
+    "http://purl.oclc.org/ooxml/wordprocessingml/main": _W,
     "http://purl.oclc.org/ooxml/presentationml/main": _P,
     "http://purl.oclc.org/ooxml/drawingml/main": _A,
     _STRICT_R: _R,
@@ -55,6 +59,7 @@ _MEDIA_TYPES = {
     ".txt": "text/plain",
     ".csv": "text/csv",
     ".tsv": "text/tab-separated-values",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     ".png": "image/png",
     ".jpg": "image/jpeg",
@@ -221,7 +226,7 @@ def _relationship_target(owner: str, target: str) -> str:
     return path
 
 
-def _relationships(parts: dict[str, bytes]) -> dict[str, dict[str, tuple[str, str]]]:
+def _relationships(parts: dict[str, bytes], *, allow_external_hyperlinks: bool = False) -> dict[str, dict[str, tuple[str, str]]]:
     result = {}
     for name, data in parts.items():
         if not name.endswith(".rels"):
@@ -239,14 +244,20 @@ def _relationships(parts: dict[str, bytes]) -> dict[str, dict[str, tuple[str, st
         if root.tag != "{" + _PACKAGE_R + "}Relationships":
             raise ValueError("Invalid PPTX relationships root")
         relationships = {}
+        seen_ids = set()
         for element in root:
             if element.tag != "{" + _PACKAGE_R + "}Relationship":
                 raise ValueError("Invalid PPTX relationship element")
-            if element.get("TargetMode", "Internal") != "Internal":
-                raise ValueError("External PPTX relationships are not allowed")
             identity, kind = element.get("Id"), element.get("Type")
-            if not identity or not kind or identity in relationships:
+            if not identity or not kind or identity in seen_ids:
                 raise ValueError("Missing or duplicate PPTX relationship identifier")
+            seen_ids.add(identity)
+            if element.get("TargetMode", "Internal") != "Internal":
+                if (allow_external_hyperlinks and element.get("TargetMode") == "External"
+                        and _is_relationship(kind, "hyperlink")):
+                    # Visible hyperlink text lives in the document XML. Never read its target.
+                    continue
+                raise ValueError("External PPTX relationships are not allowed")
             target = _relationship_target(owner, element.get("Target", ""))
             if target not in parts:
                 raise ValueError("PPTX relationship target is missing")
@@ -402,6 +413,187 @@ def _read_pptx(data: bytes, units: _Units) -> None:
         _read_shapes(tree, slide_number, units)
 
 
+def _word_text(paragraph: ET.Element, units: _Units) -> str:
+    chunks = []
+
+    def visit(node: ET.Element) -> None:
+        if not node.tag.startswith("{" + _W + "}"):
+            units.warn("DOCX alternate-format and non-Word inline content is not extracted.")
+            return
+        tag = node.tag.removeprefix("{" + _W + "}")
+        if tag == "t":
+            chunks.append(node.text or "")
+        elif tag in ("tab", "br", "cr"):
+            chunks.append("\t" if tag == "tab" else "\n")
+        elif tag == "noBreakHyphen":
+            chunks.append("\u2011")
+        elif tag == "softHyphen":
+            chunks.append("\u00ad")
+        elif tag in ("del", "moveFrom"):
+            units.warn("DOCX deleted and moved-from revisions are omitted; current inserted text is included.")
+        elif tag in ("drawing", "pict", "object", "txbxContent", "sym", "altChunk"):
+            units.warn("DOCX drawings, text boxes, embedded content and symbols are not transcribed.")
+        elif tag in ("pPr", "rPr", "sdtPr", "instrText", "delInstrText"):
+            pass
+        elif tag in ("footnoteReference", "endnoteReference", "commentReference"):
+            units.warn("DOCX footnotes, endnotes and comments are not extracted.")
+        else:
+            if tag in ("ins", "moveTo"):
+                units.warn("DOCX deleted and moved-from revisions are omitted; current inserted text is included.")
+            for child in node:
+                visit(child)
+
+    visit(paragraph)
+    return "".join(chunks)
+
+
+def _word_blocks(parent: ET.Element, units: _Units):
+    """Yield body/cell blocks in XML order, including common content controls."""
+    for child in parent:
+        tag = child.tag.removeprefix("{" + _W + "}")
+        if tag in ("p", "tbl"):
+            yield child
+        elif tag in ("sdt", "sdtContent", "customXml", "ins", "moveTo"):
+            if tag in ("ins", "moveTo"):
+                units.warn("DOCX deleted and moved-from revisions are omitted; current inserted text is included.")
+            yield from _word_blocks(child, units)
+        elif tag in ("del", "moveFrom"):
+            units.warn("DOCX deleted and moved-from revisions are omitted; current inserted text is included.")
+        elif tag not in ("sectPr", "tcPr", "sdtPr", "sdtEndPr", "bookmarkStart", "bookmarkEnd",
+                          "proofErr", "permStart", "permEnd"):
+            units.warn("DOCX unsupported body or cell elements are not extracted.")
+
+
+def _word_int(parent: ET.Element, path: str, default: int, *, positive: bool = False) -> int:
+    node = parent.find(path, _NS)
+    raw = node.get("{" + _W + "}val", "") if node is not None else str(default)
+    if not raw.isdecimal() or len(raw) > 6 or int(raw) < int(positive):
+        raise ValueError("Invalid DOCX table grid or span")
+    return int(raw)
+
+
+def _word_merge(cell: ET.Element, name: str) -> str:
+    node = cell.find("w:tcPr/w:" + name, _NS)
+    if node is None:
+        return "none"
+    value = node.get("{" + _W + "}val", "continue")
+    if value not in ("restart", "continue"):
+        raise ValueError("Invalid DOCX table merge marker")
+    return value
+
+
+def _read_word_body(body: ET.Element, units: _Units, part: str) -> None:
+    table_number = 0
+
+    def blocks(parent: ET.Element, location: dict) -> None:
+        paragraph_number = 0
+        for block_number, block in enumerate(_word_blocks(parent, units), 1):
+            current = {**location, "block": block_number}
+            if block.tag == "{" + _W + "}tbl":
+                table(block, current)
+                continue
+            paragraph_number += 1
+            text = _word_text(block, units)
+            style = block.find("w:pPr/w:pStyle", _NS)
+            if style is not None:
+                current["paragraph_style"] = style.get("{" + _W + "}val", "")
+            if block.find("w:pPr/w:numPr", _NS) is not None:
+                units.warn("DOCX automatic list numbers are not rendered; literal paragraph text is retained.")
+            if text.strip() or "cell" in location:
+                units.add(text, {**current, "paragraph": paragraph_number})
+
+    def table(element: ET.Element, location: dict) -> None:
+        nonlocal table_number
+        table_number += 1
+        number = table_number
+        columns = element.findall("w:tblGrid/w:gridCol", _NS)
+        rows = element.findall("w:tr", _NS)
+        if not columns or not rows:
+            raise ValueError("DOCX table has no cell grid")
+        if any(child.tag not in {"{" + _W + "}" + tag for tag in ("tblPr", "tblGrid", "tr")}
+               for child in element):
+            units.warn("DOCX unsupported table wrappers are not extracted.")
+        parsed_rows = []
+        headers = []
+        for row_number, row in enumerate(rows, 1):
+            header = row.find("w:trPr/w:tblHeader", _NS)
+            header_value = header.get("{" + _W + "}val", "true") if header is not None else "false"
+            if header_value not in ("0", "1", "true", "false", "on", "off"):
+                raise ValueError("Invalid DOCX table header marker")
+            is_header = header_value in ("1", "true", "on")
+            column = 1 + _word_int(row, "w:trPr/w:gridBefore", 0)
+            cells = []
+            if any(child.tag not in {"{" + _W + "}" + tag for tag in ("trPr", "tc")}
+                   for child in row):
+                units.warn("DOCX unsupported table row wrappers are not extracted.")
+            for physical_cell, cell in enumerate(row.findall("w:tc", _NS), 1):
+                span = _word_int(cell, "w:tcPr/w:gridSpan", 1, positive=True)
+                if column + span - 1 > len(columns):
+                    raise ValueError("DOCX table cell exceeds its column grid")
+                cell_location = {"row": row_number, "column": column, "physical_cell": physical_cell,
+                                 "column_span": span, "header_row": is_header,
+                                 "horizontal_merge": _word_merge(cell, "hMerge"),
+                                 "vertical_merge": _word_merge(cell, "vMerge")}
+                if is_header:
+                    text = "\n".join(_word_text(p, units) for p in _word_blocks(cell, units)
+                                     if p.tag == "{" + _W + "}p")
+                    headers.append({"row": row_number, "column": column, "column_span": span, "text": text})
+                cells.append((cell, cell_location))
+                column += span
+            if not cells or column - 1 + _word_int(row, "w:trPr/w:gridAfter", 0) != len(columns):
+                raise ValueError("DOCX table row does not match its column grid")
+            parsed_rows.append(cells)
+        for cells in parsed_rows:
+            for cell, position in cells:
+                # Headers are explicit repeating rows, never guessed from first-row text.
+                header_context = [h for h in headers if h["row"] < position["row"]
+                                  and h["column"] < position["column"] + position["column_span"]
+                                  and position["column"] < h["column"] + h["column_span"]]
+                cell_location = {"kind": "docx", "part": part, "table": number, "cell": position,
+                                 "header_context": header_context}
+                if "table" in location:
+                    cell_location["parent_cell"] = {"table": location["table"], "cell": location["cell"]}
+                cell_location["table_block"] = location["block"]
+                blocks(cell, cell_location)
+
+    blocks(body, {"kind": "docx", "part": part})
+
+
+def _read_docx(data: bytes, units: _Units) -> None:
+    # Reuse the existing bounded ZIP/XML package reader. PPTX's link policy stays
+    # unchanged; DOCX may contain external hyperlinks whose targets are never read.
+    try:
+        parts = _zip_parts(data)
+        relationships = _relationships(parts, allow_external_hyperlinks=True)
+        office_parts = [target for kind, target in relationships.get("", {}).values()
+                        if _is_relationship(kind, "officeDocument")]
+        if len(office_parts) != 1 or "[Content_Types].xml" not in parts:
+            raise ValueError("DOCX requires exactly one document part and content types")
+        name = office_parts[0]
+        content_types = _xml(parts["[Content_Types].xml"])
+        expected = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+        if content_types.tag != "{" + _CONTENT_TYPES + "}Types" or not any(
+            item.get("PartName") == "/" + name and item.get("ContentType") == expected
+            for item in content_types
+        ):
+            raise ValueError("DOCX document content type is missing or unsupported")
+        document = _xml(parts[name])
+        body = document.find("w:body", _NS)
+        if document.tag != "{" + _W + "}document" or body is None:
+            raise ValueError("DOCX document root or body is invalid")
+        units.warn("DOCX locators use document XML order, not rendered page numbers. Hyperlink targets are never fetched.")
+        for links in relationships.values():
+            if any(_is_relationship(kind, role) for kind, _ in links.values()
+                   for role in ("header", "footer", "footnotes", "endnotes", "comments")):
+                units.warn("DOCX headers, footers, footnotes, endnotes and comments are not extracted.")
+        _read_word_body(body, units, name)
+    except ValueError as exc:
+        # Keep established PPTX diagnostics unchanged for existing callers.
+        if "PPTX" in str(exc):
+            raise ValueError(str(exc).replace("PPTX", "DOCX")) from exc
+        raise
+
+
 def _read_image(data: bytes, extension: str, transcription: dict | None, units: _Units) -> bool:
     expected = _IMAGE_FORMATS[extension]
     try:
@@ -463,6 +655,8 @@ def read_source(data: bytes, source_name: str, *, transcription: dict | None = N
         _read_text(data, units)
     elif extension in (".csv", ".tsv"):
         _read_csv(data, "," if extension == ".csv" else "\t", units)
+    elif extension == ".docx":
+        _read_docx(data, units)
     elif extension == ".pptx":
         _read_pptx(data, units)
     else:

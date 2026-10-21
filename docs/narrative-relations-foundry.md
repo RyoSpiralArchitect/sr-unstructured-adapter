@@ -1,7 +1,7 @@
 # Documents → proposed relation tables → Foundry IQ
 
 The opt-in `knowledge narrative` path reads UTF-8 text/Markdown, CSV/TSV,
-PowerPoint `.pptx`, and single-frame PNG/JPEG/WebP documents. It calls an existing
+Word `.docx`, PowerPoint `.pptx`, and single-frame PNG/JPEG/WebP documents. It calls an existing
 Foundry model deployment to propose statements using a caller-authored ontology.
 It exports a normal CSV relation table and a verified evidence bundle, then the
 existing `knowledge foundry` / `foundry-publish` path makes those statements
@@ -40,7 +40,7 @@ sr-adapt knowledge narrative data/knowledge/narrative-mock/memo-a.md \
 ```
 
 Without `--execute`, this creates an offline request plan without authentication
-or model calls. Each output directory must be new. A text/CSV/PPTX extraction
+or model calls. Each output directory must be new. A text/CSV/DOCX/PPTX extraction
 uses one model request. An image uses two: transcription, then relation extraction
 from the saved transcription. No automatic retries, implicit cloud publication,
 OCR confidence scores or invented visual bounding boxes are used.
@@ -94,6 +94,7 @@ dates, conditions and identity qualifications remain inspectable.
 |---|---|---|
 | `.txt`, `.md` | Original one-based line | UTF-8; no Markdown semantic inference. |
 | `.csv`, `.tsv` | Logical record, physical lines, column index/header/raw value | Duplicate headers remain positional; quoted multiline cells are retained; inconsistent widths reject. |
+| `.docx` | Main-document XML part, block/paragraph; table number, grid row/column and explicit header context | Body paragraphs and table cells in document order, including nested tables/content controls. Merge markers and empty cells are retained; no rendered page numbers or inferred headers. |
 | `.pptx` | Presentation-order slide, shape ID, table cell where applicable | OOXML text; images, diagrams, charts and notes are not visually interpreted. Unsupported content is reported. |
 | `.png`, `.jpg`, `.jpeg`, `.webp` | Original image hash, frame and model transcript line | Transcript lines are not pixel coordinates; no claim of OCR/visual correctness. |
 
@@ -104,6 +105,41 @@ Limits reject the whole input rather than silently truncating: 16 MiB input,
 64 KiB extracted UTF-8 text, 500 source units, 200 candidates. Foundry cards have a
 64 KiB ceiling, and publication is bounded to 1,000 cards / 12 MiB per batch.
 Full evidence may reach these bounds before the raw file does.
+
+### Word documents
+
+The same CLI accepts a Word file without conversion or a new flag:
+
+```sh
+sr-adapt knowledge narrative requirements.docx \
+  --ontology ontology.json \
+  --project-endpoint https://YOUR-ACCOUNT.services.ai.azure.com/api/projects/YOUR-PROJECT \
+  --model gpt-5.5 --out artifacts/narrative/requirements
+```
+
+This example prepares an offline request; add `--execute` for the existing
+single-request extraction flow. The Python APIs remain
+`read_source(data, "requirements.docx")` and `extract_narrative(path, ...)`.
+Existing CSV exports, evidence replay and Foundry handoffs accept the resulting
+bundle without a DOCX-specific publishing step.
+
+Word locators count blocks and paragraphs within their body or cell. Tables are
+numbered in document order, including nested tables; nested cells also identify
+their parent table/cell. Columns follow the Word grid, so a merged cell's
+`column_span` can exceed one. `horizontal_merge` and `vertical_merge` preserve
+`none`, `restart` or `continue`; merged values are never filled down.
+`header_context` contains overlapping earlier rows explicitly marked as repeating
+headers (`w:tblHeader`), not a guess that the first row is a header. The source
+units for those headers remain separately citable.
+
+Visible hyperlink text and cached field results are included. Hyperlink targets
+are never fetched; other external relationships are rejected. Deleted revisions
+are omitted and inserted text is included, with a warning. Automatic list numbers,
+headers/footers, footnotes, comments, drawings, text boxes and embedded objects are
+not rendered or transcribed. Warnings describe these boundaries. The DOCX reader
+uses the existing bounded ZIP/XML checks, including traversal, duplicate parts,
+DTD/entity declarations and decompression limits. No macro-enabled Word format is
+accepted.
 
 ## Reproducibility and existing bundles
 
