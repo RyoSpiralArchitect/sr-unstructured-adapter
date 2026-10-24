@@ -34,6 +34,14 @@ def add_parser(subparsers):
     visual.add_argument("--strategy", choices=("grounded", "direct"), default="grounded")
     visual.add_argument("--out", required=True, type=Path)
     visual.add_argument("--execute", action="store_true")
+    dataset = commands.add_parser("dataset", help="Export destination-independent relation tables and replay sources (local only)")
+    dataset.add_argument("bundles", nargs="+", type=Path)
+    dataset.add_argument("--profile", choices=("narrative", "visual"), required=True)
+    dataset.add_argument("--out", required=True, type=Path)
+    dataset.add_argument("--review", type=Path, help="Optional visual review findings JSON")
+    dataset_sqlite = commands.add_parser("dataset-sqlite", help="Commit every table of a verified relation dataset into SQLite")
+    dataset_sqlite.add_argument("bundle", type=Path)
+    dataset_sqlite.add_argument("--database", required=True, type=Path)
     sqlite = commands.add_parser("sqlite", help="Atomically insert a verified bundle into SQLite")
     sqlite.add_argument("bundle", type=Path)
     sqlite.add_argument("--database", type=Path, required=True)
@@ -108,6 +116,13 @@ def handle(args):
             from .visual_runtime import extract_visual
             result = extract_visual(args.source, args.out, endpoint=args.project_endpoint, model=args.model,
                 page_label=args.page_label, strategy=args.strategy, execute=args.execute)
+        elif args.knowledge_command == "dataset":
+            from .relation_dataset_store import export_relation_dataset
+            result = export_relation_dataset(args.bundles, args.out, profile=args.profile,
+                review=json.loads(args.review.read_bytes()) if args.review else None)
+        elif args.knowledge_command == "dataset-sqlite":
+            from .relation_dataset_store import write_dataset_sqlite
+            result = write_dataset_sqlite(args.bundle, args.database)
         elif args.knowledge_command == "sqlite":
             result = write_sqlite(args.bundle, args.database)
         elif args.knowledge_command == "adls":
