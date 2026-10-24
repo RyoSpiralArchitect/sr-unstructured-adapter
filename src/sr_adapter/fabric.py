@@ -14,6 +14,7 @@ from pydantic import Field, field_validator
 from .knowledge import KnowledgePackage, sha256
 from .knowledge_store import FIELDS, atomic_json, verify_bundle
 from .tables import Record, canonical_json
+from .relation_dataset import rows_digest as rows_digest
 
 
 class FabricTarget(Record):
@@ -54,11 +55,6 @@ INTEGER_COLUMNS = {"page", "row_index", "column_index", "row_span", "column_span
 NULLABLE = {("observations", "subject_id"), ("observations", "value")}
 NULLABLE |= {("evidence", name) for name in ("row_index", "column_index", "row_span", "column_span", "text")}
 MAX_EXPORT_BYTES = 64 * 1024 * 1024
-
-
-def rows_digest(rows):
-    """Order-independent content digest; duplicate rows are retained and detectable."""
-    return sha256(canonical_json(sorted(rows, key=canonical_json)))
 
 
 def _arrow_schema(kind):

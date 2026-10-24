@@ -3,6 +3,13 @@
 
 Turn chaotic documents into structured payloads with a pipeline that speaks both native kernels and LLMs.
 
+The [portable relation dataset layer](docs/relation-datasets.md) separates source
+interpretation from destination storage. Replay-verified document and image
+relations become immutable, typed scalar tables with source IDs, evidence,
+uncertainty and versioned profiles. Fabric and local SQLite consume the same
+tables; portable Parquet needs no cloud target or new model call. Start with
+`sr-adapt knowledge dataset <saved-bundle> --profile narrative --out <new-directory>`.
+
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
 and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks Delta

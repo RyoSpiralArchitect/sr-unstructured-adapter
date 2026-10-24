@@ -15,7 +15,7 @@ from uuid import UUID
 from pydantic import Field, field_validator
 
 from .fabric import FabricTarget, verify_fabric
-from .fabric_visual import COLUMNS, INTS, REVIEW_COLUMNS
+from .relation_profiles import VISUAL_COLUMNS as COLUMNS, VISUAL_INTS as INTS, VISUAL_REVIEW_COLUMNS as REVIEW_COLUMNS
 from .foundry import FoundryTarget, SEARCH_API_VERSION
 from .knowledge import sha256
 from .knowledge_store import atomic_json
