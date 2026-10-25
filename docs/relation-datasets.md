@@ -22,6 +22,8 @@ flowchart LR
     C --> P[Portable Parquet + replay sources]
     C --> F[Existing Fabric export and publisher]
     P --> S[Transactional SQLite + readback]
+    P --> VIEWS[Search cards / assertion graph]
+    VIEWS --> S
 ```
 
 This layer normalizes the *handoff contract*, not every source into one ontology.
@@ -131,8 +133,11 @@ This is the first migrated slice. Ruled-PDF knowledge packages, native PPTX
 object/connector tables, and Foundry search cards keep their existing formats;
 they are not silently converted into either of these two profiles. The existing
 ADLS/Databricks commands still accept their original knowledge bundle format.
-New dataset sinks for those services, search cards and graph stores remain future
-work. No new cloud compatibility or extraction-accuracy result is claimed here.
+[Search cards and an assertion graph](relation-views.md) now provide explicit
+versioned projections over the common dataset. They share source and node IDs
+and reuse the existing Parquet/SQLite storage path. New dataset sinks for cloud
+search and graph stores remain future work. No new cloud compatibility or
+extraction-accuracy result is claimed here.
 
 To add a source family, define a versioned profile with source replay, scalar
 schemas and identity/evidence rules, and test it through the existing sinks.

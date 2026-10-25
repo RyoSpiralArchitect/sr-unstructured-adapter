@@ -9,6 +9,10 @@ relations become immutable, typed scalar tables with source IDs, evidence,
 uncertainty and versioned profiles. Fabric and local SQLite consume the same
 tables; portable Parquet needs no cloud target or new model call. Start with
 `sr-adapt knowledge dataset <saved-bundle> --profile narrative --out <new-directory>`.
+The same dataset also produces [search cards and an assertion graph](docs/relation-views.md)
+with shared evidence IDs: `sr-adapt knowledge dataset-view <dataset> --view search --out <new-directory>`
+(or `--view graph`). Both views are local, replayable,
+and readable through the existing SQLite sink.
 
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
