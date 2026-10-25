@@ -83,22 +83,20 @@ def _manifest(dataset, files):
             "snapshot_id": sha256(canonical_json(description)), **description, "files": _hashes(files)}
 
 
-def export_relation_dataset(bundles, destination, *, profile, review=None):
-    """Save all scalar tables and replay inputs; no endpoint, identity or network."""
+def _dataset_files(dataset):
     import pyarrow as pa
     import pyarrow.parquet as pq
-    dataset, sources = load_relation_dataset(bundles, profile=profile, review=review)
     files = {"dataset.json": canonical_json(dataset.describe())}
-    files.update({f"sources/{key}/{name}": data for key, entries in sources.items() for name, data in entries.items()})
-    if review is not None:
-        files["review.json"] = canonical_json(review)
     for table in dataset.tables:
         stream = io.BytesIO()
         pq.write_table(pa.Table.from_pylist(table.rows(), schema=table.arrow_schema()), stream)
         files[f"tables/{table.name}.parquet"] = stream.getvalue()
+    return files
+
+
+def _save_snapshot(destination, files, manifest):
     if sum(map(len, files.values())) > MAX_BYTES:
         raise ValueError("Relation dataset exceeds 64 MiB")
-    manifest = _manifest(dataset, files)
     root = Path(destination)
     root.mkdir(parents=True, exist_ok=False)
     for name, data in files.items():
@@ -107,6 +105,37 @@ def export_relation_dataset(bundles, destination, *, profile, review=None):
         path.write_bytes(data)
     atomic_json(root / "manifest.json", manifest)
     return manifest
+
+
+def export_relation_dataset(bundles, destination, *, profile, review=None):
+    """Save all scalar tables and replay inputs; no endpoint, identity or network."""
+    dataset, sources = load_relation_dataset(bundles, profile=profile, review=review)
+    files = _dataset_files(dataset)
+    files.update({f"sources/{key}/{name}": data for key, entries in sources.items() for name, data in entries.items()})
+    if review is not None:
+        files["review.json"] = canonical_json(review)
+    return _save_snapshot(destination, files, _manifest(dataset, files))
+
+
+def _view_manifest(dataset, files, view, source):
+    return {**_manifest(dataset, files), "kind": "relation_view", "view": view,
+            "input_snapshot_id": source.snapshot_id, "input_profile": source.profile}
+
+
+def _search_file(dataset):
+    return b"".join(canonical_json(row) + b"\n" for row in dataset.rows()["cards"])
+
+
+def export_relation_view(bundle, destination, *, view):
+    """Derive search cards or a graph locally from a replay-verified base dataset."""
+    from .relation_views import project_relation_view
+    source, inputs = _load_dataset(bundle, allow_view=False)
+    dataset = project_relation_view(source, view=view)
+    files = _dataset_files(dataset)
+    files.update({"input/" + name: data for name, data in inputs.items()})
+    if view == "search":
+        files["cards.jsonl"] = _search_file(dataset)
+    return _save_snapshot(destination, files, _view_manifest(dataset, files, view, source))
 
 
 def _read_files(root, manifest):
@@ -128,25 +157,53 @@ def _read_files(root, manifest):
     return files
 
 
-def verify_relation_dataset(folder):
-    """Rebuild every table from original sources; rehashed edits cannot bypass replay."""
+def _check_header(manifest, *, allow_view):
+    from .relation_views import VIEW_PROFILES
+    kind = manifest.get("kind")
+    profile = manifest.get("profile")
+    supported = (kind == "relation_dataset" and profile in PROFILES.values()) or (
+        allow_view and kind == "relation_view" and manifest.get("view") in VIEW_PROFILES
+        and profile == VIEW_PROFILES[manifest["view"]])
+    if (type(manifest.get("schema_version")) is not int or manifest["schema_version"] != 1
+            or manifest.get("status") != "complete" or not supported
+            or type(manifest.get("contract_version")) is not int or manifest["contract_version"] != 1):
+        raise ValueError("Incomplete or unsupported relation dataset/view")
+
+
+def _verify_tables(dataset, files):
     import pyarrow as pa
     import pyarrow.parquet as pq
-    root = Path(folder).resolve()
-    with (root / "manifest.json").open("rb") as stream:
-        raw = stream.read(1024 * 1024 + 1)
-    if len(raw) > 1024 * 1024:
-        raise ValueError("Dataset manifest exceeds 1 MiB")
-    manifest = json.loads(raw)
-    if (type(manifest.get("schema_version")) is not int or manifest["schema_version"] != 1
-            or manifest.get("kind") != "relation_dataset" or manifest.get("status") != "complete"
-            or type(manifest.get("contract_version")) is not int or manifest["contract_version"] != 1
-            or manifest.get("profile") not in PROFILES.values()):
-        raise ValueError("Incomplete or unsupported relation dataset")
+    names = {"dataset.json"}
+    if files["dataset.json"] != canonical_json(dataset.describe()):
+        raise ValueError("Dataset contract differs from replayed source/candidates")
+    for table in dataset.tables:
+        filename = f"tables/{table.name}.parquet"
+        names.add(filename)
+        saved = pq.read_table(pa.BufferReader(files[filename]))
+        if saved.schema != table.arrow_schema() or saved.to_pylist() != table.rows():
+            raise ValueError("Dataset table differs from replayed source/candidates")
+    return names
+
+
+def _verify_payloads(manifest, files, *, allow_view):
+    _check_header(manifest, allow_view=allow_view)
+    if manifest["kind"] == "relation_view":
+        from .relation_views import project_relation_view
+        inputs = {name.removeprefix("input/"): data for name, data in files.items() if name.startswith("input/")}
+        inner = json.loads(inputs["manifest.json"])
+        source = _verify_payloads(inner, {n: v for n, v in inputs.items() if n != "manifest.json"}, allow_view=False)
+        dataset = project_relation_view(source, view=manifest["view"])
+        expected = _verify_tables(dataset, files) | {"input/" + n for n in inputs}
+        if manifest["view"] == "search":
+            expected.add("cards.jsonl")
+            if files["cards.jsonl"] != _search_file(dataset):
+                raise ValueError("Search cards differ from the source dataset")
+        if set(files) != expected or manifest != _view_manifest(dataset, files, manifest["view"], source):
+            raise ValueError("Relation view differs from the source dataset")
+        return dataset
     packages = manifest["package_ids"]
     if not 1 <= len(packages) <= 20 or len(set(packages)) != len(packages):
         raise ValueError("Invalid dataset package selection")
-    files = _read_files(root, manifest)
     payloads, expected = [], {"dataset.json"}
     for package_id in packages:
         prefix = "sources/" + _key(package_id) + "/"
@@ -162,16 +219,27 @@ def verify_relation_dataset(folder):
             raise ValueError("A saved review cannot be null")
         expected.add("review.json")
     dataset = _project(manifest["profile"], payloads, review)
-    for table in dataset.tables:
-        filename = f"tables/{table.name}.parquet"
-        expected.add(filename)
-        saved = pq.read_table(pa.BufferReader(files[filename]))
-        if saved.schema != table.arrow_schema() or saved.to_pylist() != table.rows():
-            raise ValueError("Dataset table differs from replayed source/candidates")
-    if (set(files) != expected or files["dataset.json"] != canonical_json(dataset.describe())
-            or manifest != _manifest(dataset, files)):
+    expected.update(_verify_tables(dataset, files))
+    if set(files) != expected or manifest != _manifest(dataset, files):
         raise ValueError("Dataset contract differs from replayed source/candidates")
     return dataset
+
+
+def _load_dataset(folder, *, allow_view):
+    root = Path(folder).resolve()
+    with (root / "manifest.json").open("rb") as stream:
+        raw = stream.read(1024 * 1024 + 1)
+    if len(raw) > 1024 * 1024:
+        raise ValueError("Dataset manifest exceeds 1 MiB")
+    manifest = json.loads(raw)
+    _check_header(manifest, allow_view=allow_view)
+    files = _read_files(root, manifest)
+    return _verify_payloads(manifest, files, allow_view=allow_view), {**files, "manifest.json": raw}
+
+
+def verify_relation_dataset(folder):
+    """Replay a base dataset or a single derived view from the enclosed source bytes."""
+    return _load_dataset(folder, allow_view=True)[0]
 
 
 def _create_sql(name, table):

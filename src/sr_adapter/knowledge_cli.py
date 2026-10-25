@@ -39,6 +39,10 @@ def add_parser(subparsers):
     dataset.add_argument("--profile", choices=("narrative", "visual"), required=True)
     dataset.add_argument("--out", required=True, type=Path)
     dataset.add_argument("--review", type=Path, help="Optional visual review findings JSON")
+    view = commands.add_parser("dataset-view", help="Project a saved relation dataset into search cards or a graph (local only)")
+    view.add_argument("bundle", type=Path)
+    view.add_argument("--view", choices=("search", "graph"), required=True)
+    view.add_argument("--out", type=Path, required=True)
     dataset_sqlite = commands.add_parser("dataset-sqlite", help="Commit every table of a verified relation dataset into SQLite")
     dataset_sqlite.add_argument("bundle", type=Path)
     dataset_sqlite.add_argument("--database", required=True, type=Path)
@@ -123,6 +127,9 @@ def handle(args):
         elif args.knowledge_command == "dataset-sqlite":
             from .relation_dataset_store import write_dataset_sqlite
             result = write_dataset_sqlite(args.bundle, args.database)
+        elif args.knowledge_command == "dataset-view":
+            from .relation_dataset_store import export_relation_view
+            result = export_relation_view(args.bundle, args.out, view=args.view)
         elif args.knowledge_command == "sqlite":
             result = write_sqlite(args.bundle, args.database)
         elif args.knowledge_command == "adls":
