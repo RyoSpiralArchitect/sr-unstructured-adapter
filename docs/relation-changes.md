@@ -63,6 +63,12 @@ evidence order remain distinct. A new deployment/package ID alone does not imply
 different candidate values. This compares projected readings, not every byte of
 the original extraction request or a certified ontology.
 
+Relation-review targets include the normalized endpoint observations and ordered
+evidence, so moving a finding between same-label connectors in different regions
+remains visible. Image-review targets retain the pixel dimensions and coordinate
+system; deployment, response-model and endpoint metadata remain in the source
+records and do not re-enter candidate fingerprints through review targets.
+
 ## Check conditions outside the cited relation
 
 The response always distinguishes:

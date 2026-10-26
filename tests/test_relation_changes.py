@@ -2,13 +2,16 @@
 from copy import deepcopy
 import json
 import sqlite3
+from types import SimpleNamespace
 
+import httpx
 import pytest
 
 from sr_adapter.narrative import render_narrative, save_narrative
 from sr_adapter.relation_changes import compare_received_sources, main
 from sr_adapter.relation_receiver import SQLiteRelationReceiver, trace_received_relation
 from sr_adapter.relation_sources import read_source
+from sr_adapter.visual_runtime import extract_visual
 from test_fabric_narrative import narrative as narrative
 from test_narrative import ontology as ontology, response
 from test_relation_receiver import delivered as delivered, revision, pair
@@ -150,6 +153,45 @@ def test_empty_extraction_does_not_hide_context_changes(narrative, tmp_path):
     assert report["counts"]["before_count"] == report["counts"]["after_count"] == 0
     context = compare_received_sources(tmp_path / "db", **args, scope="context", include_unchanged=True)
     assert context["total"] > 0 and any(g["content"].get("record", {}).get("text") == "Only applies after approval." for g in context["groups"])
+
+
+def test_review_moved_between_same_label_reversed_regions_changes_context(source, tmp_path):
+    readings = {"relations": [*RELATIONS["relations"],
+        {**RELATIONS["relations"][0], "id": "r2", "subject_id": "n2", "object_id": "n1"}], "limitations": []}
+    run(source, tmp_path / "image", responses=[visual_response(INVENTORY), visual_response(readings)])
+    base = pair(tmp_path / "image", tmp_path / "base", "visual")
+    versions = []
+    for ref in ("r1", "r2"):
+        review = {"version": 1, "reviewer": "synthetic", "findings": [{"package_id": base.source.package_ids[0],
+            "reference_kind": "relation", "reference_id": ref, "finding": "ambiguous_relation", "detail": "Inspect connector"}]}
+        versions.append(pair(tmp_path / "image", tmp_path / ref, "visual", review))
+    args = publish_pair(tmp_path / "db", *versions, collection="images")
+    report = compare_received_sources(tmp_path / "db", **args, scope="context")
+    assert report["source_context_changed"] and report["total"] == 2
+    targets = [g["content"]["referenced_values"] for g in report["groups"]]
+    assert {target["mentions"]["subject"]["x0"] for target in targets} == {0, 500}
+    assert all(len(target["evidence"]) == 3 for target in targets)
+
+
+def test_image_review_ignores_deployment_metadata_in_content_fingerprints(source, tmp_path):
+    versions = []
+    for suffix in ("old", "new"):
+        responses = [visual_response(INVENTORY, model="response-" + suffix), visual_response(RELATIONS, model="response-" + suffix)]
+        def handle(request):
+            return httpx.Response(200, json=responses.pop(0))
+        bundle = tmp_path / suffix
+        extract_visual(source, bundle, endpoint=f"https://example.services.ai.azure.com/api/projects/{suffix}",
+            model="deployment-" + suffix, page_label="7", execute=True,
+            credential=SimpleNamespace(get_token=lambda scope: SimpleNamespace(token="test")), transport=httpx.MockTransport(handle))
+        base = pair(bundle, tmp_path / (suffix + "-base"), "visual")
+        review = {"version": 1, "reviewer": "synthetic", "findings": [{"package_id": base.source.package_ids[0],
+            "reference_kind": "image", "reference_id": None, "finding": "coverage_gap", "detail": "Inspect remaining content"}]}
+        versions.append(pair(bundle, tmp_path / (suffix + "-reviewed"), "visual", review))
+    args = publish_pair(tmp_path / "db", *versions, collection="images")
+    report = compare_received_sources(tmp_path / "db", **args)
+    assert report["source_metadata_changed"] and not report["source_bytes_changed"]
+    assert report["total"] == 0 and report["counts"]["shared_count"] == 1
+    assert not report["source_context_changed"]
 
 
 def test_source_selection_paging_and_cli(ontology, tmp_path, capsys):

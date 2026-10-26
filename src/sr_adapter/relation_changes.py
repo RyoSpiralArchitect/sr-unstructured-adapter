@@ -50,30 +50,44 @@ class _SelectedSource:
 
     def review(self, row):
         kind, ref = row["reference_kind"], row["reference_id"]
-        target = (self.origin if kind == "image" else self.entities[ref] if kind == "item" else self.relations[ref])
-        return {"record": _values(row, "finding_id", "reference_id"),
-                "referenced_values": _values(target, "item_id", "relation_id", "subject_id", "object_id")}
+        if kind == "image":
+            # Deployment/provenance changes belong to source_metadata_changed,
+            # while the spatial frame is needed to interpret a review of pixels.
+            target = {key: self.origin[key] for key in ("width_px", "height_px", "coordinate_system")}
+        elif kind == "item":
+            target = _values(self.entities[ref], "item_id")
+        else:
+            # Retain role-specific observations and evidence when dropping scoped
+            # IDs. Equal labels alone cannot identify the reviewed connector.
+            target = self.relation_values(self.relations[ref])
+        return {"record": _values(row, "finding_id", "reference_id"), "referenced_values": target}
+
+    def relation_values(self, row):
+        """Normalize a target without its reviews, avoiding recursive review links."""
+        rid = row["relation_id"]
+        mentions = {role: None if row[role + "_id"] is None else _values(
+            self.entities[row[role + "_id"]], "entity_id", "item_id", "relation_id") for role in ("subject", "object")}
+        if self.narrative:
+            links = sorted([r for r in self.rows["evidence_links"] if r["relation_id"] == rid], key=lambda r: r["evidence_order"])
+            evidence = [self.unit(self.evidence[r["unit_id"]]) for r in links]
+        else:
+            links = sorted([r for r in self.rows["evidence"] if r["relation_id"] == rid], key=lambda r: r["evidence_order"])
+            evidence = [{"record": _values(r, "relation_id", "item_id"),
+                         "observation": _values(self.entities[r["item_id"]], "item_id")} for r in links]
+        return {"relation": _values(row, "relation_id", "subject_id", "object_id"), "mentions": mentions, "evidence": evidence}
 
     def relation_entries(self):
         entries = []
         for row in self.rows["relations"]:
             rid = row["relation_id"]
-            mentions = {role: None if row[role + "_id"] is None else _values(
-                self.entities[row[role + "_id"]], "entity_id", "item_id", "relation_id") for role in ("subject", "object")}
             if self.narrative:
-                links = sorted([r for r in self.rows["evidence_links"] if r["relation_id"] == rid], key=lambda r: r["evidence_order"])
-                evidence = [self.unit(self.evidence[r["unit_id"]]) for r in links]
                 reviews = []
             else:
-                links = sorted([r for r in self.rows["evidence"] if r["relation_id"] == rid], key=lambda r: r["evidence_order"])
-                evidence = [{"record": _values(r, "relation_id", "item_id"),
-                             "observation": _values(self.entities[r["item_id"]], "item_id")} for r in links]
-                related_items = {row["subject_id"], row["object_id"], *(r["item_id"] for r in links)}
+                related_items = {row["subject_id"], row["object_id"], *(r["item_id"] for r in self.rows["evidence"] if r["relation_id"] == rid)}
                 reviews = [self.review(r) for r in self.rows.get("reviews", []) if r["reference_kind"] == "image"
                     or (r["reference_kind"] == "relation" and r["reference_id"] == rid)
                     or (r["reference_kind"] == "item" and r["reference_id"] in related_items)]
-            content = {"relation": _values(row, "relation_id", "subject_id", "object_id"), "mentions": mentions,
-                       "evidence": evidence, "reviews": sorted(reviews, key=canonical_json)}
+            content = {**self.relation_values(row), "reviews": sorted(reviews, key=canonical_json)}
             entries.append((content, self.reference("relations", row)))
         return entries
 
