@@ -26,6 +26,10 @@ node identity. Equal labels across occurrences, documents, or assertions are
 never automatically merged. IDs are deterministic within a snapshot; a changed
 source selection or review changes its snapshot and the view IDs.
 
+The [receiver contract](relation-receiver.md) now accepts both views as one
+delivery, verifies their common source, and atomically activates a local collection.
+Its search/trace APIs return the selected snapshot so evidence survives later updates.
+
 ## Search context
 
 There is one card per extracted assertion. Titles retain the narrative status

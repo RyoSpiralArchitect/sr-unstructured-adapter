@@ -46,6 +46,27 @@ def add_parser(subparsers):
     dataset_sqlite = commands.add_parser("dataset-sqlite", help="Commit every table of a verified relation dataset into SQLite")
     dataset_sqlite.add_argument("bundle", type=Path)
     dataset_sqlite.add_argument("--database", required=True, type=Path)
+    receive = commands.add_parser("dataset-receive", help="Atomically receive paired search/graph views and activate a local collection")
+    receive.add_argument("search_bundle", type=Path)
+    receive.add_argument("graph_bundle", type=Path)
+    receive.add_argument("--database", required=True, type=Path)
+    receive.add_argument("--collection", required=True)
+    receive.add_argument("--expected-snapshot", help="Required current source snapshot when replacing an active collection")
+    query = commands.add_parser("dataset-query", help="Search received relations with explicit source/status context")
+    query.add_argument("--database", required=True, type=Path)
+    query.add_argument("--collection", required=True)
+    query.add_argument("--snapshot", help="Previously received source snapshot; defaults to active")
+    query.add_argument("--query", default="")
+    query.add_argument("--scope", choices=("relation", "context"), default="relation")
+    query.add_argument("--assertion-status", choices=("asserted", "denied", "unknown", "ambiguous"))
+    query.add_argument("--support", choices=("explicit", "uncertain"))
+    query.add_argument("--limit", type=int, default=20)
+    query.add_argument("--offset", type=int, default=0)
+    trace = commands.add_parser("dataset-trace", help="Trace a received search card to its exact source evidence")
+    trace.add_argument("card_id")
+    trace.add_argument("--database", required=True, type=Path)
+    trace.add_argument("--collection", required=True)
+    trace.add_argument("--snapshot", help="Source snapshot returned by the original query")
     sqlite = commands.add_parser("sqlite", help="Atomically insert a verified bundle into SQLite")
     sqlite.add_argument("bundle", type=Path)
     sqlite.add_argument("--database", type=Path, required=True)
@@ -130,6 +151,19 @@ def handle(args):
         elif args.knowledge_command == "dataset-view":
             from .relation_dataset_store import export_relation_view
             result = export_relation_view(args.bundle, args.out, view=args.view)
+        elif args.knowledge_command == "dataset-receive":
+            from .relation_receiver import receive_relation_views
+            result = receive_relation_views(args.search_bundle, args.graph_bundle, args.database,
+                collection=args.collection, expected_snapshot=args.expected_snapshot)
+        elif args.knowledge_command == "dataset-query":
+            from .relation_receiver import search_received_relations
+            result = search_received_relations(args.database, collection=args.collection, query=args.query,
+                scope=args.scope, assertion_status=args.assertion_status, support=args.support,
+                limit=args.limit, offset=args.offset, snapshot_id=args.snapshot)
+        elif args.knowledge_command == "dataset-trace":
+            from .relation_receiver import trace_received_relation
+            result = trace_received_relation(args.database, collection=args.collection,
+                card_id=args.card_id, snapshot_id=args.snapshot)
         elif args.knowledge_command == "sqlite":
             result = write_sqlite(args.bundle, args.database)
         elif args.knowledge_command == "adls":
@@ -209,6 +243,12 @@ def handle(args):
         print(json.dumps(result, ensure_ascii=True, indent=2))
         return 0 if result.get("status") in {None, "prepared", "complete", "committed", "configured"} else 1
     except Exception as exc:
+        from .relation_receiver import ReceiverConflict
+        if isinstance(exc, ReceiverConflict):
+            print(json.dumps({"status": "failed", "error_type": "ReceiverConflict",
+                "message": "Collection changed or source profile differs. Query the current snapshot and use "
+                           "--expected-snapshot for an update; use a separate collection for another profile."}))
+            return 1
         # Provider messages/URLs can contain credentials or source text.
         print(json.dumps({"status": "failed", "error_type": type(exc).__name__,
                           "message": "Operation failed; verify inputs, optional dependencies, and any reserved receipt."}))

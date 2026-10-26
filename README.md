@@ -14,6 +14,10 @@ with shared evidence IDs: `sr-adapt knowledge dataset-view <dataset> --view sear
 (or `--view graph`). Both views are local, replayable,
 and readable through the existing SQLite sink.
 
+Receive both views together with the [local receiver](docs/relation-receiver.md):
+`sr-adapt knowledge dataset-receive <search-view> <graph-view> --database received.db --collection demo`.
+Search and trace APIs retain the selected source version through updates.
+
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
 and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks Delta

@@ -31,6 +31,8 @@ include docs/validation/foundry-live-2026-10-16/live-verification.json
 include docs/narrative-relations-foundry.md
 include docs/relation-datasets.md
 include docs/relation-views.md
+include docs/relation-receiver.md
+include scripts/demo_relation_receiver.py
 include docs/narrative-foundry-2026-10-17.md
 recursive-include data/knowledge/narrative-mock *
 include scripts/probe_narrative_relations.py

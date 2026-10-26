@@ -270,6 +270,50 @@ def _read_sql_table(connection, name, table):
     return RelationTable.from_rows(table.name, table.columns, table.primary_key, rows)
 
 
+def _sqlite_receipt(dataset, inserted=0):
+    snapshot = dataset.snapshot_id
+    return {"status": "committed", "snapshot_id": snapshot, "profile": dataset.profile,
+            "inserted_rows": inserted, "tables": {
+                t.name: {"name": f"srd_{snapshot}_{t.name}", **t.describe()} for t in dataset.tables}}
+
+
+def _verify_sqlite_dataset(connection, dataset):
+    """Readback only; the caller owns the transaction and replayed source dataset."""
+    snapshot = dataset.snapshot_id
+    old = connection.execute("SELECT profile, descriptor FROM sr_relation_datasets WHERE snapshot_id=?",
+                             (snapshot,)).fetchone()
+    if old != (dataset.profile, canonical_json(dataset.describe()).decode()):
+        raise ValueError("Existing SQLite snapshot has different metadata")
+    for table in dataset.tables:
+        name = f"srd_{snapshot}_{table.name}"
+        saved = connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone()
+        if saved != (_create_sql(name, table),) or _read_sql_table(connection, name, table) != table:
+            raise ValueError("Existing SQLite table differs from the complete dataset")
+    return _sqlite_receipt(dataset)
+
+
+def _write_sqlite_dataset(connection, dataset):
+    """Store/readback a snapshot inside a transaction owned by the caller."""
+    snapshot = dataset.snapshot_id
+    descriptor = canonical_json(dataset.describe()).decode()
+    inserted = 0
+    connection.execute("CREATE TABLE IF NOT EXISTS sr_relation_datasets (snapshot_id TEXT PRIMARY KEY NOT NULL, "
+                       "profile TEXT NOT NULL, descriptor TEXT NOT NULL)")
+    old = connection.execute("SELECT profile, descriptor FROM sr_relation_datasets WHERE snapshot_id=?",
+                             (snapshot,)).fetchone()
+    if old is None:
+        for table in dataset.tables:
+            name = f"srd_{snapshot}_{table.name}"
+            connection.execute(_create_sql(name, table))  # Missing marker + existing table is a conflict.
+            placeholders = ", ".join("?" for _ in table.columns)
+            connection.executemany(f'INSERT INTO "{name}" VALUES ({placeholders})', table.values)
+            inserted += len(table.values)
+        connection.execute("INSERT INTO sr_relation_datasets VALUES (?, ?, ?)",
+                           (snapshot, dataset.profile, descriptor))
+    _verify_sqlite_dataset(connection, dataset)
+    return _sqlite_receipt(dataset, inserted)
+
+
 def write_dataset_sqlite(bundle, database):
     """Commit a complete snapshot transactionally; repeated writes require exact readback.
 
@@ -277,31 +321,7 @@ def write_dataset_sqlite(bundle, database):
     are never implicitly merged. Existing databases and other snapshots are kept.
     """
     dataset = verify_relation_dataset(bundle)
-    snapshot = dataset.snapshot_id
-    descriptor = canonical_json(dataset.describe()).decode()
-    names = {t.name: f"srd_{snapshot}_{t.name}" for t in dataset.tables}
-    inserted = 0
     with closing(sqlite3.connect(database)) as connection, connection:
         connection.execute("BEGIN IMMEDIATE")
-        connection.execute("CREATE TABLE IF NOT EXISTS sr_relation_datasets (snapshot_id TEXT PRIMARY KEY NOT NULL, "
-                           "profile TEXT NOT NULL, descriptor TEXT NOT NULL)")
-        old = connection.execute("SELECT profile, descriptor FROM sr_relation_datasets WHERE snapshot_id=?",
-                                 (snapshot,)).fetchone()
-        if old is not None and old != (dataset.profile, descriptor):
-            raise ValueError("Existing SQLite snapshot has different metadata")
-        for table in dataset.tables:
-            name = names[table.name]
-            sql = _create_sql(name, table)
-            if old is None:
-                connection.execute(sql)  # A table without its snapshot marker is a conflict.
-                placeholders = ", ".join("?" for _ in table.columns)
-                connection.executemany(f'INSERT INTO "{name}" VALUES ({placeholders})', table.values)
-                inserted += len(table.values)
-            saved = connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone()
-            if saved != (sql,) or _read_sql_table(connection, name, table) != table:
-                raise ValueError("Existing SQLite table differs from the complete dataset")
-        if old is None:
-            connection.execute("INSERT INTO sr_relation_datasets VALUES (?, ?, ?)",
-                               (snapshot, dataset.profile, descriptor))
-    return {"status": "committed", "snapshot_id": snapshot, "profile": dataset.profile,
-            "inserted_rows": inserted, "tables": {t.name: {"name": names[t.name], **t.describe()} for t in dataset.tables}}
+        receipt = _write_sqlite_dataset(connection, dataset)
+    return receipt
