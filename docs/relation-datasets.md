@@ -139,6 +139,11 @@ and reuse the existing Parquet/SQLite storage path. New dataset sinks for cloud
 search and graph stores remain future work. No new cloud compatibility or
 extraction-accuracy result is claimed here.
 
+The [local receiver](relation-receiver.md) accepts the paired views, archives the
+source bundle, and saves all three datasets with transactional activation and
+historical search/evidence lookup. It provides the first receiving implementation
+of the shared delivery contract, without adding a live cloud connection.
+
 To add a source family, define a versioned profile with source replay, scalar
 schemas and identity/evidence rules, and test it through the existing sinks.
 Keep old profile implementations available for saved bundle replay. To add a
