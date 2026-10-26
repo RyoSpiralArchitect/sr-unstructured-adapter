@@ -33,6 +33,8 @@ include docs/relation-datasets.md
 include docs/relation-views.md
 include docs/relation-receiver.md
 include scripts/demo_relation_receiver.py
+include docs/relation-semantics.md
+include scripts/demo_relation_semantics.py
 include docs/narrative-foundry-2026-10-17.md
 recursive-include data/knowledge/narrative-mock *
 include scripts/probe_narrative_relations.py

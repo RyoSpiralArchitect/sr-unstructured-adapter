@@ -18,6 +18,12 @@ Receive both views together with the [local receiver](docs/relation-receiver.md)
 `sr-adapt knowledge dataset-receive <search-view> <graph-view> --database received.db --collection demo`.
 Search and trace APIs retain the selected source version through updates.
 
+An explicit [semantic overlay](docs/relation-semantics.md) adds typed vocabulary,
+n-ary roles, nested conditions/negation, modality, validity intervals and competing
+viewpoints. It preserves the source snapshot and replays into scalar Parquet/SQLite
+tables. Start with `python scripts/demo_relation_semantics.py --out <new-directory>`;
+the example uses handwritten synthetic declarations, with no model or cloud calls.
+
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
 and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks Delta
