@@ -138,6 +138,23 @@ def export_relation_view(bundle, destination, *, view):
     return _save_snapshot(destination, files, _view_manifest(dataset, files, view, source))
 
 
+def _semantics_manifest(dataset, files, source):
+    return {**_manifest(dataset, files), "kind": "relation_semantics",
+            "input_snapshot_id": source.snapshot_id, "input_profile": source.profile}
+
+
+def export_relation_semantics(bundle, destination, *, overlay):
+    """Save a declared semantic overlay with its replay-verified, unchanged source."""
+    from .relation_semantics import normalize_overlay, project_relation_semantics
+    source, inputs = _load_dataset(bundle, allow_view=False)
+    normalized = normalize_overlay(overlay)
+    dataset = project_relation_semantics(source, normalized)
+    files = _dataset_files(dataset)
+    files["semantics.json"] = canonical_json(normalized)
+    files.update({"input/" + name: data for name, data in inputs.items()})
+    return _save_snapshot(destination, files, _semantics_manifest(dataset, files, source))
+
+
 def _read_files(root, manifest):
     files, total = {}, 0
     for name, expected in manifest["files"].items():
@@ -163,7 +180,8 @@ def _check_header(manifest, *, allow_view):
     profile = manifest.get("profile")
     supported = (kind == "relation_dataset" and profile in PROFILES.values()) or (
         allow_view and kind == "relation_view" and manifest.get("view") in VIEW_PROFILES
-        and profile == VIEW_PROFILES[manifest["view"]])
+        and profile == VIEW_PROFILES[manifest["view"]]) or (
+        allow_view and kind == "relation_semantics" and profile == "relation_semantics/1")
     if (type(manifest.get("schema_version")) is not int or manifest["schema_version"] != 1
             or manifest.get("status") != "complete" or not supported
             or type(manifest.get("contract_version")) is not int or manifest["contract_version"] != 1):
@@ -187,6 +205,19 @@ def _verify_tables(dataset, files):
 
 def _verify_payloads(manifest, files, *, allow_view):
     _check_header(manifest, allow_view=allow_view)
+    if manifest["kind"] == "relation_semantics":
+        from .relation_semantics import normalize_overlay, project_relation_semantics
+        inputs = {name.removeprefix("input/"): data for name, data in files.items() if name.startswith("input/")}
+        inner = json.loads(inputs["manifest.json"])
+        source = _verify_payloads(inner, {n: v for n, v in inputs.items() if n != "manifest.json"}, allow_view=False)
+        overlay = normalize_overlay(json.loads(files["semantics.json"]))
+        if files["semantics.json"] != canonical_json(overlay):
+            raise ValueError("Semantic overlay differs from its canonical declaration")
+        dataset = project_relation_semantics(source, overlay)
+        expected = _verify_tables(dataset, files) | {"input/" + n for n in inputs} | {"semantics.json"}
+        if set(files) != expected or manifest != _semantics_manifest(dataset, files, source):
+            raise ValueError("Semantic tables differ from the declared overlay and source")
+        return dataset
     if manifest["kind"] == "relation_view":
         from .relation_views import project_relation_view
         inputs = {name.removeprefix("input/"): data for name, data in files.items() if name.startswith("input/")}
