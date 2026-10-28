@@ -35,6 +35,10 @@ include docs/relation-receiver.md
 include scripts/demo_relation_receiver.py
 include docs/relation-semantics.md
 include scripts/demo_relation_semantics.py
+include docs/semantic-proposals.md
+include docs/semantic-proposals-2026-10-28.md
+recursive-include docs/validation/semantic-proposals-2026-10-28 *
+include scripts/probe_semantic_proposals.py
 include docs/narrative-foundry-2026-10-17.md
 recursive-include data/knowledge/narrative-mock *
 include scripts/probe_narrative_relations.py
