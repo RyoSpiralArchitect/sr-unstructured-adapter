@@ -24,6 +24,13 @@ viewpoints. It preserves the source snapshot and replays into scalar Parquet/SQL
 tables. Start with `python scripts/demo_relation_semantics.py --out <new-directory>`;
 the example uses handwritten synthetic declarations, with no model or cloud calls.
 
+[Semantic proposals](docs/semantic-proposals.md) now generate that overlay from
+saved document/image datasets, with original image pixels, source citations,
+coverage/omission notes and a review report. Prepare with
+`python -m sr_adapter.semantic_proposal_runtime propose <dataset> --model <model> --out <new-directory>`;
+`--execute` makes one explicit OpenAI Responses call. Results remain unreviewed
+model candidates, with the original request/response retained for replay.
+
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
 and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks Delta
