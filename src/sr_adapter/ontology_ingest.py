@@ -21,7 +21,7 @@ from .narrative import NarrativeOntology, render_narrative, save_narrative
 from .proposal_vocabulary import REGISTRY, STRICT, VocabularyConflict
 from .relation_dataset_store import _hashes, _load_dataset, _save_snapshot, export_relation_dataset
 from .relation_sources import read_source
-from .semantic_proposals import (INSTRUCTIONS_V2, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION, ProposalConfig,
+from .semantic_proposals import (INSTRUCTIONS_V2, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION, UNIVERSAL_VERSION, ProposalConfig,
     proposal_instructions, proposal_request, proposal_schema, render_semantic_proposal)
 from .tables import canonical_json
 from .visual_relations import INVENTORY_VERSION, project_visual, visual_request
@@ -104,17 +104,26 @@ def _source_bundle(data, source_name, root, *, visual_response=None, model=None)
     return _load_dataset(root / "dataset", allow_view=False)[1]
 
 
-def _request_key(source_name, source_hash, provider, model, first_request, plan):
+def _request_key(source_name, source_hash, provider, model, first_request, plan, *, proposal_version=None):
     # Input identity remains independent of local vocabulary compilation. Every
     # previously accepted strict proposal already satisfied registry uniqueness.
+    # Omitting the version retains the historical v3 native/v4 OCR identity.
+    version = (OCR_VERSION if plan is not None else STRUCTURAL_VERSION) if proposal_version is None else proposal_version
+    if type(version) is not int or version not in (STRUCTURAL_VERSION, OCR_VERSION, UNIVERSAL_VERSION):
+        raise ValueError("Raw ingestion requires proposal version 3, 4 or 5")
+    if plan is not None and version < OCR_VERSION:
+        raise ValueError("OCR ingestion requires proposal version 4 or 5")
     if plan is None:
         fields = {"version": 1, "source_name": source_name, "source_sha256": source_hash,
             "provider": provider, "request": first_request, "proposal_instructions": INSTRUCTIONS_V2,
             "proposal_schema": proposal_schema(version=STRUCTURAL_VERSION)}
+        if version != STRUCTURAL_VERSION:
+            fields.update(proposal_version=version, proposal_instructions=proposal_instructions(version),
+                          proposal_schema=proposal_schema(version=version))
     else:
-        config = ProposalConfig(version=OCR_VERSION, model=model, max_output_tokens=24000)
+        config = ProposalConfig(version=version, model=model, max_output_tokens=24000)
         fields = {"version": 2, "plan": plan, "provider": provider, "proposal_config": config.model_dump(),
-            "proposal_instructions": proposal_instructions(OCR_VERSION), "proposal_schema": proposal_schema(version=OCR_VERSION)}
+            "proposal_instructions": proposal_instructions(version), "proposal_schema": proposal_schema(version=version)}
     return sha256(canonical_json(fields))
 
 
@@ -197,14 +206,21 @@ def _finish_proposal(database, root, receipt, inputs, response, version, expecte
 def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="default", name=None,
                            expected_snapshot=None, execute=False, api_key=None, complete=None,
                            adapter_id=None, transport=None, ocr=None, ocr_engine="auto",
-                           ocr_languages=None, ocr_dpi=144, pages=None, ocr_reader=None):
+                           ocr_languages=None, ocr_dpi=144, pages=None, ocr_reader=None,
+                           proposal_version=UNIVERSAL_VERSION):
     """Parse, propose and import from a raw file; ``complete`` can wrap a local model.
 
     The injected callable receives one Responses-shaped request and returns one
     complete normalized response. Host code owns that adapter and its credentials.
     Default transport uses OpenAI; retrieval tools never invoke this function.
+    Protocol v5 is common to all formats; v3/v4 remain available for exact replay
+    and reuse of older generation identities. OCR requires v4 or v5.
     """
     source = Path(source)
+    if type(proposal_version) is not int or proposal_version not in (STRUCTURAL_VERSION, OCR_VERSION, UNIVERSAL_VERSION):
+        raise ValueError("Raw ingestion requires proposal version 3, 4 or 5")
+    if ocr is not None and proposal_version < OCR_VERSION:
+        raise ValueError("OCR ingestion requires proposal version 4 or 5")
     if complete is not None and (not callable(complete) or not isinstance(adapter_id, str) or not adapter_id.strip()):
         raise ValueError("A host model callable requires a stable adapter_id for replay and reuse")
     if complete is None and adapter_id is not None:
@@ -232,7 +248,6 @@ def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="
                         reader_signature=getattr(ocr_reader, "signature", None))
     reading = None if plan is not None else read_source(data, source.name)
     visual = plan is None and reading["needs_transcription"]
-    proposal_version = OCR_VERSION if plan is not None else STRUCTURAL_VERSION
     with TemporaryDirectory(prefix="sr-ontology-") as scratch:
         root = Path(scratch)
         inputs = request = None
@@ -240,7 +255,7 @@ def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="
             inputs = None if visual else _source_bundle(data, source.name, root)
             request = (visual_request(data, source.name, model, "inventory", version=INVENTORY_VERSION) if visual
                        else proposal_request(inputs, model=model, version=proposal_version))
-        fingerprint = _request_key(source.name, sha256(data), provider, model, request, plan)
+        fingerprint = _request_key(source.name, sha256(data), provider, model, request, plan, proposal_version=proposal_version)
         receipt = {"version": 1, "run_id": uuid4().hex, "status": "prepared", "stage": "prepared",
             "collection": collection, "name": name, "source_name": source.name, "source_sha256": sha256(data),
             "model": model, "provider": "host_callable" if complete is not None else "openai",

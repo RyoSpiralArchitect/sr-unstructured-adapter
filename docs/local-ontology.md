@@ -117,7 +117,15 @@ listed as outside coverage. Limits include 16 million pixels per input image,
 source package, plus the existing context/archive bounds. Exceeding any bound
 fails explicitly instead of truncating a successful result.
 
-OCR ingestion uses semantic proposal protocol **v4**: each source unit is sent
+Raw ingestion defaults to source-agnostic semantic proposal protocol **v5**.
+It constrains vocabulary/list sizes, distinguishes meanings with separate IRIs,
+retains source-local draft/conflict scope and restricts non-null validity fields
+to timezone-bearing timestamps. Native and OCR sources use medium reasoning.
+`--proposal-version 3` or `4` selects an earlier generation contract; OCR requires
+version 4 or 5. Reuse an older active entry with its original protocol, or supply
+`--expected-snapshot` when changing its generation profile.
+
+Protocols **v4/v5** send each narrative source unit
 once with its layout attached, avoiding repeated source IDs and location rows.
 Full scalar rows remain unchanged in the database and binding receipts. Page
 pixels stay in the request. V4 preserves bounded list sizes in the generation
@@ -140,13 +148,28 @@ directly to semantic proposal. There is no intermediate binary relation extracto
 that would force a condition or an unknown operator into a two-endpoint edge.
 Existing v1/v2 visual bundles and request contracts remain unchanged.
 
-Raw ingestion selects semantic proposal protocol v3, which constrains each logical
+Raw ingestion retains semantic proposal protocol v3, which constrains each logical
 operator separately (`implies`: exactly two ordered operands, `not`: one, `and/or`:
 two or more). It uses the supported `anyOf` and array-bound subset of
 [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 This addresses malformed logical shapes at generation time; it does not establish
 semantic correctness. Stored ontologies remain `relation_semantics/2`; existing
 proposal v1/v2 schemas and requests retain their exact replay behavior.
+
+In v5, a syntactically valid selector that cannot resolve within its known source
+unit becomes an explicit `unknown` role value. The original selector and source
+reference remain in `review.json.anchor_findings`, with review-required flags.
+Claim evidence remains available. Unknown aliases, wrong source-table selectors,
+malformed selectors and role constraints that exclude unknown still reject the
+proposal. Earlier protocols retain their strict selector validation.
+
+For supplying several inspected claims to a model, `pack_ontology_context` and
+`unpack_ontology_context` share identical fields only within the same collection,
+document and snapshot. Source tables use named columns, constant fields and row
+arrays. Roundtrip verification restores every input JSON value, including numeric
+types and original source strings. The host supplies verified inspection results.
+Bounds are 100 inspections, 32 MiB expanded and 8 MiB packed; excess data fails
+explicitly. See the [cross-format observation](cross-format-ontology-2026-11-03.md).
 
 Input is limited to 16 MiB, PDF to 100 pages, and source units to existing parser
 bounds (500 units and 64 KiB of extracted UTF-8 text in total). Semantic context/request/response/archive

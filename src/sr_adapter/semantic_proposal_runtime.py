@@ -114,7 +114,7 @@ def main(argv=None):
     propose.add_argument("--out", required=True)
     propose.add_argument("--model", required=True)
     propose.add_argument("--max-output-tokens", type=int, default=24000)
-    propose.add_argument("--proposal-version", type=int, choices=(1, 2), default=VERSION)
+    propose.add_argument("--proposal-version", type=int, choices=(1, 2, 3, 4, 5), default=VERSION)
     propose.add_argument("--vocabulary-policy", choices=(REGISTRY, STRICT), default=REGISTRY)
     propose.add_argument("--execute", action="store_true")
     verify = commands.add_parser("verify")

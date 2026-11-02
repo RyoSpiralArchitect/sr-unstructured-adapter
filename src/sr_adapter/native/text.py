@@ -76,11 +76,13 @@ class TextKernel:
 
         inputs = (self._Input * len(payloads))()
         holders = []
+        capacity = 0
         for idx, (data, type_code, infer, confidence) in enumerate(payloads):
             if not isinstance(data, (bytes, bytearray)):
                 raise TypeError("kernel input must be utf-8 bytes")
             data = bytes(data)
             data.decode("utf-8")  # Reject malformed UTF-8 before entering C++.
+            capacity += len(data)
             buf = ctypes.create_string_buffer(data)
             holders.append(buf)
             inputs[idx] = self._Input(
@@ -92,15 +94,11 @@ class TextKernel:
             )
 
         outputs = (self._Output * len(payloads))()
+        # For valid UTF-8 this kernel only removes whitespace or replaces a
+        # three-byte bullet with "- ". Input bytes therefore bound output bytes,
+        # including embedded NULs. Allocate once instead of normalizing twice.
+        buffer = ctypes.create_string_buffer(capacity or 1)
         with self._lock:
-            required = self._lib.normalize_text_blocks(
-                inputs,
-                ctypes.c_size_t(len(payloads)),
-                ctypes.c_void_p(),
-                ctypes.c_size_t(),
-                outputs,
-            )
-            buffer = ctypes.create_string_buffer(required or 1)
             written = self._lib.normalize_text_blocks(
                 inputs,
                 ctypes.c_size_t(len(payloads)),
@@ -108,6 +106,19 @@ class TextKernel:
                 ctypes.c_size_t(len(buffer)),
                 outputs,
             )
+            if written > len(buffer):
+                # An explicitly supplied ABI-compatible library may expand text.
+                # Keep its size-query protocol available outside the bundled
+                # kernel's no-expansion fast path.
+                required = self._lib.normalize_text_blocks(
+                    inputs, ctypes.c_size_t(len(payloads)), ctypes.c_void_p(),
+                    ctypes.c_size_t(), outputs,
+                )
+                buffer = ctypes.create_string_buffer(required or 1)
+                written = self._lib.normalize_text_blocks(
+                    inputs, ctypes.c_size_t(len(payloads)),
+                    ctypes.cast(buffer, ctypes.c_void_p), ctypes.c_size_t(len(buffer)), outputs,
+                )
 
         if written > len(buffer):
             raise TextKernelError("kernel returned an invalid output size")

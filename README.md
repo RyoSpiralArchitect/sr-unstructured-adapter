@@ -44,6 +44,9 @@ Provider-neutral read-only tools discover vocabulary and inspect
 whole claims from the database alone, without a cloud store or original folder.
 Omit `--execute` to prepare locally; install the `ontology` extra for ingestion
 and the `ocr` extra for PDF rendering. A local OCR engine is also required.
+The [cross-format probe](docs/cross-format-ontology-2026-11-03.md) covers conflicting
+synthetic PDF/DOCX/image sources, source-local unknown roles and lossless context
+packing. Raw ingestion defaults to source-agnostic proposal v5 with `gpt-6-luna`.
 
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
