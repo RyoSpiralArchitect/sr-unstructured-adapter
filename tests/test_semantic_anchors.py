@@ -173,7 +173,7 @@ def test_anchor_alias_resolution_replay_and_scalar_sqlite_roundtrip(narrative_an
     report = json.loads((out / "review.json").read_bytes())
     assert report["anchor_counts"] == {"selected_text": 2, "whole_record": 0}
     assert {a["role"] for a in report["argument_anchors"]} == {NS + "actor", NS + "object"}
-    markdown = (out / "review.md").read_text()
+    markdown = (out / "review.md").read_text(encoding="utf-8")
     assert "審査部" in markdown and "役割ごとの原文参照" in markdown
     db = tmp_path / "anchors.db"
     receipt = write_dataset_sqlite(out / "semantics", db)
