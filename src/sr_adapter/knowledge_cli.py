@@ -12,6 +12,8 @@ from .tables import extract_pdf_tables
 def add_parser(subparsers):
     parser = subparsers.add_parser("knowledge", help="Extract source-linked relations and persist them")
     commands = parser.add_subparsers(dest="knowledge_command", required=True)
+    from .ontology_cli import add_parser as add_ontology_parser
+    add_ontology_parser(commands)
     extract = commands.add_parser("extract", help="Extract ruled PDF tables using an explicit ontology mapping")
     extract.add_argument("source", type=Path)
     extract.add_argument("--mapping", required=True, type=Path)
@@ -124,7 +126,10 @@ def add_parser(subparsers):
 
 def handle(args):
     try:
-        if args.knowledge_command == "extract":
+        if args.knowledge_command == "ontology":
+            from .ontology_cli import handle as handle_ontology
+            result = handle_ontology(args)
+        elif args.knowledge_command == "extract":
             mapping = OntologyMapping.model_validate_json(args.mapping.read_bytes())
             package = extract_knowledge(extract_pdf_tables(args.source), mapping)
             result = export_bundle(package, args.out, parquet=args.parquet)

@@ -61,6 +61,7 @@ _MEDIA_TYPES = {
     ".tsv": "text/tab-separated-values",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".pdf": "application/pdf",
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -642,6 +643,24 @@ def _read_image(data: bytes, extension: str, transcription: dict | None, units: 
     return False
 
 
+def _read_pdf(data: bytes, units: _Units) -> None:
+    from pypdf import PdfReader
+    from pypdf.errors import PyPdfError
+    try:
+        reader = PdfReader(io.BytesIO(data), strict=True)
+        if reader.is_encrypted or not 1 <= len(reader.pages) <= 100:
+            raise ValueError("PDF must be unencrypted and contain 1..100 pages")
+        units.warn("PDF text uses the embedded reading order; layout, tables and image-only content are not interpreted.")
+        for number, page in enumerate(reader.pages, 1):
+            text = page.extract_text()
+            if text and text.strip():
+                units.add(text, {"kind": "pdf", "page": number})
+            else:
+                units.warn(f"PDF page {number} has no extractable text; its visual content was not read.")
+    except PyPdfError as error:
+        raise ValueError("Cannot read embedded text from this PDF") from error
+
+
 def read_source(data: bytes, source_name: str, *, transcription: dict | None = None) -> dict:
     """Read supported source bytes, or raise ``ValueError`` without partial output.
 
@@ -670,6 +689,8 @@ def read_source(data: bytes, source_name: str, *, transcription: dict | None = N
         _read_docx(data, units)
     elif extension == ".pptx":
         _read_pptx(data, units)
+    elif extension == ".pdf":
+        _read_pdf(data, units)
     else:
         needs_transcription = _read_image(data, extension, transcription, units)
     if not needs_transcription and not any(unit["text"].strip() for unit in units.units):
