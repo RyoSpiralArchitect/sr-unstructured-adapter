@@ -197,6 +197,31 @@ related vocabulary/axioms and references to claims using it. These are declared
 interpretations, with `semantic_validation: not_performed`; inferred subclass
 closure, equivalence resolution or truth adjudication is not performed.
 
+Inspection also returns `value.vocabulary_review`. Each archive records its
+vocabulary policy and response model, then lists relevant terms with their
+individual description strings, zero-based declaration positions and JSON
+Pointers into the original proposal. `review_required: true` marks parallel
+descriptions that need interpretation. Claim inspection includes declarations
+used by its reachable expressions; unused vocabulary has its own term reference.
+Search summaries set `declarations_included: false` so consumers can request the
+full inspection before interpreting a combined description.
+
+Multiple archived responses can produce the same semantic snapshot. Their
+declarations remain scoped by `archive_id`. Inspection returns one archive per
+page, with `has_more` and a complete `next_inspect` action for the model to call.
+The CLI accepts `--vocabulary-offset` from that action. A null aggregate
+`review_required` means the complete declaration history has yet to be established,
+including explicit overlays that have no archived model declarations. Per-term
+flags apply to the displayed archive. Follow all pages when assessing its history.
+
+Readback verifies archive, manifest, configuration, response and proposal hashes,
+re-parses the original model response and compares its compiled vocabulary with
+the SQL terms. This uses SQLite and core Python dependencies. Source folders,
+Arrow, OCR and PDF rendering are unnecessary for inspection. Reads are bounded
+to 32 MiB of archive metadata per page, and the model tool response budget also
+applies. Earlier strict proposal archives and explicit semantic overlays retain
+their own provenance.
+
 Each read checks descriptor/schema hashes, source rows and the semantic projection
 inside a read-only SQLite transaction. A changed active version cannot silently
 redirect a saved reference. Tool responses are capped at 256 KiB by default
@@ -295,6 +320,8 @@ Recovery uses the original collection and document name. If a different version
 is active, add `--expected-snapshot <current-version>` to replace it. Repeating a
 completed recovery for the same active entry returns its existing run ID. The
 failed receipt and original response remain available by the original run ID.
+Archived source filenames follow the source reader's metadata contract, including
+names containing line breaks or tabs when an explicit safe document name was used.
 
 In the synthetic mixed-PDF case, Luna declared `urn:sr:proposed:condition` twice
 with the label `条件`, once for a table and once for an exception. Replaying that
