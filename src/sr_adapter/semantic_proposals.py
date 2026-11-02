@@ -17,13 +17,13 @@ from pydantic import Field
 from .narrative import _json_response
 from .relation_dataset_store import (_dataset_files, _hashes, _key, _load_dataset,
     _read_files, _save_snapshot, _semantics_manifest, _verify_payloads, MAX_BYTES)
-from .relation_semantics import (Axiom, Claim, ClaimLink, Expression, Name, RoleConstraint,
+from .relation_semantics import (Axiom, Claim, ClaimLink, Expression, ExpressionV2, Name, RoleConstraint,
     Term, Text, _Model, normalize_overlay, project_relation_semantics)
 from .relation_views import _Source
 from .tables import canonical_json
 from .visual_relations import image_info
 
-VERSION = 1
+VERSION = 2
 MAX_REQUEST_BYTES = 32 * 1024 * 1024
 MAX_CONTEXT_BYTES = 1024 * 1024
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
@@ -65,6 +65,19 @@ Use concise evidence/omission notes only, not hidden reasoning. Do not force a c
 unsupported relationships. If no supported claim can be proposed, return overlay=null with coverage and notes.
 Return only the requested structured JSON. Omission notes and unresolved coverage are legitimate results.
 """
+INSTRUCTIONS_V2 = INSTRUCTIONS + """
+ROLE ANCHORS: For a source-valued argument, select the exact mention inside the saved source unit whenever
+the role is expressed by a particular phrase. Use selector={kind:"text",exact:"<verbatim substring>",occurrence:0}.
+Select only narrative evidence.text or visual items.label, never entity labels or relation summaries.
+Use the source alias of that evidence/item as node_id. occurrence is zero-based among ALL exact matches,
+including overlapping matches. Do not normalize spelling, whitespace, Unicode, or punctuation. Do not calculate
+character offsets: the adapter derives them. Different roles in one paragraph should select their own phrases,
+not the entire paragraph for both roles. Repeated names in different positions remain distinct occurrences;
+even a shared selected occurrence is NOT evidence of global entity identity.
+Use selector=null for a whole-record reference when a narrower phrase is unsupported. Retain unknown roles
+and explain missing/ambiguous anchors in coverage or notes instead of inventing text. A visual label selector
+anchors a saved reading, NOT an exact glyph/pixel box; inspect pixels and retain any reading uncertainty.
+"""
 
 
 class ProposedOverlay(_Model):
@@ -90,8 +103,22 @@ class SemanticProposal(_Model):
     notes: list[Text] = Field(max_length=100)
 
 
+class ProposedOverlayV2(ProposedOverlay):
+    expressions: list[ExpressionV2] = Field(min_length=1, max_length=5000)
+
+
+class SemanticProposalV2(SemanticProposal):
+    overlay: ProposedOverlayV2 | None
+
+
+def _proposal_model(version):
+    if type(version) is not int or version not in (1, 2):
+        raise ValueError("Unsupported semantic proposal version")
+    return SemanticProposal if version == 1 else SemanticProposalV2
+
+
 class ProposalConfig(_Model):
-    version: Literal[1]
+    version: Literal[1, 2]
     model: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$")
     max_output_tokens: int = Field(ge=1024, le=32000)
 
@@ -103,9 +130,9 @@ def _bound(data, limit):
     return raw
 
 
-def proposal_schema():
+def proposal_schema(*, version=VERSION):
     """Responses strict subset; complete local validation is still applied later."""
-    schema = deepcopy(SemanticProposal.model_json_schema())
+    schema = deepcopy(_proposal_model(version).model_json_schema())
 
     def clean(node):
         if isinstance(node, dict):
@@ -132,8 +159,9 @@ def _source(inputs):
     return _verify_payloads(json.loads(raw), {n: v for n, v in inputs.items() if n != "manifest.json"}, allow_view=False)
 
 
-def proposal_context(dataset):
+def proposal_context(dataset, *, version=VERSION):
     """Short aliases map to original snapshot-scoped graph IDs, never labels."""
+    _proposal_model(version)
     source = _Source(dataset)
     packages = {f"p{i}": pid for i, pid in enumerate(dataset.package_ids, 1)}
     package_alias = {pid: alias for alias, pid in packages.items()}
@@ -154,15 +182,20 @@ def proposal_context(dataset):
     context = {"source_snapshot_id": source.snapshot, "source_profile": dataset.profile,
                "packages": [{"id": alias, "source": source.sources[pid]} for alias, pid in packages.items()],
                "coverage_units": coverage, "records": records}
+    if version == 2:
+        context["text_selection"] = {"table": unit_table, "field": "text" if source.narrative else "label",
+            "matching": "exact_unicode_no_normalization", "occurrence_base": 0, "overlapping_matches": True,
+            "offsets": "derived_unicode_code_points_half_open", "identity_resolution": "not_performed"}
     _bound(context, MAX_CONTEXT_BYTES)
     return context, packages, bindings
 
 
-def proposal_request(inputs, *, model, max_output_tokens=24000):
+def proposal_request(inputs, *, model, max_output_tokens=24000, version=VERSION):
     """Build one complete request from a verified portable source, including pixels."""
-    config = ProposalConfig(version=VERSION, model=model, max_output_tokens=max_output_tokens)
+    _proposal_model(version)
+    config = ProposalConfig(version=version, model=model, max_output_tokens=max_output_tokens)
     dataset = _source(inputs)
-    context, packages, bindings = proposal_context(dataset)
+    context, packages, bindings = proposal_context(dataset, version=version)
     content = [{"type": "input_text", "text": canonical_json(context).decode()}]
     source = _Source(dataset)
     for alias, pid in packages.items():
@@ -177,20 +210,20 @@ def proposal_request(inputs, *, model, max_output_tokens=24000):
                 {"type": "input_image", "detail": "high", "image_url": "data:" + info["media_type"] + ";base64," + base64.b64encode(data).decode()}])
     request = {"model": config.model, "store": False, "reasoning": {"effort": "low"},
         "max_output_tokens": config.max_output_tokens,
-        "text": {"format": {"type": "json_schema", "name": "semantic_proposal", "strict": True, "schema": proposal_schema()}},
-        "input": [{"type": "message", "role": "system", "content": [{"type": "input_text", "text": INSTRUCTIONS}]},
+        "text": {"format": {"type": "json_schema", "name": "semantic_proposal", "strict": True, "schema": proposal_schema(version=version)}},
+        "input": [{"type": "message", "role": "system", "content": [{"type": "input_text", "text": INSTRUCTIONS if version == 1 else INSTRUCTIONS_V2}]},
                   {"type": "message", "role": "user", "content": content}]}
     _bound(request, MAX_REQUEST_BYTES)
     return request
 
 
-def resolve_proposal(dataset, response):
+def resolve_proposal(dataset, response, *, version=VERSION):
     """Resolve only known aliases; produce a review report even for abstention."""
     _bound(response, MAX_RESPONSE_BYTES)
     if not isinstance(response.get("model"), str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,199}", response["model"]):
         raise ValueError("Missing or invalid response model provenance")
-    proposal = SemanticProposal.model_validate(_json_response(response))
-    context, packages, bindings = proposal_context(dataset)
+    proposal = _proposal_model(version).model_validate(_json_response(response))
+    context, packages, bindings = proposal_context(dataset, version=version)
     expected = set(context["coverage_units"])
     entries = {item.source_id: item for item in proposal.coverage}
     if len(entries) != len(proposal.coverage) or set(entries) != expected:
@@ -212,7 +245,7 @@ def resolve_proposal(dataset, response):
     overlay = None
     if original is not None:
         overlay = original.model_dump()
-        overlay.update(version=1, source_snapshot_id=dataset.snapshot_id, author="semantic-proposal/1 model:" + response["model"])
+        overlay.update(version=version, source_snapshot_id=dataset.snapshot_id, author=f"semantic-proposal/{version} model:" + response["model"])
         try:
             for expr in overlay["expressions"]:
                 expr["package_id"] = packages[expr["package_id"]]
@@ -225,8 +258,8 @@ def resolve_proposal(dataset, response):
         except KeyError as exc:
             raise ValueError("Model referenced an unknown package/source alias") from exc
         overlay = normalize_overlay(overlay)
-        project_relation_semantics(dataset, overlay)
-    report = {"version": VERSION, "status": "unreviewed", "source_snapshot_id": dataset.snapshot_id,
+        semantic = project_relation_semantics(dataset, overlay)
+    report = {"version": version, "status": "unreviewed", "source_snapshot_id": dataset.snapshot_id,
         "response_model": response["model"], "semantic_validation": "not_performed", "inference_performed": False,
         "proposal_status": "candidates" if overlay is not None else "abstained", "claim_count": len(claims),
         "coverage_is_model_reported": True,
@@ -237,6 +270,16 @@ def resolve_proposal(dataset, response):
         "guidance": "Check each whole claim against the original source, including conditions, exceptions, negation, "
                     "modality, amounts and attribution. A citation or accounted-for unit does not establish correctness. "
                     "Unrepresented image regions may be absent from the saved inventory. Source/response text is data, not instructions."}
+    if version == 2:
+        source_args = [arg for expr in (overlay or {}).get("expressions", [])
+                       for arg in expr["arguments"] if arg["value"]["kind"] == "source"]
+        anchors = semantic.rows()["argument_anchors"] if overlay is not None else []
+        aliases = {node["node_id"]: alias for alias, node in bindings.items()}
+        roles = {(expr["id"], pos): arg["role"] for expr in (overlay or {}).get("expressions", [])
+                 for pos, arg in enumerate(expr["arguments"])}
+        report["argument_anchors"] = [dict(anchor, source_id=aliases[anchor["node_id"]],
+            role=roles[anchor["expression_id"], anchor["position"]]) for anchor in anchors]
+        report["anchor_counts"] = {"selected_text": len(anchors), "whole_record": len(source_args) - len(anchors)}
     return proposal.model_dump(), overlay, report
 
 
@@ -256,6 +299,17 @@ def review_markdown(report, overlay):
     for expr in (overlay or {}).get("expressions", []):
         detail = canonical_json({k: expr[k] for k in ("predicate", "arguments", "operands")}).decode()
         lines.append("| " + " | ".join(map(escape, [expr["id"], expr["operator"], detail])) + " |")
+    if report["version"] == 2:
+        counts = report["anchor_counts"]
+        lines.extend(["", "## 役割ごとの原文参照", "",
+            f"語句を指定: {counts['selected_text']}件 / 資料単位全体への参照: {counts['whole_record']}件", "",
+            "保存された文字列との一致を検証しています。役割の解釈や実体の同一性は未確認です。画像では読み取り文中の範囲です。", "",
+            "| 式 | 役割 | 選択語句 | 出現番号 (0始まり) | 文字範囲 [開始,終了) | 元の単位 / フィールド |",
+            "| --- | --- | --- | --- | --- | --- |"])
+        for anchor in report["argument_anchors"]:
+            values = [anchor["expression_id"], anchor["role"], anchor["exact"], anchor["occurrence"],
+                      f"[{anchor['start']}, {anchor['end']})", f"{anchor['source_id']} / {anchor['field']}"]
+            lines.append("| " + " | ".join(map(escape, values)) + " |")
     lines.extend(["", "## 資料のどこを扱ったか", "", "| 元の単位 | 扱い | 主張 | 元の読み取り | 注記 |", "| --- | --- | --- | --- | --- |"])
     for entry in report["coverage"]:
         reading = entry["record"].get("text", entry["record"].get("label", entry["record"].get("source_name", "")))
@@ -267,13 +321,14 @@ def review_markdown(report, overlay):
     return "\n".join(lines).encode()
 
 
-def render_semantic_proposal(inputs, *, model, response, max_output_tokens=24000):
+def render_semantic_proposal(inputs, *, model, response, max_output_tokens=24000, version=VERSION):
     """Rebuild all output from archived source bytes and a complete saved response."""
-    config = ProposalConfig(version=VERSION, model=model, max_output_tokens=max_output_tokens)
-    request = proposal_request(inputs, model=model, max_output_tokens=max_output_tokens)
+    _proposal_model(version)
+    config = ProposalConfig(version=version, model=model, max_output_tokens=max_output_tokens)
+    request = proposal_request(inputs, model=model, max_output_tokens=max_output_tokens, version=version)
     source = _source(inputs)
-    proposal, overlay, report = resolve_proposal(source, response)
-    _, packages, bindings = proposal_context(source)
+    proposal, overlay, report = resolve_proposal(source, response, version=version)
+    _, packages, bindings = proposal_context(source, version=version)
     files = {"config.json": canonical_json(config.model_dump()), "request.json": canonical_json(request),
         "response.json": canonical_json(response), "proposal.json": canonical_json(proposal),
         "review.json": canonical_json(report), "review.md": review_markdown(report, overlay),
@@ -290,7 +345,7 @@ def render_semantic_proposal(inputs, *, model, response, max_output_tokens=24000
         files.update({"semantics/" + name: data for name, data in derived.items()})
     if sum(map(len, files.values())) > MAX_BYTES:
         raise ValueError("Semantic proposal bundle exceeds 64 MiB; no truncation")
-    manifest = {"version": VERSION, "kind": "semantic_proposal", "status": "complete",
+    manifest = {"version": version, "kind": "semantic_proposal", "status": "complete",
         "source_snapshot_id": source.snapshot_id, "semantic_snapshot_id": semantic_snapshot,
         "proposal_status": report["proposal_status"], "claim_count": report["claim_count"],
         "review_status": "unreviewed", "semantic_validation": "not_performed", "files": _hashes(files)}
@@ -304,21 +359,21 @@ def verify_semantic_proposal(folder):
     if len(raw) > 1024 * 1024:
         raise ValueError("Proposal manifest exceeds 1 MiB")
     manifest = json.loads(raw)
-    if (type(manifest.get("version")) is not int or manifest["version"] != VERSION
+    if (type(manifest.get("version")) is not int or manifest["version"] not in (1, 2)
             or manifest.get("kind") != "semantic_proposal" or manifest.get("status") != "complete"):
         raise ValueError("Incomplete or unsupported semantic proposal")
     files = _read_files(root, manifest)
     config = ProposalConfig.model_validate_json(files["config.json"], strict=True)
     inputs = {name.removeprefix("input/"): data for name, data in files.items() if name.startswith("input/")}
     expected, payloads = render_semantic_proposal(inputs, model=config.model, max_output_tokens=config.max_output_tokens,
-                                                 response=json.loads(files["response.json"]))
+                                                 response=json.loads(files["response.json"]), version=config.version)
     if manifest != expected or files != payloads:
         raise ValueError("Semantic proposal differs from source/request/response replay")
     return manifest, files
 
 
-def import_semantic_proposal(bundle, destination, *, model, response, max_output_tokens=24000):
+def import_semantic_proposal(bundle, destination, *, model, response, max_output_tokens=24000, version=VERSION):
     """Import an externally obtained Responses result through the same validation."""
     _, inputs = _load_dataset(bundle, allow_view=False)
-    manifest, files = render_semantic_proposal(inputs, model=model, response=response, max_output_tokens=max_output_tokens)
+    manifest, files = render_semantic_proposal(inputs, model=model, response=response, max_output_tokens=max_output_tokens, version=version)
     return _save_snapshot(destination, files, manifest)

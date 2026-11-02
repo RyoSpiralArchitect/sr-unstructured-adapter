@@ -3,6 +3,7 @@
 文書・画像の共通データから、条件・役割・義務・否定・期間・解釈の違いを持つ
 [意味の記述](relation-semantics.md)をモデルに提案させます。画像では元の画像も渡します。
 提案した各主張を原文・観測箇所へ結び付け、未確認の候補として保存します。
+役割ごとに「審査部」「申請A」などの語句と出現箇所も指定でき、同じ段落内の指し先を区別します。
 
 ```mermaid
 flowchart LR
@@ -55,6 +56,11 @@ python -m sr_adapter.semantic_proposal_runtime propose ./source-dataset \
   --model gpt-5.5 --out ./proposal-plan
 ```
 
+New requests default to proposal **version 2**, producing `relation_semantics/2`.
+Pass `--proposal-version 1` (or `version=1` to the Python request/import/runtime
+APIs) for the original protocol. The verifier chooses the saved version; existing
+version 1 requests, normalized overlays, review reports and snapshots replay unchanged.
+
 Inspect `request.json` and the archived input. To execute, use a **new** directory
 and the existing `OPENAI_API_KEY` environment variable:
 
@@ -89,7 +95,7 @@ bundle/                 # only after successful structural validation
   review.json
   review.md             # human-readable claim/expression/coverage tables
   input/
-  semantics/            # standard relation_semantics/1 bundle, when claims exist
+  semantics/            # relation_semantics/2 (or /1 for legacy requests), when claims exist
 ```
 
 Open `bundle/review.md`, inspect conditions and exceptions in each complete
@@ -120,6 +126,23 @@ Labels, filenames or arbitrary IDs cannot substitute for the mapping. Coverage
 and claim evidence refer to original text units/visual observations, not merely
 an entity label, model-written paraphrase or a nonexistent fragment.
 
+In version 2, source-valued arguments also carry a nullable `selector`. A text
+selector specifies `kind: "text"`, a verbatim `exact` phrase and a zero-based
+`occurrence`. The adapter validates it against original `evidence.text` or
+`items.label` and derives Unicode code-point offsets. It does not ask the model
+to count characters or silently normalize a quote. See the precise
+[matching contract](relation-semantics.md#exact-role-anchors-version-2).
+
+The review adds a role/phrase/range table and `anchor_counts`: `selected_text`
+counts source arguments with validated selections, while `whole_record` counts
+source arguments without selections. These counts include unclaimed expressions
+and do not count literal, term, unknown or expression-valued arguments. They are
+not an accuracy or coverage score. A valid phrase can still be the wrong actor,
+object or repeated occurrence; a whole-record reference may be appropriate.
+The model is asked to leave unsupported finer readings unresolved rather than
+invent text. Image selections refer to the saved label, with original pixels
+and observation uncertainty retained for review.
+
 Every claim has `basis=source_interpretation` with original citations. All
 declarations remain hypotheses in the everyday sense of unreviewed model output;
 this runtime does not permit uncited `basis=hypothesis` claims to bypass grounding.
@@ -131,6 +154,8 @@ runtime additionally checks source aliases and coverage associations. It does
 not infer whether a cited sentence logically entails a claim. For example,
 `not required` must be distinguished from `prohibited`; preserving a valid enum
 is insufficient to establish that the model made the distinction correctly.
+Version 2 enumerates supported datatype IRIs in the wire schema as well, so a
+shorthand such as `xsd:decimal` is not offered as an arbitrary string value.
 
 Full source context is included: uncited conditions, DOCX locators/header context,
 image regions, limitations and saved reviews. Original image bytes are included
@@ -146,6 +171,10 @@ The wire schema requires every object property, prohibits extras and uses `anyOf
 for nullable/variant values. Complete local constraints are reapplied on receipt.
 Sources, review comments and model-written notes remain data, never instructions
 or permission to act.
+
+The [role-anchor development observation](semantic-role-anchors-2026-11-02.md)
+records the small synthetic DOCX/image smoke, its initial failures, and remaining
+semantic limitations.
 
 ## Replay and failures
 

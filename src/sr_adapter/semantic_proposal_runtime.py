@@ -11,7 +11,7 @@ import httpx
 from .knowledge import sha256
 from .knowledge_store import atomic_json
 from .relation_dataset_store import _load_dataset, _save_snapshot
-from .semantic_proposals import (MAX_RESPONSE_BYTES, proposal_request,
+from .semantic_proposals import (MAX_RESPONSE_BYTES, VERSION, proposal_request,
     render_semantic_proposal, verify_semantic_proposal)
 from .tables import canonical_json
 
@@ -19,9 +19,9 @@ RESPONSES_URL = "https://api.openai.com/v1/responses"
 
 
 def propose_semantics(bundle, destination, *, model, execute=False, api_key=None,
-                      max_output_tokens=24000, transport=None):
+                      max_output_tokens=24000, transport=None, version=VERSION):
     source, inputs = _load_dataset(bundle, allow_view=False)
-    request = proposal_request(inputs, model=model, max_output_tokens=max_output_tokens)
+    request = proposal_request(inputs, model=model, max_output_tokens=max_output_tokens, version=version)
     request_bytes = canonical_json(request)
     root = Path(destination)
     root.mkdir(parents=True, exist_ok=False)
@@ -33,7 +33,7 @@ def propose_semantics(bundle, destination, *, model, execute=False, api_key=None
     receipt = {"version": 1, "status": "prepared", "stage": "prepared", "provider": "openai", "model": model,
         "source_snapshot_id": source.snapshot_id, "request_sha256": sha256(request_bytes),
         "planned_model_requests": 1, "submitted_requests": 0, "automatic_retries": 0,
-        "publication": "not_performed", "semantic_validation": "not_performed"}
+        "publication": "not_performed", "semantic_validation": "not_performed", "proposal_version": version}
     receipt_path = root / "receipt.json"
     atomic_json(receipt_path, receipt)
     if not execute:
@@ -74,7 +74,7 @@ def propose_semantics(bundle, destination, *, model, execute=False, api_key=None
                     raise ValueError("Unexpected inference acknowledgement")
         raw = json.loads(body)
         receipt["stage"] = "validating"
-        manifest, files = render_semantic_proposal(inputs, model=model, response=raw, max_output_tokens=max_output_tokens)
+        manifest, files = render_semantic_proposal(inputs, model=model, response=raw, max_output_tokens=max_output_tokens, version=version)
         receipt["stage"] = "saving"
         _save_snapshot(root / "bundle", files, manifest)
         receipt.update(status="complete", stage="complete", response_model=raw["model"], usage=raw.get("usage"),
@@ -106,6 +106,7 @@ def main(argv=None):
     propose.add_argument("--out", required=True)
     propose.add_argument("--model", required=True)
     propose.add_argument("--max-output-tokens", type=int, default=24000)
+    propose.add_argument("--proposal-version", type=int, choices=(1, 2), default=VERSION)
     propose.add_argument("--execute", action="store_true")
     verify = commands.add_parser("verify")
     verify.add_argument("bundle")
@@ -113,7 +114,7 @@ def main(argv=None):
     try:
         if args.command == "propose":
             result = propose_semantics(args.source, args.out, model=args.model, execute=args.execute,
-                                       max_output_tokens=args.max_output_tokens)
+                                       max_output_tokens=args.max_output_tokens, version=args.proposal_version)
         else:
             result = verify_semantic_proposal(args.bundle)[0]
         print(json.dumps(result, ensure_ascii=False))

@@ -62,7 +62,7 @@ def test_scope_and_provenance_survive_alias_resolution(case):
     before = deepcopy(payload)
     proposal, overlay, review = resolve_proposal(source, raw(payload))
     assert overlay["source_snapshot_id"] == source.snapshot_id
-    assert overlay["author"].startswith("semantic-proposal/1 model:")
+    assert overlay["author"].startswith("semantic-proposal/2 model:")
     assert {claim["status"] for claim in overlay["claims"]} == {"asserted", "denied"}
     assert {claim["expression_id"] for claim in overlay["claims"]} == {"rule"}
     assert {claim["modality"] for claim in overlay["claims"]} == {"required"}

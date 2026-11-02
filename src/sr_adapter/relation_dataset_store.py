@@ -181,7 +181,7 @@ def _check_header(manifest, *, allow_view):
     supported = (kind == "relation_dataset" and profile in PROFILES.values()) or (
         allow_view and kind == "relation_view" and manifest.get("view") in VIEW_PROFILES
         and profile == VIEW_PROFILES[manifest["view"]]) or (
-        allow_view and kind == "relation_semantics" and profile == "relation_semantics/1")
+        allow_view and kind == "relation_semantics" and profile in {"relation_semantics/1", "relation_semantics/2"})
     if (type(manifest.get("schema_version")) is not int or manifest["schema_version"] != 1
             or manifest.get("status") != "complete" or not supported
             or type(manifest.get("contract_version")) is not int or manifest["contract_version"] != 1):

@@ -52,6 +52,10 @@ human reviewer or a blinded judge. Candidates remain `unreviewed`.
 
 ## Concrete next improvements
 
+The first item is implemented in version 2; see the
+[2026-11-02 follow-up](semantic-role-anchors-2026-11-02.md) for the separate
+development observation. The limitations below describe the original run.
+
 1. **Finer role anchors.** Both outputs sometimes use the same whole paragraph or
    image observation as multiple role values, such as actor and object. Valid
    references do not distinguish the mentions inside that paragraph. Introduce
