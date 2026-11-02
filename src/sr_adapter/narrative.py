@@ -269,6 +269,9 @@ def render_narrative(*, data: bytes, source_name: str, ontology: NarrativeOntolo
 
 def verify_narrative_payloads(files: dict[str, bytes]) -> dict:
     manifest = json.loads(files["manifest.json"])
+    if manifest.get("kind") == "ocr_source":
+        from .ocr_sources import verify_ocr_payloads
+        return verify_ocr_payloads(files)
     if (manifest.get("kind") != "narrative_relations" or manifest.get("schema_version") != 1
             or type(manifest.get("schema_version")) is not int or manifest.get("status") != "complete"
             or set(files) != {*manifest["files"], "manifest.json"}):

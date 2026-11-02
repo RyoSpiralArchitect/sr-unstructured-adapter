@@ -16,7 +16,7 @@ from .relation_dataset_store import (MAX_BYTES, _create_sql, _hashes, _key, _loa
     _read_sql_table, _verify_payloads, _write_sqlite_dataset)
 from .relation_receiver import ReceiverConflict, _collection, _snapshot
 from .relation_semantics import _Semantics, normalize_overlay, trace_semantic_claim
-from .tables import canonical_json
+from .tables import canonical_json, identifier
 
 _SCHEMA = {
     "sro_snapshots": "CREATE TABLE sro_snapshots (snapshot_id TEXT PRIMARY KEY NOT NULL, source_snapshot_id TEXT NOT NULL, overlay TEXT NOT NULL)",
@@ -345,3 +345,46 @@ def read_ontology_source(database, *, collection, name, snapshot_id, package_id)
         if not isinstance(data, bytes) or sha256(data) != expected:
             raise ValueError("Original source bytes differ from their snapshot")
     return {"source_name": origin["source_name"], "sha256": expected, "data": data}
+
+
+def read_ontology_frame(database, *, collection, name, snapshot_id, package_id, page):
+    """Trusted-host OCR page view and saved reading; no renderer, OCR or Arrow needed."""
+    if type(page) is not int or not 1 <= page <= 100:
+        raise ValueError("Use a 1-based physical page number")
+    with _reader(database) as connection:
+        next(_selected(connection, collection, name, snapshot_id))
+        semantics, _ = _read_semantics(connection, snapshot_id)
+        origin = semantics.source.sources.get(package_id)
+        if origin is None:
+            raise ValueError("Source package is outside the selected ontology")
+        archived = connection.execute("SELECT archive_id, kind, descriptor FROM sro_archives WHERE snapshot_id=? ORDER BY archive_id", (snapshot_id,)).fetchone()
+        if (archived is None or len(archived[2].encode()) > 4 * 1024 * 1024
+                or sha256(archived[2].encode()) != archived[0]):
+            raise ValueError("Ontology page archive is missing or altered")
+        descriptor = json.loads(archived[2])
+        prefix = ("semantics/" if archived[1] == "semantic_proposal" else "") + f"input/sources/{_key(package_id)}/"
+
+        def read(filename, limit):
+            path = prefix + filename
+            expected = descriptor["files"].get(path)
+            size = connection.execute("SELECT length(data) FROM sro_files WHERE archive_id=? AND path=?", (archived[0], path)).fetchone()
+            if expected is None or size is None or not 0 <= size[0] <= limit or size[0] != expected["bytes"]:
+                raise ValueError("Saved OCR page file is absent or oversized")
+            raw = connection.execute("SELECT data FROM sro_files WHERE archive_id=? AND path=?", (archived[0], path)).fetchone()[0]
+            if not isinstance(raw, bytes) or sha256(raw) != expected["sha256"]:
+                raise ValueError("Saved OCR page file differs from its archive")
+            return raw
+
+        manifest = json.loads(read("manifest.json", 1024 * 1024))
+        if manifest.get("kind") != "ocr_source" or identifier("ocr", manifest["files"]) != package_id:
+            raise ValueError("Selected source has no matching OCR page archive")
+        frame = read(f"frame-{page:04d}.png", 8 * 1024 * 1024)
+        reading = read(f"page-{page:04d}.json", 4 * 1024 * 1024)
+        for filename, raw in ((f"frame-{page:04d}.png", frame), (f"page-{page:04d}.json", reading)):
+            if manifest["files"].get(filename) != {"bytes": len(raw), "sha256": sha256(raw)}:
+                raise ValueError("Saved OCR page differs from its source package")
+        reading = json.loads(reading)
+        if reading["page"] != page or reading["frame_sha256"] != sha256(frame):
+            raise ValueError("Saved OCR page and reading disagree")
+    return {"source_name": origin["source_name"], "page": page, "sha256": sha256(frame), "data": frame,
+            "reading": reading, "coordinate_system": "rendered_pixels_top_left", "reading_status": "unverified"}

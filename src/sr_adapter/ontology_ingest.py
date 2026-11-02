@@ -20,8 +20,8 @@ from .local_ontology import _collection, _name, _schema, _snapshot, import_ontol
 from .narrative import NarrativeOntology, render_narrative, save_narrative
 from .relation_dataset_store import _hashes, _load_dataset, _save_snapshot, export_relation_dataset
 from .relation_sources import read_source
-from .semantic_proposals import (INSTRUCTIONS_V2, MAX_RESPONSE_BYTES, STRUCTURAL_VERSION, proposal_request,
-    proposal_schema, render_semantic_proposal)
+from .semantic_proposals import (INSTRUCTIONS_V2, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION,
+    proposal_instructions, proposal_request, proposal_schema, render_semantic_proposal)
 from .tables import canonical_json
 from .visual_relations import INVENTORY_VERSION, project_visual, visual_request
 
@@ -93,9 +93,10 @@ def _source_bundle(data, source_name, root, *, visual_response=None, model=None)
     return _load_dataset(root / "dataset", allow_view=False)[1]
 
 
-def ingest_ontology_source(source, database, *, model, collection="default", name=None,
+def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="default", name=None,
                            expected_snapshot=None, execute=False, api_key=None, complete=None,
-                           adapter_id=None, transport=None):
+                           adapter_id=None, transport=None, ocr=None, ocr_engine="auto",
+                           ocr_languages=None, ocr_dpi=144, pages=None, ocr_reader=None):
     """Parse, propose and import from a raw file; ``complete`` can wrap a local model.
 
     The injected callable receives one Responses-shaped request and returns one
@@ -117,24 +118,47 @@ def ingest_ontology_source(source, database, *, model, collection="default", nam
         _snapshot(expected_snapshot)
     with source.open("rb") as stream:
         data = stream.read(16 * 1024 * 1024 + 1)
-    reading = read_source(data, source.name)
-    visual = reading["needs_transcription"]
+    if ocr is None and (ocr_engine != "auto" or ocr_languages is not None or ocr_dpi != 144 or pages is not None or ocr_reader is not None):
+        raise ValueError("OCR options require ocr='auto' or 'always'")
+    if ocr_reader is not None and (not callable(ocr_reader) or ocr_engine != "auto" or ocr_languages is not None):
+        raise ValueError("A host OCR reader owns its engine and language settings")
+    plan = None
+    if ocr is not None:
+        from .ocr_readers import local_reader
+        from .ocr_sources import plan_ocr
+        ocr_reader = local_reader(ocr_engine, ocr_languages) if ocr_reader is None else ocr_reader
+        plan = plan_ocr(data, source.name, mode=ocr, dpi=ocr_dpi, pages=pages,
+                        reader_signature=getattr(ocr_reader, "signature", None))
+    reading = None if plan is not None else read_source(data, source.name)
+    visual = plan is None and reading["needs_transcription"]
+    proposal_version = OCR_VERSION if plan is not None else STRUCTURAL_VERSION
     with TemporaryDirectory(prefix="sr-ontology-") as scratch:
         root = Path(scratch)
-        inputs = None if visual else _source_bundle(data, source.name, root)
-        request = (visual_request(data, source.name, model, "inventory", version=INVENTORY_VERSION) if visual
-                   else proposal_request(inputs, model=model, version=STRUCTURAL_VERSION))
-        fingerprint = sha256(canonical_json({"version": 1, "source_name": source.name, "source_sha256": sha256(data),
-            "provider": provider, "request": request, "proposal_instructions": INSTRUCTIONS_V2,
-            "proposal_schema": proposal_schema(version=STRUCTURAL_VERSION)}))
+        inputs = request = None
+        if plan is None:
+            inputs = None if visual else _source_bundle(data, source.name, root)
+            request = (visual_request(data, source.name, model, "inventory", version=INVENTORY_VERSION) if visual
+                       else proposal_request(inputs, model=model, version=proposal_version))
+            fingerprint_data = {"version": 1, "source_name": source.name, "source_sha256": sha256(data),
+                "provider": provider, "request": request, "proposal_instructions": INSTRUCTIONS_V2,
+                "proposal_schema": proposal_schema(version=proposal_version)}
+        else:
+            # Compute identity before rendering or OCR. A matching active run needs neither.
+            from .semantic_proposals import ProposalConfig
+            config = ProposalConfig(version=proposal_version, model=model, max_output_tokens=24000)
+            fingerprint_data = {"version": 2, "plan": plan, "provider": provider, "proposal_config": config.model_dump(),
+                "proposal_instructions": proposal_instructions(proposal_version), "proposal_schema": proposal_schema(version=proposal_version)}
+        fingerprint = sha256(canonical_json(fingerprint_data))
         receipt = {"version": 1, "run_id": uuid4().hex, "status": "prepared", "stage": "prepared",
             "collection": collection, "name": name, "source_name": source.name, "source_sha256": sha256(data),
             "model": model, "provider": "host_callable" if complete is not None else "openai",
             "adapter_id": provider,
             "planned_model_requests": 2 if visual else 1, "submitted_requests": 0,
-            "automatic_retries": 0, "source_reading": "visual_model" if visual else "local_embedded_text",
+            "automatic_retries": 0, "source_reading": "local_ocr" if plan is not None else "visual_model" if visual else "local_embedded_text",
             "semantic_validation": "not_performed", "warnings": (
-                ["Image readings and regions are unverified model candidates."] if visual else reading["warnings"]), "stages": []}
+                [] if plan is not None else ["Image readings and regions are unverified model candidates."] if visual else reading["warnings"]), "stages": []}
+        if plan is not None:
+            receipt.update(ocr_plan=plan, ocr_pages_read=0, rendered_pages=0)
         with closing(sqlite3.connect(database, timeout=30)) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
             _schema(connection, create=True)
@@ -148,16 +172,16 @@ def ingest_ontology_source(source, database, *, model, collection="default", nam
                     if previous["status"] == "complete" and previous.get("snapshot_id") == active:
                         from .local_ontology import _read_semantics
                         _read_semantics(connection, active)
-                        return {**previous, "outcome": "already_active", "submitted_requests_this_call": 0}
+                        return {**previous, "outcome": "already_active", "submitted_requests_this_call": 0,
+                                **({"ocr_pages_this_call": 0, "rendered_pages_this_call": 0} if plan is not None else {})}
             if active != expected_snapshot:
                 raise ValueError("Entry changed; supply its expected active snapshot before generating a replacement")
             connection.execute("INSERT INTO sro_ingestions VALUES (?, ?, ?, ?, ?)",
                 (receipt["run_id"], fingerprint, collection, name, canonical_json(receipt).decode()))
             connection.execute("INSERT INTO sro_ingestion_files VALUES (?, ?, ?)", (receipt["run_id"], "source.bin", data))
         first_stage = "visual" if visual else "semantics"
-        _save_run(database, receipt, [(first_stage + "-request.json", canonical_json(request))])
-        if not execute:
-            return receipt
+        if request is not None:
+            _save_run(database, receipt, [(first_stage + "-request.json", canonical_json(request))])
 
         def submit(stage, wire, *, saved=False):
             if not saved:
@@ -200,15 +224,39 @@ def ingest_ontology_source(source, database, *, model, collection="default", nam
             return result
 
         try:
+            if plan is not None:
+                from .ocr_sources import render_ocr
+                receipt.update(stage="ocr_reading")
+                recorded = set()
+                def record(path, raw):
+                    recorded.add(path)
+                    if path.startswith("frame-"):
+                        receipt["rendered_pages"] += 1
+                    if path.startswith("page-") and json.loads(raw)["method"] == "ocr":
+                        receipt["ocr_pages_read"] += 1
+                    _save_run(database, receipt, [("ocr/" + path, raw)])
+                record("ocr-config.json", canonical_json(plan))
+                manifest, files = render_ocr(data, plan, ocr_reader, record=record)
+                receipt["warnings"] = manifest["warnings"]
+                _save_run(database, receipt, [("ocr/" + path, raw) for path, raw in files.items()
+                    if path not in recorded and path != "source.bin"] + [("ocr/manifest.json", canonical_json(manifest))])
+                _save_snapshot(root / "source", files, manifest)
+                export_relation_dataset([root / "source"], root / "dataset", profile="narrative")
+                inputs = _load_dataset(root / "dataset", allow_view=False)[1]
+                request = proposal_request(inputs, model=model, version=proposal_version)
+                receipt.update(stage="prepared")
+                _save_run(database, receipt, [("semantics-request.json", canonical_json(request))])
+            if not execute:
+                return receipt
             secret = api_key if api_key is not None else os.environ.get("OPENAI_API_KEY")
             if complete is None and (not isinstance(secret, str) or not secret.strip()):
                 raise ValueError("Credential unavailable")
             if visual:
                 result = submit("visual", request, saved=True)
                 inputs = _source_bundle(data, source.name, root, visual_response=result, model=model)
-                request = proposal_request(inputs, model=model, version=STRUCTURAL_VERSION)
+                request = proposal_request(inputs, model=model, version=proposal_version)
             response = submit("semantics", request, saved=not visual)
-            manifest, files = render_semantic_proposal(inputs, model=model, response=response, version=STRUCTURAL_VERSION)
+            manifest, files = render_semantic_proposal(inputs, model=model, response=response, version=proposal_version)
             _save_snapshot(root / "proposal", files, manifest)
             if manifest["proposal_status"] == "abstained":
                 receipt.update(status="abstained", stage="complete", claim_count=0)
@@ -233,7 +281,8 @@ def ingest_ontology_source(source, database, *, model, collection="default", nam
             receipt.update(status="failed" if error.response.status_code < 500 else "unknown",
                 failure_reason="model_request_failed", error_type=type(error).__name__)
         except (httpx.TransportError, OSError) as error:
-            receipt.update(status="unknown", failure_reason="execution_outcome_unknown", error_type=type(error).__name__)
+            receipt.update(status="failed" if receipt["stage"] == "ocr_reading" else "unknown",
+                failure_reason="execution_outcome_unknown", error_type=type(error).__name__)
         except Exception as error:
             receipt.update(status="unknown" if receipt["stage"].endswith("_submitting") else "failed",
                 failure_reason="ingestion_not_completed", error_type=type(error).__name__)

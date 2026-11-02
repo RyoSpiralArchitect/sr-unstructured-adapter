@@ -16,7 +16,12 @@ def add_parser(commands):
         if name not in {"status", "tools", "call"}:
             command.add_argument("--collection", default="default")
         if name == "ingest":
-            command.add_argument("--model", required=True)
+            command.add_argument("--model", default="gpt-6-luna")
+            command.add_argument("--ocr", choices=("auto", "always"), help="Read PDF/image pages locally, retaining pixels for the model")
+            command.add_argument("--ocr-engine", choices=("auto", "vision", "tesseract"), default="auto")
+            command.add_argument("--ocr-languages", nargs="+", help="Engine-specific language identifiers")
+            command.add_argument("--ocr-dpi", type=int, default=144)
+            command.add_argument("--pages", nargs="+", type=int, help="Increasing 1-based physical PDF pages (at most 12)")
             command.add_argument("--execute", action="store_true", help="Send source content to the selected OpenAI model")
         if name == "search":
             command.add_argument("query", nargs="?", default="")
@@ -48,7 +53,8 @@ def handle(args):
     if command == "ingest":
         from .ontology_ingest import ingest_ontology_source
         return ingest_ontology_source(args.source, args.database, model=args.model, collection=args.collection,
-            name=args.name, expected_snapshot=args.expected_snapshot, execute=args.execute)
+            name=args.name, expected_snapshot=args.expected_snapshot, execute=args.execute,
+            ocr=args.ocr, ocr_engine=args.ocr_engine, ocr_languages=args.ocr_languages, ocr_dpi=args.ocr_dpi, pages=args.pages)
     if command == "import":
         return import_ontology(args.source, args.database, collection=args.collection,
             name=args.name, expected_snapshot=args.expected_snapshot)
