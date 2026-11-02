@@ -262,3 +262,16 @@ def test_tesseract_reuse_signature_changes_when_language_weights_change(tmp_path
     assert first != TesseractOCR().signature
     with pytest.raises(ValueError, match="not installed"):
         TesseractOCR(["jpn"])
+
+
+@pytest.mark.parametrize("first", ['"approval"', '"open'])
+def test_tesseract_quotes_are_literal_and_never_swallow_following_word_rows(first):
+    raw = ("level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n"
+        f"5\t1\t1\t1\t1\t1\t5\t10\t20\t10\t12\t{first}\n"
+        "5\t1\t1\t1\t1\t2\t30\t10\t30\t10\t90\tclose\"\n").encode()
+    line = parse_tesseract(raw)["lines"][0]
+    assert line["text"] == first + ' close"'
+    assert [word["text"] for word in line["words"]] == [first, 'close"']
+    assert line["words"][1]["box"] == [30, 10, 60, 20]
+    assert line["words"][1]["confidence"] == 0.9
+    assert line["box"] == [5, 10, 60, 20]

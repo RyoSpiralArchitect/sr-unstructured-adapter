@@ -71,7 +71,7 @@ class TesseractOCR:
                     digest.update(chunk)
             weights[language] = digest.hexdigest()
         self.signature = {"engine": "tesseract", "version": version, "languages": self.languages,
-            "traineddata_sha256": weights, "page_segmentation_mode": 3, "word_join": "single_space", "implementation_version": 1}
+            "traineddata_sha256": weights, "page_segmentation_mode": 3, "word_join": "single_space", "implementation_version": 2}
 
     def __call__(self, data):
         with TemporaryDirectory(prefix="sr-tesseract-") as directory:
@@ -90,7 +90,9 @@ def parse_tesseract(raw):
     if not isinstance(raw, bytes) or len(raw) > MAX_READING_BYTES:
         raise ValueError("OCR reading exceeds 4 MiB")
     groups = {}
-    for row in csv.DictReader(io.StringIO(raw.decode("utf-8")), delimiter="\t"):
+    # Tesseract emits literal text, not CSV-escaped fields. An unmatched quote
+    # must never absorb the following word's TSV row into this word.
+    for row in csv.DictReader(io.StringIO(raw.decode("utf-8")), delimiter="\t", quoting=csv.QUOTE_NONE):
         if row["level"] != "5" or not row["text"].strip():
             continue
         key = tuple(int(row[k]) for k in ("page_num", "block_num", "par_num", "line_num"))
