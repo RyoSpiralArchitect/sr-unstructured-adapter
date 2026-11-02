@@ -61,6 +61,14 @@ Pass `--proposal-version 1` (or `version=1` to the Python request/import/runtime
 APIs) for the original protocol. The verifier chooses the saved version; existing
 version 1 requests, normalized overlays, review reports and snapshots replay unchanged.
 
+Raw ontology ingestion now selects version 5 across source formats. It uses
+medium reasoning and bounded vocabulary/role structures, preserves draft and
+conflict context, and requires timezone-bearing timestamps in validity fields.
+The standalone CLI accepts `--proposal-version 5` and retains its version 2
+default. Versions 1–4 keep their saved wire contracts. V5 can retain an
+unresolvable local text selector as an explicit unknown role, with the original
+attempt recorded for review. See [cross-format validation](cross-format-ontology-2026-11-03.md).
+
 The runtime uses the local `proposal-registry/1` vocabulary policy. It runs after
 the model responds, independently of the generation protocol. Compatible repeated
 declarations share a term and the review preserves their individual descriptions.
