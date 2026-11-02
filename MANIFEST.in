@@ -40,6 +40,8 @@ include docs/relation-semantics.md
 include scripts/demo_relation_semantics.py
 include docs/semantic-proposals.md
 include docs/semantic-proposals-2026-10-28.md
+include docs/semantic-role-anchors-2026-11-02.md
+recursive-include docs/validation/semantic-role-anchors-2026-11-02 *
 recursive-include docs/validation/semantic-proposals-2026-10-28 *
 include scripts/probe_semantic_proposals.py
 include docs/narrative-foundry-2026-10-17.md

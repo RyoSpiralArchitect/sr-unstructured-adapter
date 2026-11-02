@@ -26,7 +26,9 @@ the example uses handwritten synthetic declarations, with no model or cloud call
 
 [Semantic proposals](docs/semantic-proposals.md) now generate that overlay from
 saved document/image datasets, with original image pixels, source citations,
-coverage/omission notes and a review report. Prepare with
+exact role phrases and occurrence positions, coverage/omission notes and a review report.
+Version 2 preserves separate mentions within a paragraph or image reading;
+version 1 bundles still replay unchanged. Prepare with
 `python -m sr_adapter.semantic_proposal_runtime propose <dataset> --model <model> --out <new-directory>`;
 `--execute` makes one explicit OpenAI Responses call. Results remain unreviewed
 model candidates, with the original request/response retained for replay.

@@ -1,0 +1,268 @@
+{
+  "date": "2026-11-02",
+  "scope": "Development smoke on two reused synthetic sources with handwritten inventories; not a held-out accuracy benchmark or raw extraction/VLM comparison.",
+  "submitted_requests": 4,
+  "automatic_retries": 0,
+  "initial_validation_failures": 2,
+  "post_fix_completions": 2,
+  "semantic_validation": "not_performed",
+  "inspection": "coding assistant, not independent or blinded",
+  "phases": {
+    "initial": {
+      "frozen_sha256": "fa37d060f06cda82a5d2e47b00f541e9ab9b2be583cee14b50ec140ef7df7624",
+      "implementation_patch_sha256": "4ac10d76a7ae37f66c5f3a9d07874e411ef1d369eb1823b59c14880f607d8198",
+      "base_commit": "affb8c9dcfb3972ff72da4b441f0a4514ca7d82b",
+      "formats": {
+        "docx": {
+          "automatic_retries": 0,
+          "error_type": "ValidationError",
+          "failure_reason": "proposal_validation_failed",
+          "http_status": 200,
+          "model": "gpt-5.5",
+          "planned_model_requests": 1,
+          "proposal_version": 2,
+          "provider": "openai",
+          "publication": "not_performed",
+          "request_sha256": "b114f207a63e3609d2cf3cbe8166ec0992ee2c733fadc346482de76b391091cd",
+          "semantic_validation": "not_performed",
+          "source_snapshot_id": "804a7104b93bc70999be840eb4a7353961a973f71ca93db3d5862e64db096b4a",
+          "stage": "validating",
+          "status": "failed",
+          "submitted_requests": 1,
+          "version": 1,
+          "wire_response_sha256": "029fe65707317373bfc89c7441a3af4725e370b950dbd040c86854427cb9b5ac"
+        },
+        "image": {
+          "automatic_retries": 0,
+          "error_type": "ValidationError",
+          "failure_reason": "proposal_validation_failed",
+          "http_status": 200,
+          "model": "gpt-5.5",
+          "planned_model_requests": 1,
+          "proposal_version": 2,
+          "provider": "openai",
+          "publication": "not_performed",
+          "request_sha256": "dedd2874070589744b813dd488853afac7d42055fb369a5056edfebc945f440d",
+          "semantic_validation": "not_performed",
+          "source_snapshot_id": "744742c5dfec487c4a38d82885914e52415d723477ea0ca262ee0f6738ad60b7",
+          "stage": "validating",
+          "status": "failed",
+          "submitted_requests": 1,
+          "version": 1,
+          "wire_response_sha256": "8b6e92863b1c11b25964d51bd10698b22218263f3eef0eb79ee43523681bde5a"
+        }
+      }
+    },
+    "datatype_enum": {
+      "frozen_sha256": "5d3b6a16ac24db625e250031a7cc8e23d225e536b6db189fea2bf54777ca8dca",
+      "implementation_patch_sha256": "b9b4453b483c9f160aed17178136467216df38d131ddfa525dac482a3edad155",
+      "base_commit": "affb8c9dcfb3972ff72da4b441f0a4514ca7d82b",
+      "formats": {
+        "docx": {
+          "automatic_retries": 0,
+          "bundle_manifest_sha256": "3d1f19cb01cf99320802d34b2bb21a8765a48257adc91c6505a7f93d665d685a",
+          "claim_count": 8,
+          "http_status": 200,
+          "model": "gpt-5.5",
+          "planned_model_requests": 1,
+          "proposal_status": "candidates",
+          "proposal_version": 2,
+          "provider": "openai",
+          "publication": "not_performed",
+          "request_sha256": "e1e9f91d9e2c80d8faf433cc49e09145de3f851dfca6bdff31201e9b56e11e3c",
+          "response_model": "gpt-5.5-2026-04-23",
+          "review_status": "unreviewed",
+          "semantic_snapshot_id": "a66f60ad952be1cb2d16c85241d652bf53d7c8b16716c92f40fb131dd0d28a19",
+          "semantic_validation": "not_performed",
+          "source_snapshot_id": "804a7104b93bc70999be840eb4a7353961a973f71ca93db3d5862e64db096b4a",
+          "stage": "complete",
+          "status": "complete",
+          "submitted_requests": 1,
+          "usage": {
+            "input_tokens": 9629,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 4666,
+            "output_tokens_details": {
+              "reasoning_tokens": 130
+            },
+            "total_tokens": 14295
+          },
+          "version": 1,
+          "wire_response_sha256": "29688fe595951cdfa257db39952b5611d63f9b1287b84e0194fca37ecb9b89b1"
+        },
+        "image": {
+          "automatic_retries": 0,
+          "bundle_manifest_sha256": "40ca6687628e129b6da79e5b0268d48dd897241625a61f239916d4ec63ecd686",
+          "claim_count": 7,
+          "http_status": 200,
+          "model": "gpt-5.5",
+          "planned_model_requests": 1,
+          "proposal_status": "candidates",
+          "proposal_version": 2,
+          "provider": "openai",
+          "publication": "not_performed",
+          "request_sha256": "a79eb555cc363d240774f7c4c95bb94a6d70e476476122d1973afeaac5e2bb88",
+          "response_model": "gpt-5.5-2026-04-23",
+          "review_status": "unreviewed",
+          "semantic_snapshot_id": "dc7c93f012c1281a7bc6abaef1ad6419154d920d7a94e2366f7b9525871ea968",
+          "semantic_validation": "not_performed",
+          "source_snapshot_id": "744742c5dfec487c4a38d82885914e52415d723477ea0ca262ee0f6738ad60b7",
+          "stage": "complete",
+          "status": "complete",
+          "submitted_requests": 1,
+          "usage": {
+            "input_tokens": 6907,
+            "input_tokens_details": {
+              "cache_write_tokens": 0,
+              "cached_tokens": 0
+            },
+            "output_tokens": 3851,
+            "output_tokens_details": {
+              "reasoning_tokens": 179
+            },
+            "total_tokens": 10758
+          },
+          "version": 1,
+          "wire_response_sha256": "7b12ec8af31202ef8537fc4c19828a82888edc769c118519caa3f4818f18ef11"
+        }
+      }
+    }
+  },
+  "legacy_replay": {
+    "docx": {
+      "version": 1,
+      "semantic_snapshot_id": "d0f85431e08335bb22f67701c120914c341113afe777e39fce31d72daf6999ba",
+      "verified": true
+    },
+    "image": {
+      "version": 1,
+      "semantic_snapshot_id": "9d2708920253bafdffd2dbb526f4a2c1d846ac2eba9d89f93aa580e4cb27e4ab",
+      "verified": true
+    }
+  },
+  "post_fix": {
+    "docx": {
+      "profile": "relation_semantics/2",
+      "semantic_snapshot_id": "a66f60ad952be1cb2d16c85241d652bf53d7c8b16716c92f40fb131dd0d28a19",
+      "claim_count": 8,
+      "anchor_counts": {
+        "selected_text": 19,
+        "whole_record": 0
+      },
+      "coverage_counts": {
+        "context_only": 2,
+        "represented": 5,
+        "unresolved": 0
+      },
+      "replay_verified": true,
+      "sqlite_inserted_rows": 153,
+      "sqlite_repeat_inserted_rows": 0,
+      "sqlite_anchor_readback_equal": true,
+      "selected_examples": [
+        {
+          "expression_id": "e5",
+          "role": "urn:sr:proposed:role:actor",
+          "exact": "審査部",
+          "occurrence": 0,
+          "start": 27,
+          "end": 30,
+          "source_id": "s3",
+          "field": "text"
+        },
+        {
+          "expression_id": "e5",
+          "role": "urn:sr:proposed:role:system",
+          "exact": "融資システム",
+          "occurrence": 0,
+          "start": 31,
+          "end": 37,
+          "source_id": "s3",
+          "field": "text"
+        },
+        {
+          "expression_id": "e5",
+          "role": "urn:sr:proposed:role:object",
+          "exact": "申請A",
+          "occurrence": 1,
+          "start": 38,
+          "end": 41,
+          "source_id": "s3",
+          "field": "text"
+        },
+        {
+          "expression_id": "e7",
+          "role": "urn:sr:proposed:role:subject",
+          "exact": "申請A",
+          "occurrence": 1,
+          "start": 38,
+          "end": 41,
+          "source_id": "s3",
+          "field": "text"
+        }
+      ]
+    },
+    "image": {
+      "profile": "relation_semantics/2",
+      "semantic_snapshot_id": "dc7c93f012c1281a7bc6abaef1ad6419154d920d7a94e2366f7b9525871ea968",
+      "claim_count": 7,
+      "anchor_counts": {
+        "selected_text": 18,
+        "whole_record": 0
+      },
+      "coverage_counts": {
+        "context_only": 1,
+        "represented": 5,
+        "unresolved": 0
+      },
+      "replay_verified": true,
+      "sqlite_inserted_rows": 119,
+      "sqlite_repeat_inserted_rows": 0,
+      "sqlite_anchor_readback_equal": true,
+      "selected_examples": [
+        {
+          "expression_id": "e12",
+          "role": "urn:sr:proposed:role:actor",
+          "exact": "審査部",
+          "occurrence": 0,
+          "start": 27,
+          "end": 30,
+          "source_id": "s2",
+          "field": "label"
+        },
+        {
+          "expression_id": "e12",
+          "role": "urn:sr:proposed:role:system",
+          "exact": "融資システム",
+          "occurrence": 0,
+          "start": 31,
+          "end": 37,
+          "source_id": "s2",
+          "field": "label"
+        },
+        {
+          "expression_id": "e12",
+          "role": "urn:sr:proposed:role:application",
+          "exact": "申請A",
+          "occurrence": 1,
+          "start": 38,
+          "end": 41,
+          "source_id": "s2",
+          "field": "label"
+        },
+        {
+          "expression_id": "e1",
+          "role": "urn:sr:proposed:role:application",
+          "exact": "申請A",
+          "occurrence": 0,
+          "start": 5,
+          "end": 8,
+          "source_id": "s2",
+          "field": "label"
+        }
+      ]
+    }
+  }
+}

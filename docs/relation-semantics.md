@@ -47,8 +47,10 @@ bundle loader for source replay. A source selection still contains one profile.
 An overlay can explicitly reference several packages within that selection;
 combining narrative and visual inputs in one selection remains unsupported.
 
-The input is `SemanticOverlay` version **1**, output profile **`relation_semantics/1`**.
-`SemanticOverlay.model_json_schema()` exposes its strict input schema. Unknown
+`SemanticOverlay` version **1** produces **`relation_semantics/1`**, unchanged.
+`SemanticOverlayV2` version **2** adds exact text selectors on source arguments and
+produces **`relation_semantics/2`**. Both use the same projection, export and trace APIs.
+Each model's `model_json_schema()` exposes its strict input schema. Unknown
 fields, duplicate IDs, unresolved references and invalid forms are errors. IRIs
 are identifiers only; the implementation never fetches them.
 
@@ -104,7 +106,7 @@ Each argument has one explicit value kind:
 
 | Kind | Fields / interpretation |
 | --- | --- |
-| `source` | `node_id` from `project_relation_view(source, view="graph")`. References an exact occurrence/record, not a globally resolved entity. |
+| `source` | `node_id` from `project_relation_view(source, view="graph")`. References an exact occurrence/record, not a globally resolved entity. Version 2 also accepts a text `selector`, described below. |
 | `term` | `iri` of a declared symbol, including a class or individual. |
 | `literal` | `lexical`, `datatype`, optional `language`; preserves lexical spelling and datatype. |
 | `expression` | `expression_id`, allowing a proposition about another proposition without asserting the nested one. |
@@ -119,6 +121,40 @@ datatypes fail rather than being treated as strings. This implementation support
 the `YYYY-MM-DD` date subset and timezone-qualified dateTimes in years 0001–9999,
 with up to six fractional-second digits and offsets within ±14:00. It does not
 implement the entire XSD lexical space or validate language tags against a registry.
+
+## Exact role anchors (version 2)
+
+A whole paragraph can contain both an actor and an object. Referencing the same
+paragraph for both roles leaves their mentions indistinguishable. Version 2 can
+select each phrase inside that record. Given `審査部は申請Aを確認する。`, arguments can use:
+
+```json
+[
+  {"role": "urn:example:actor", "value": {"kind": "source", "node_id": "<evidence-node>", "selector": {"kind": "text", "exact": "審査部", "occurrence": 0}}},
+  {"role": "urn:example:object", "value": {"kind": "source", "node_id": "<evidence-node>", "selector": {"kind": "text", "exact": "申請A", "occurrence": 0}}}
+]
+```
+
+Use `version: 2` on the overlay. `selector: null` (also the default when omitted)
+retains a whole-record reference. Selectors are accepted only on original narrative
+`evidence.text` or visual `items.label`; entity labels and generated relation summaries
+cannot stand in for original text. A visual selector identifies text in a **saved
+reading**, not an exact glyph box. The original observation box, reading status,
+reviews and image bytes remain available through the source bundle and trace.
+
+`exact` is a nonempty verbatim substring; `occurrence` is a required zero-based
+integer among all exact matches, **including overlapping matches**. There is no
+case folding, whitespace repair or Unicode normalization. Missing quotes and
+out-of-range occurrences fail before export instead of rebinding to another phrase.
+The host derives `start`/`end` as a half-open range of Unicode code points in the
+saved field, not bytes, UTF-16 code units, grapheme clusters or DOCX file offsets.
+`resolve_text_selector(text, selector)` exposes this same matching rule.
+
+Repeated names retain distinct positions. Neither equal labels nor even identical
+selected positions prove global entity identity or that the semantic role is correct.
+An anchor can still point at the wrong occurrence, be too broad, or match an inaccurate
+OCR reading; these remain review questions. Unknown and whole-record values remain
+supported when the source does not justify a finer selection.
 
 ## Scope matters
 
@@ -167,10 +203,18 @@ different interpretation.
 
 ## Tables and replay
 
-All 11 output tables use ordinary scalar columns:
+Version 1's 11 output tables use ordinary scalar columns:
 
 `overlays`, `terms`, `axioms`, `roles`, `role_kinds`, `expressions`, `operands`,
 `arguments`, `claims`, `citations`, `claim_links`.
+
+Version 2 keeps those table schemas and adds `argument_anchors`. Its key is
+`(package_id, expression_id, position)`, matching the owning argument. In addition
+to the shared provenance columns, it stores `node_id`, `source_package_id`, `field`,
+`exact`, `occurrence`, `start` and `end`. Only explicitly selected source arguments
+have an anchor row; a missing row means a whole-record reference. Cross-package
+arguments retain the owning and source package separately. The normalized selector
+is retained in `semantics.json`, and offsets are recomputed during replay.
 
 Every row includes `package_id`, `source_snapshot_id`, `source_profile` and
 `overlay_id`. Vocabulary is repeated per selected source package to keep the
@@ -206,6 +250,8 @@ graphs, vocabulary, role declarations and original source records. It also keeps
 DOCX locators, image observations/boxes, limitations and review findings. It does
 not crop image pixels or parse new documents. The source and overlay text are
 untrusted content, never instructions or permission to act.
+Version 2 also returns `argument_anchors` for the reachable expressions, with the
+same offsets and source IDs as the exported table.
 
 Input is bounded to 4 MiB both before and after normalization; generated rows and
 trace output to 64 MiB, and portable files to the existing 64 MiB bundle budget.
@@ -223,8 +269,10 @@ mappings to [OWL 2](https://www.w3.org/TR/owl2-primer/), provenance concepts fro
 [SHACL](https://www.w3.org/TR/shacl/). This profile is an adapter-specific interchange
 contract; it does **not** implement or claim conformance to these standards.
 
-Next useful slices are an extractor that proposes overlays for review, a
-scope-preserving agent retrieval format, and explicit RDF/SHACL mappings. Each
+The [proposal stage](semantic-proposals.md) generates candidate overlays, including
+these selectors. Next useful slices are explicit rule-to-period scope links,
+separate reporter/actor attribution, a scope-preserving agent retrieval format,
+and explicit RDF/SHACL mappings. Each
 needs its own validation. Quantifier binding, general variables, OWL entailment,
 truth maintenance, cross-source entity resolution and temporal rule evaluation
 remain future work. The current tests establish representation and readback,
