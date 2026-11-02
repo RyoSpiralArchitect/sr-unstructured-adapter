@@ -34,7 +34,7 @@ def reading(wire, *, conflict=None, duplicate_claim=False):
 def legacy_failure(tmp_path, monkeypatch, kind="text"):
     source, db = tmp_path / ("source.txt" if kind == "text" else "source.png"), tmp_path / "memory.sqlite"
     source.write_bytes(b"A rule requires approval." if kind == "text" else image())
-    options = {"ocr": "auto", "ocr_reader": Reader()} if kind == "ocr" else {}
+    options = {"ocr": "auto", "ocr_reader": Reader(), "proposal_version": 4} if kind == "ocr" else {"proposal_version": 3}
 
     def complete(wire):
         return reading(wire) if wire["text"]["format"]["name"] == "semantic_proposal" else response(INVENTORY)

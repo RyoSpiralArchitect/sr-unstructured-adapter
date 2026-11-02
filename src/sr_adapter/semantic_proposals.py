@@ -18,7 +18,7 @@ from .narrative import _json_response
 from .relation_dataset_store import (_dataset_files, _hashes, _key, _load_dataset,
     _read_files, _save_snapshot, _semantics_manifest, _verify_payloads, MAX_BYTES)
 from .relation_semantics import (Axiom, Claim, ClaimLink, Expression, ExpressionV2, Name, RoleConstraint,
-    Term, Text, _Model, normalize_overlay, project_relation_semantics)
+    Term, Text, _Model, normalize_overlay, project_relation_semantics, resolve_text_selector)
 from .relation_views import _Source
 from .tables import canonical_json
 from .visual_relations import image_info
@@ -29,6 +29,9 @@ VERSION = 2
 # Opt-in generation protocol with operator-specific arity; stored semantics remains v2.
 STRUCTURAL_VERSION = 3
 OCR_VERSION = 4
+# A common generation profile for native text, visual inventories and OCR.
+# Versions 1..4 retain their exact wire contracts for archived response replay.
+UNIVERSAL_VERSION = 5
 MAX_REQUEST_BYTES = 32 * 1024 * 1024
 MAX_CONTEXT_BYTES = 1024 * 1024
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
@@ -97,10 +100,35 @@ A bare role such as "approver" is invalid. Every predicate likewise needs a kind
 Coverage claim_ids must name actual final claims whose evidence includes that same source_id. Use stable,
 descriptive claim IDs; never cite an omitted claim or renumber claims independently of coverage.
 """
+INSTRUCTIONS_V5 = INSTRUCTIONS_V2 + """
+SOURCE READINGS: Native document text, visual inventories and OCR readings use the same semantic contract.
+Use the supplied source units and locators; never assume a source has page images, OCR boxes or table cells.
+When original images or recorded page views are supplied, inspect those pixels for layout, arrows, numbers,
+negation and conditions. OCR strings, word order, line boxes and confidence are fallible observations,
+not verified facts or calibrated probabilities. Do not infer table cells from line order.
+Selectors MUST quote saved reading text exactly, even when pixels suggest a correction; explain reading
+disagreements in coverage/notes and keep uncertain roles unknown. A line box localizes its whole reading,
+not individual role phrases. Physical page numbers, when supplied, are 1-based; only selected pages are covered.
+DECLARE EVERY SYMBOL: all argument.role values must be absolute IRIs declared as kind="role" in terms.
+For example role="urn:sr:proposed:approver" requires a term with that exact iri, kind="role", label="承認者".
+A bare role such as "approver" is invalid. Every predicate likewise needs a kind="relation" term.
+Different meanings require distinct IRIs even when their labels are identical. Equal labels or IRIs in
+different documents are not evidence of global identity. Keep incompatible interpretations source-local.
+Retain every condition, source attribution, time scope and draft/unapproved qualifier. A proposed permission
+does not become an approved operative rule. Explicitly unresolved disagreement has no selected winner;
+do not invent priority or reconciliation. Missing role values remain unknown rather than inferred from other roles.
+Date-only periods belong in claim context or date-valued arguments. Leave valid_from and valid_until null
+unless the source provides a full ISO dateTime with an explicit timezone. Never invent a timezone or place
+a date-only value such as "2030-01-01" in valid_from or valid_until.
+Coverage claim_ids must name actual final claims whose evidence includes that same source_id. Use stable,
+descriptive claim IDs; never cite an omitted claim or renumber claims independently of coverage.
+"""
 
 
 def proposal_instructions(version):
     _proposal_model(version)
+    if version == UNIVERSAL_VERSION:
+        return INSTRUCTIONS_V5
     return INSTRUCTIONS if version == 1 else INSTRUCTIONS_V4 if version == OCR_VERSION else INSTRUCTIONS_V2
 
 
@@ -136,13 +164,13 @@ class SemanticProposalV2(SemanticProposal):
 
 
 def _proposal_model(version):
-    if type(version) is not int or version not in (1, 2, STRUCTURAL_VERSION, OCR_VERSION):
+    if type(version) is not int or version not in (1, 2, STRUCTURAL_VERSION, OCR_VERSION, UNIVERSAL_VERSION):
         raise ValueError("Unsupported semantic proposal version")
     return SemanticProposal if version == 1 else SemanticProposalV2
 
 
 class ProposalConfig(_Model):
-    version: Literal[1, 2, 3, 4]
+    version: Literal[1, 2, 3, 4, 5]
     model: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$")
     max_output_tokens: int = Field(ge=1024, le=32000)
 
@@ -161,7 +189,7 @@ def proposal_schema(*, version=VERSION):
     def clean(node):
         if isinstance(node, dict):
             remove = ("title", "default", "minLength", "maxLength", "pattern", "minimum", "maximum", "discriminator")
-            for key in remove + (() if version == OCR_VERSION else ("minItems", "maxItems")):
+            for key in remove + (() if version >= OCR_VERSION else ("minItems", "maxItems")):
                 node.pop(key, None)
             if "oneOf" in node:
                 node["anyOf"] = node.pop("oneOf")
@@ -194,6 +222,16 @@ def proposal_schema(*, version=VERSION):
                 fields["arguments"].update(maxItems=0)
             variants.append(variant)
         schema["$defs"]["ExpressionV2"] = {"anyOf": variants}
+    if version == UNIVERSAL_VERSION:
+        # Constrain generation too: date-only periods must not enter fields whose
+        # local contract requires explicit timezone-bearing instants. Calendar
+        # validity and interval ordering still use the existing local validators.
+        instant = (r"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])"
+                   r"T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,6})?"
+                   r"(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))$")
+        for field in ("valid_from", "valid_until"):
+            schema["$defs"]["Claim"]["properties"][field] = {
+                "anyOf": [{"type": "string", "pattern": instant}, {"type": "null"}]}
     return schema
 
 
@@ -209,7 +247,7 @@ def proposal_context(dataset, *, version=VERSION):
     packages = {f"p{i}": pid for i, pid in enumerate(dataset.package_ids, 1)}
     package_alias = {pid: alias for alias, pid in packages.items()}
     entries = [(table, row) for table in sorted(source.rows) for row in source.rows[table]]
-    compact = version == OCR_VERSION and source.narrative
+    compact = version >= OCR_VERSION and source.narrative
     locations = {}
     if compact:
         # The DB keeps full scalar rows. The model sees each source unit once,
@@ -282,7 +320,7 @@ def proposal_request(inputs, *, model, max_output_tokens=24000, version=VERSION)
                 raise ValueError("Image bytes differ from the source snapshot")
             content.extend([{"type": "input_text", "text": f"Original image for package {alias}; hash {expected}."},
                 {"type": "input_image", "detail": "high", "image_url": "data:" + info["media_type"] + ";base64," + base64.b64encode(data).decode()}])
-    request = {"model": config.model, "store": False, "reasoning": {"effort": "medium" if version == OCR_VERSION else "low"},
+    request = {"model": config.model, "store": False, "reasoning": {"effort": "medium" if version >= OCR_VERSION else "low"},
         "max_output_tokens": config.max_output_tokens,
         "text": {"format": {"type": "json_schema", "name": "semantic_proposal", "strict": True, "schema": proposal_schema(version=version)}},
         "input": [{"type": "message", "role": "system", "content": [{"type": "input_text", "text": proposal_instructions(version)}]},
@@ -320,6 +358,7 @@ def resolve_proposal(dataset, response, *, version=VERSION, vocabulary_policy=ST
             raise ValueError("Coverage disposition and claim references disagree")
     overlay = None
     vocabulary = None
+    anchor_findings = []
     if vocabulary_policy == REGISTRY:
         terms, vocabulary = compile_vocabulary(original.terms if original is not None else [])
     if original is not None:
@@ -330,9 +369,32 @@ def resolve_proposal(dataset, response, *, version=VERSION, vocabulary_policy=ST
         try:
             for expr in overlay["expressions"]:
                 expr["package_id"] = packages[expr["package_id"]]
-                for arg in expr["arguments"]:
+                for position, arg in enumerate(expr["arguments"]):
                     if arg["value"]["kind"] == "source":
-                        arg["value"]["node_id"] = bindings[arg["value"]["node_id"]]["node_id"]
+                        alias = arg["value"]["node_id"]
+                        binding = bindings[alias]
+                        selector = arg["value"].get("selector")
+                        if version == UNIVERSAL_VERSION and selector is not None:
+                            table, field = ("evidence", "text") if dataset.profile.startswith("narrative") else ("items", "label")
+                            if binding["table"] != table:
+                                raise ValueError("Text selectors require original evidence text or visual item labels")
+                            text = binding["record"][field]
+                            if not isinstance(text, str):
+                                raise ValueError("Text selectors require a saved source reading")
+                            try:
+                                resolve_text_selector(text, selector)
+                            except ValueError:
+                                # Syntax was checked by the proposal model above.
+                                # Preserve the failed local binding, never search
+                                # another unit or use an unsupported whole record.
+                                anchor_findings.append({"expression_id": expr["id"], "position": position,
+                                    "role": arg["role"], "source_id": alias, "node_id": binding["node_id"],
+                                    "selector": deepcopy(selector), "failure_reason": (
+                                        "exact_not_found_in_bound_unit" if selector["exact"] not in text
+                                        else "occurrence_not_found_in_bound_unit"), "requires_review": True})
+                                arg["value"] = {"kind": "unknown", "reason": "unresolved_text_selector"}
+                                continue
+                        arg["value"]["node_id"] = binding["node_id"]
             for claim in overlay["claims"]:
                 claim["package_id"] = packages[claim["package_id"]]
                 claim["evidence"] = [bindings[alias]["node_id"] for alias in claim["evidence"]]
@@ -363,6 +425,11 @@ def resolve_proposal(dataset, response, *, version=VERSION, vocabulary_policy=ST
         report["argument_anchors"] = [dict(anchor, source_id=aliases[anchor["node_id"]],
             role=roles[anchor["expression_id"], anchor["position"]]) for anchor in anchors]
         report["anchor_counts"] = {"selected_text": len(anchors), "whole_record": len(source_args) - len(anchors)}
+    if anchor_findings:
+        # Existing successful v5 proposals had no unresolved selectors. Leaving
+        # their reports unchanged preserves their archived bundle replay bytes.
+        report["anchor_findings"] = anchor_findings
+        report["anchor_counts"]["unresolved"] = len(anchor_findings)
     return proposal.model_dump(), overlay, report
 
 
@@ -382,7 +449,7 @@ def review_markdown(report, overlay):
     for expr in (overlay or {}).get("expressions", []):
         detail = canonical_json({k: expr[k] for k in ("predicate", "arguments", "operands")}).decode()
         lines.append("| " + " | ".join(map(escape, [expr["id"], expr["operator"], detail])) + " |")
-    if report["version"] in {2, OCR_VERSION}:
+    if report["version"] in {2, OCR_VERSION, UNIVERSAL_VERSION}:
         counts = report["anchor_counts"]
         lines.extend(["", "## 役割ごとの原文参照", "",
             f"語句を指定: {counts['selected_text']}件 / 資料単位全体への参照: {counts['whole_record']}件", "",
@@ -394,6 +461,14 @@ def review_markdown(report, overlay):
                       f"[{anchor['start']}, {anchor['end']})", f"{anchor['source_id']} / {anchor['field']}"]
             lines.append("| " + " | ".join(map(escape, values)) + " |")
     vocabulary = report.get("vocabulary_resolution")
+    if report.get("anchor_findings"):
+        lines.extend(["", "## 解決できなかった役割の原文参照", "",
+            "指定された資料単位内で語句・出現番号を解決できず、役割の値を unknown として保持しました。別の単位への付け替えや全体参照への変更は行っていません。", "",
+            "| 式 | 引数位置 | 役割 | 元の資料単位 | 元の選択指定 | 理由 |", "| --- | --- | --- | --- | --- | --- |"])
+        for finding in report["anchor_findings"]:
+            values = [finding["expression_id"], finding["position"], finding["role"], finding["source_id"],
+                      canonical_json(finding["selector"]).decode(), finding["failure_reason"]]
+            lines.append("| " + " | ".join(map(escape, values)) + " |")
     if vocabulary and vocabulary["repetitions"]:
         lines.extend(["", "## 複数回宣言された語彙", "", "宣言番号は元の提案の overlay.terms 内の位置（0始まり）です。", "",
             "| 語彙ID | 宣言番号 | 種類 | 名称 | モデルによる説明 |", "| --- | --- | --- | --- | --- |"])
@@ -452,7 +527,7 @@ def verify_semantic_proposal(folder):
     if len(raw) > 1024 * 1024:
         raise ValueError("Proposal manifest exceeds 1 MiB")
     manifest = json.loads(raw)
-    if (type(manifest.get("version")) is not int or manifest["version"] not in (1, 2, STRUCTURAL_VERSION, OCR_VERSION)
+    if (type(manifest.get("version")) is not int or manifest["version"] not in (1, 2, STRUCTURAL_VERSION, OCR_VERSION, UNIVERSAL_VERSION)
             or manifest.get("kind") != "semantic_proposal" or manifest.get("status") != "complete"):
         raise ValueError("Incomplete or unsupported semantic proposal")
     files = _read_files(root, manifest)

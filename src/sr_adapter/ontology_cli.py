@@ -18,6 +18,8 @@ def add_parser(commands):
             command.add_argument("--collection", default="default")
         if name == "ingest":
             command.add_argument("--model", default="gpt-6-luna")
+            command.add_argument("--proposal-version", type=int, choices=(3, 4, 5), default=5,
+                                 help="Generation protocol; v5 uses one profile for all source formats (OCR requires v4+)")
             command.add_argument("--ocr", choices=("auto", "always"), help="Read PDF/image pages locally, retaining pixels for the model")
             command.add_argument("--ocr-engine", choices=("auto", "vision", "tesseract"), default="auto")
             command.add_argument("--ocr-languages", nargs="+", help="Engine-specific language identifiers")
@@ -56,7 +58,8 @@ def handle(args):
         from .ontology_ingest import ingest_ontology_source
         return ingest_ontology_source(args.source, args.database, model=args.model, collection=args.collection,
             name=args.name, expected_snapshot=args.expected_snapshot, execute=args.execute,
-            ocr=args.ocr, ocr_engine=args.ocr_engine, ocr_languages=args.ocr_languages, ocr_dpi=args.ocr_dpi, pages=args.pages)
+            ocr=args.ocr, ocr_engine=args.ocr_engine, ocr_languages=args.ocr_languages, ocr_dpi=args.ocr_dpi, pages=args.pages,
+            proposal_version=args.proposal_version)
     if command == "import":
         return import_ontology(args.source, args.database, collection=args.collection,
             name=args.name, expected_snapshot=args.expected_snapshot)

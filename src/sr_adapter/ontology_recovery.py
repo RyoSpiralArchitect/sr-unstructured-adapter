@@ -10,7 +10,7 @@ from .ontology_ingest import (_finish_proposal, _request_key, _reserve_ingestion
                               _save_run, _source_bundle, _validate_run_id)
 from .proposal_vocabulary import REGISTRY
 from .relation_dataset_store import _load_dataset, _save_snapshot, export_relation_dataset
-from .semantic_proposals import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION, proposal_request
+from .semantic_proposals import MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION, UNIVERSAL_VERSION, proposal_request
 from .tables import canonical_json
 from .visual_relations import INVENTORY_VERSION, visual_request
 
@@ -70,8 +70,9 @@ def recover_ontology_ingestion(database, run_id, *, expected_snapshot=None):
         raise ValueError("Original source differs from its ingestion receipt")
     wire, raw_response = _verified_stage(parent, files, "semantics")
     reading = parent["source_reading"]
-    version = OCR_VERSION if reading == "local_ocr" else STRUCTURAL_VERSION
-    if parent.get("proposal_version", version) != version:
+    version = parent.get("proposal_version", OCR_VERSION if reading == "local_ocr" else STRUCTURAL_VERSION)
+    if (type(version) is not int or version not in (STRUCTURAL_VERSION, OCR_VERSION, UNIVERSAL_VERSION)
+            or reading == "local_ocr" and version < OCR_VERSION):
         raise ValueError("Unsupported recorded ingestion protocol")
     with TemporaryDirectory(prefix="sr-ontology-recovery-") as scratch:
         root = Path(scratch)
@@ -104,7 +105,8 @@ def recover_ontology_ingestion(database, run_id, *, expected_snapshot=None):
         request = proposal_request(inputs, model=model, version=version)
         if canonical_json(request) != wire:
             raise ValueError("Original semantic request cannot be reproduced")
-        key = _request_key(name, parent["source_sha256"], parent["adapter_id"], model, first or request, plan)
+        key = _request_key(name, parent["source_sha256"], parent["adapter_id"], model, first or request, plan,
+                           proposal_version=version)
         if key != fingerprint:
             raise ValueError("Original generation identity differs from its recorded key")
 
