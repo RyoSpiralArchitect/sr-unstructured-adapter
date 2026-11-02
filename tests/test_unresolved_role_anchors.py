@@ -166,7 +166,7 @@ def test_existing_failed_v5_response_recovers_locally_with_original_evidence(tmp
     import sr_adapter.semantic_proposals as proposals
 
     source, db = tmp_path / "source.txt", tmp_path / "memory.sqlite"
-    source.write_text(TEXT)
+    source.write_bytes(TEXT.encode("utf-8"))
     current_resolver = proposals.resolve_proposal
 
     def previous_strict_resolver(dataset, answer, **kwargs):
