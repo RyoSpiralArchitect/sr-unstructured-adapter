@@ -34,6 +34,7 @@ def add_parser(commands):
             command.add_argument("--limit", type=int, default=20)
             command.add_argument("--offset", type=int, default=0)
         if name == "inspect":
+            command.add_argument("--vocabulary-offset", type=int, default=0, help="Offset from vocabulary_review.next_inspect")
             command.add_argument("--name", required=True)
             command.add_argument("--snapshot-id", required=True)
             command.add_argument("--kind", required=True, choices=("claim", "term"))
@@ -66,7 +67,7 @@ def handle(args):
             ("collection", "query", "name", "snapshot_id", "kind", "status", "modality", "limit", "offset")})
     if command == "inspect":
         return inspect_ontology(args.database, **{key: getattr(args, key) for key in
-            ("collection", "name", "snapshot_id", "kind", "id")})
+            ("collection", "name", "snapshot_id", "kind", "id", "vocabulary_offset")})
     if command == "status":
         from .ontology_ingest import ontology_ingestion_status
         return ontology_ingestion_status(args.database, args.run_id)

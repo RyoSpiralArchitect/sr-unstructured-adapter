@@ -27,7 +27,12 @@ def _load_failed(database, run_id):
         receipt = json.loads(raw)
         _collection(collection)
         _name(name)
-        _name(receipt["source_name"])
+        # Source names are archived metadata, separate from the entry name.
+        # Match read_source's contract, including names accepted on another OS.
+        source_name = receipt["source_name"]
+        if (not isinstance(source_name, str) or not source_name.strip()
+                or "\x00" in source_name or len(source_name) > 1024):
+            raise ValueError("Source name must be a nonempty filename of at most 1024 characters")
         if (receipt["run_id"] != run_id or receipt["collection"] != collection or receipt["name"] != name
                 or receipt["status"] != "failed" or receipt["stage"] != "semantics_validating"
                 or receipt.get("recovered_from_run_id") is not None):

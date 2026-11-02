@@ -20,7 +20,8 @@ class OntologyTools(RelationEvidenceTools):
             "limit": {"type": "integer", "minimum": 1, "maximum": self.max_results},
             "offset": {"type": "integer", "minimum": 0}}
         inspect = {"collection": collection, "name": name, "snapshot_id": snapshot,
-            "kind": {"type": "string", "enum": ["claim", "term"]}, "id": {"type": "string", "maxLength": 256}}
+            "kind": {"type": "string", "enum": ["claim", "term"]}, "id": {"type": "string", "maxLength": 256},
+            "vocabulary_offset": {"type": "integer", "minimum": 0, "maximum": 9223372036854775807}}
         return [{"name": tool, "description": description, "input_schema": {"type": "object",
             "properties": fields, "required": required, "additionalProperties": False}}
             for tool, description, fields, required in [
@@ -28,8 +29,8 @@ class OntologyTools(RelationEvidenceTools):
                  {"collection": collection}, ["collection"]),
                 ("search_ontology", "Find candidate claims or vocabulary with ONE literal substring, e.g. 'approval'. A list of keywords is NOT an OR/AND query. Use query='' to browse, then inspect returned references before reuse.",
                  search, ["collection", "query"]),
-                ("inspect_ontology", "Read a same-version whole claim with conditions, dissent, exact role anchors and original context, or inspect vocabulary and its uses.",
-                 inspect, list(inspect))]]
+                ("inspect_ontology", "Read a same-version whole claim with conditions, dissent, exact role anchors and original context, or inspect vocabulary and its uses. vocabulary_review preserves separate declaration notes and review flags scoped by archive.",
+                 inspect, [key for key in inspect if key != "vocabulary_offset"])]]
 
     def call(self, name, arguments):
         if name not in {definition["name"] for definition in self.definitions()}:
