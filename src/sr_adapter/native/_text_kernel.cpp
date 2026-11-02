@@ -163,77 +163,47 @@ std::string encode_utf8(const std::u32string &text) {
 }
 
 std::u32string normalize_whitespace(const std::u32string &input) {
-    std::u32string step1;
-    step1.reserve(input.size());
+    std::u32string normalized;
+    normalized.reserve(input.size());
     for (std::size_t i = 0; i < input.size(); ++i) {
         char32_t ch = input[i];
         if (ch == U'\r') {
             if (i + 1 < input.size() && input[i + 1] == U'\n') {
                 continue;
             }
-            step1.push_back(U'\n');
-            continue;
+            ch = U'\n';
         }
-        step1.push_back(ch);
-    }
-
-    std::u32string step2;
-    step2.reserve(step1.size());
-    for (char32_t ch : step1) {
         if (ch == U'\n') {
-            while (!step2.empty() && is_space(step2.back())) {
-                step2.pop_back();
+            // Python's \s+\n also consumes preceding newlines. Thus this
+            // already collapses every adjacent newline run to one newline.
+            while (!normalized.empty() && is_space(normalized.back())) {
+                normalized.pop_back();
             }
-            step2.push_back(U'\n');
-        } else {
-            step2.push_back(ch);
         }
+        normalized.push_back(ch);
     }
 
-    std::u32string step3;
-    step3.reserve(step2.size());
-    int newline_count = 0;
-    for (char32_t ch : step2) {
-        if (ch == U'\n') {
-            ++newline_count;
-            if (newline_count <= 2) {
-                step3.push_back(ch);
-            }
-        } else {
-            newline_count = 0;
-            step3.push_back(ch);
-        }
-    }
-
-    if (!step3.empty()) {
-        if (step3[0] == BULLET_U2022 || step3[0] == BULLET_U30FB) {
+    if (!normalized.empty()) {
+        if (normalized[0] == BULLET_U2022 || normalized[0] == BULLET_U30FB) {
             std::size_t pos = 1;
-            while (pos < step3.size() && is_space(step3[pos])) {
+            while (pos < normalized.size() && is_space(normalized[pos])) {
                 ++pos;
             }
-            std::u32string replaced;
-            replaced.reserve(step3.size() - pos + 2);
-            replaced.push_back(U'-');
-            replaced.push_back(U' ');
-            replaced.append(step3.begin() + static_cast<std::ptrdiff_t>(pos), step3.end());
-            step3.swap(replaced);
+            normalized.replace(0, pos, U"- ");
         }
     }
 
     std::size_t start = 0;
-    while (start < step3.size() && is_space(step3[start])) {
+    while (start < normalized.size() && is_space(normalized[start])) {
         ++start;
     }
-    std::size_t end = step3.size();
-    while (end > start && is_space(step3[end - 1])) {
+    std::size_t end = normalized.size();
+    while (end > start && is_space(normalized[end - 1])) {
         --end;
     }
-    std::u32string trimmed;
-    if (end > start) {
-        trimmed.assign(step3.begin() + static_cast<std::ptrdiff_t>(start),
-                       step3.begin() + static_cast<std::ptrdiff_t>(end));
-    }
-    return trimmed;
+    normalized.resize(end);
+    normalized.erase(0, start);
+    return normalized;
 }
 
 bool all_lines_bullet(const std::u32string &text) {
