@@ -33,6 +33,15 @@ version 1 bundles still replay unchanged. Prepare with
 `--execute` makes one explicit OpenAI Responses call. Results remain unreviewed
 model candidates, with the original request/response retained for replay.
 
+[Local ontology memory](docs/local-ontology.md) connects raw source ingestion to
+model reuse in **one SQLite file**. Run
+`sr-adapt knowledge ontology ingest policy.docx --database ontology.sqlite --model gpt-5.5 --execute`
+to read the source, propose semantics and register its evidence/version. TXT,
+Markdown, CSV/TSV, DOCX, PPTX, embedded-text PDF and images are supported within
+documented bounds. Provider-neutral read-only tools discover vocabulary and inspect
+whole claims from the database alone, without a cloud store or original folder.
+Omit `--execute` to prepare locally; install the `ontology` extra for ingestion.
+
 The opt-in [table knowledge and lakehouse path](docs/table-knowledge-lakehouse.md)
 preserves ruled PDF cells and coordinates, maps them to grounded entity mentions
 and relations, and exports JSON-LD, Parquet, SQLite, ADLS Gen2, and Databricks Delta
