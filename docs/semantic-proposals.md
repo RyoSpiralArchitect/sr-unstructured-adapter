@@ -61,6 +61,17 @@ Pass `--proposal-version 1` (or `version=1` to the Python request/import/runtime
 APIs) for the original protocol. The verifier chooses the saved version; existing
 version 1 requests, normalized overlays, review reports and snapshots replay unchanged.
 
+The runtime uses the local `proposal-registry/1` vocabulary policy. It runs after
+the model responds, independently of the generation protocol. Compatible repeated
+declarations share a term and the review preserves their individual descriptions.
+Conflicting kinds or labels produce `vocabulary-conflicts.json` and a failed receipt.
+`--vocabulary-policy strict` selects the original uniqueness check. The Python
+`resolve_proposal`, `render_semantic_proposal` and `import_semantic_proposal`
+functions accept the same `vocabulary_policy` argument and retain their strict
+default. The bundle verifier reads the saved policy, using strict replay for
+older manifests. [SQLite recovery](local-ontology.md#recover-a-rejected-vocabulary)
+also works with recorded responses from earlier runs.
+
 Inspect `request.json` and the archived input. To execute, use a **new** directory
 and the existing `OPENAI_API_KEY` environment variable:
 

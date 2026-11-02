@@ -91,6 +91,41 @@ def test_schema_has_required_fields_and_supported_union_shape():
     assert schema["type"] == "object"
 
 
+def test_registry_bundle_replays_original_response_and_requires_its_recorded_policy(case, tmp_path):
+    from sr_adapter.proposal_vocabulary import REGISTRY
+    from sr_adapter.relation_dataset_store import _save_snapshot
+
+    _, _, inputs, payload = case
+    term = payload["overlay"]["terms"][0]
+    payload["overlay"]["terms"].append({**term, "description": "An additional note."})
+    answer = raw(payload)
+    original = deepcopy(answer)
+    with pytest.raises(ValueError, match="Duplicate semantic identifier"):
+        render_semantic_proposal(inputs, model="fixture", response=answer)
+    manifest, files = render_semantic_proposal(inputs, model="fixture", response=answer, vocabulary_policy=REGISTRY)
+    assert answer == original == json.loads(files["response.json"])
+    assert files["request.json"] == canonical_json(proposal_request(inputs, model="fixture"))
+    saved = tmp_path / "registry-bundle"
+    _save_snapshot(saved, files, manifest)
+    assert verify_semantic_proposal(saved)[0] == manifest
+    manifest.pop("vocabulary_policy")
+    (saved / "manifest.json").write_bytes(canonical_json(manifest))
+    with pytest.raises(ValueError, match="Duplicate semantic identifier"):
+        verify_semantic_proposal(saved)
+
+
+def test_standalone_runtime_records_conflicting_declarations(case, tmp_path):
+    base, _, _, payload = case
+    term = payload["overlay"]["terms"][0]
+    payload["overlay"]["terms"].append({**term, "label": "A conflicting label"})
+    dest = tmp_path / "conflict"
+    result = propose_semantics(base, dest, model="fixture", execute=True, api_key="fixture",
+        transport=httpx.MockTransport(lambda r: httpx.Response(200, json=raw(payload))))
+    assert result["status"] == "failed" and result["failure_reason"] == "vocabulary_conflict"
+    assert json.loads((dest / "vocabulary-conflicts.json").read_bytes())["conflicts"][0]["fields"] == ["label"]
+    assert (dest / "response.json").is_file() and not (dest / "bundle").exists()
+
+
 def test_empty_visual_package_remains_in_coverage_next_to_nonempty_package(visual):
     package, _ = verify_visual(visual)
     empty = deepcopy(package)
