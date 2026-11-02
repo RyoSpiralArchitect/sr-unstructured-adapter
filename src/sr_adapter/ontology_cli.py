@@ -6,14 +6,15 @@ from pathlib import Path
 def add_parser(commands):
     parser = commands.add_parser("ontology", help="Ingest raw sources into one reusable local SQLite ontology")
     sub = parser.add_subparsers(dest="ontology_command", required=True)
-    for name in ("ingest", "import", "list", "search", "inspect", "status", "tools", "call"):
+    for name in ("ingest", "import", "recover", "list", "search", "inspect", "status", "tools", "call"):
         command = sub.add_parser(name)
         command.add_argument("--database", required=True, type=Path)
         if name in {"ingest", "import"}:
             command.add_argument("source", type=Path)
             command.add_argument("--name", help="Document entry name; defaults to its source filename")
+        if name in {"ingest", "import", "recover"}:
             command.add_argument("--expected-snapshot", help="Current version required to replace a document")
-        if name not in {"status", "tools", "call"}:
+        if name not in {"status", "recover", "tools", "call"}:
             command.add_argument("--collection", default="default")
         if name == "ingest":
             command.add_argument("--model", default="gpt-6-luna")
@@ -37,7 +38,7 @@ def add_parser(commands):
             command.add_argument("--snapshot-id", required=True)
             command.add_argument("--kind", required=True, choices=("claim", "term"))
             command.add_argument("--id", required=True)
-        if name == "status":
+        if name in {"status", "recover"}:
             command.add_argument("run_id")
         if name in {"tools", "call"}:
             command.add_argument("--collections", nargs="+", required=True)
@@ -69,6 +70,9 @@ def handle(args):
     if command == "status":
         from .ontology_ingest import ontology_ingestion_status
         return ontology_ingestion_status(args.database, args.run_id)
+    if command == "recover":
+        from .ontology_recovery import recover_ontology_ingestion
+        return recover_ontology_ingestion(args.database, args.run_id, expected_snapshot=args.expected_snapshot)
     tools = OntologyTools(args.database, tuple(args.collections))
     if command == "tools":
         return {"status": "complete", "tools": tools.definitions()}

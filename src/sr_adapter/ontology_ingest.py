@@ -18,9 +18,10 @@ import httpx
 from .knowledge import sha256
 from .local_ontology import _collection, _name, _schema, _snapshot, import_ontology
 from .narrative import NarrativeOntology, render_narrative, save_narrative
+from .proposal_vocabulary import REGISTRY, STRICT, VocabularyConflict
 from .relation_dataset_store import _hashes, _load_dataset, _save_snapshot, export_relation_dataset
 from .relation_sources import read_source
-from .semantic_proposals import (INSTRUCTIONS_V2, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION,
+from .semantic_proposals import (INSTRUCTIONS_V2, MAX_RESPONSE_BYTES, OCR_VERSION, STRUCTURAL_VERSION, ProposalConfig,
     proposal_instructions, proposal_request, proposal_schema, render_semantic_proposal)
 from .tables import canonical_json
 from .visual_relations import INVENTORY_VERSION, project_visual, visual_request
@@ -52,9 +53,13 @@ def _save_run(database, receipt, files=()):
             raise ValueError("Ontology ingestion receipt disappeared")
 
 
-def ontology_ingestion_status(database, run_id):
+def _validate_run_id(run_id):
     if not isinstance(run_id, str) or len(run_id) != 32 or any(c not in "0123456789abcdef" for c in run_id):
         raise ValueError("Use the run ID returned by ingestion")
+
+
+def ontology_ingestion_status(database, run_id):
+    _validate_run_id(run_id)
     uri = Path(database).resolve().as_uri() + "?mode=ro"
     with closing(sqlite3.connect(uri, uri=True)) as connection, connection:
         connection.execute("BEGIN")
@@ -63,6 +68,12 @@ def ontology_ingestion_status(database, run_id):
         if row is None:
             raise ValueError("Unknown ontology ingestion")
         receipt = json.loads(row[0])
+        if "vocabulary_report_sha256" in receipt:
+            report = connection.execute("SELECT data FROM sro_ingestion_files WHERE run_id=? AND path='vocabulary.json' "
+                "AND length(data) <= ?", (run_id, 2 * MAX_RESPONSE_BYTES)).fetchone()
+            if report is None or sha256(report[0]) != receipt["vocabulary_report_sha256"]:
+                raise ValueError("Vocabulary report differs from its receipt")
+            receipt["vocabulary_details"] = json.loads(report[0])
         receipt["stored_files"] = [{"path": path, "bytes": size} for path, size in connection.execute(
             "SELECT path, length(data) FROM sro_ingestion_files WHERE run_id=? ORDER BY path", (run_id,))]
     return receipt
@@ -91,6 +102,96 @@ def _source_bundle(data, source_name, root, *, visual_response=None, model=None)
         profile = "visual"
     export_relation_dataset([root / "source"], root / "dataset", profile=profile)
     return _load_dataset(root / "dataset", allow_view=False)[1]
+
+
+def _request_key(source_name, source_hash, provider, model, first_request, plan):
+    # Input identity remains independent of local vocabulary compilation. Every
+    # previously accepted strict proposal already satisfied registry uniqueness.
+    if plan is None:
+        fields = {"version": 1, "source_name": source_name, "source_sha256": source_hash,
+            "provider": provider, "request": first_request, "proposal_instructions": INSTRUCTIONS_V2,
+            "proposal_schema": proposal_schema(version=STRUCTURAL_VERSION)}
+    else:
+        config = ProposalConfig(version=OCR_VERSION, model=model, max_output_tokens=24000)
+        fields = {"version": 2, "plan": plan, "provider": provider, "proposal_config": config.model_dump(),
+            "proposal_instructions": proposal_instructions(OCR_VERSION), "proposal_schema": proposal_schema(version=OCR_VERSION)}
+    return sha256(canonical_json(fields))
+
+
+def _reserve_ingestion(database, receipt, fingerprint, expected_snapshot, source_bytes=None):
+    collection, name = receipt["collection"], receipt["name"]
+    parent = receipt.get("recovered_from_run_id")
+    with closing(sqlite3.connect(database, timeout=30)) as connection, connection:
+        connection.execute("BEGIN IMMEDIATE")
+        _schema(connection, create=True)
+        _runs(connection, create=True)
+        current = connection.execute("SELECT active_snapshot_id FROM sro_entries WHERE collection=? AND name=?", (collection, name)).fetchone()
+        active = current[0] if current else None
+        if active is not None:
+            for saved, in connection.execute("SELECT receipt FROM sro_ingestions WHERE request_key=? AND collection=? AND name=?",
+                                             (fingerprint, collection, name)):
+                previous = json.loads(saved)
+                if previous.get("vocabulary_policy", STRICT) not in (STRICT, REGISTRY):
+                    continue
+                if parent is not None and previous.get("recovered_from_run_id") != parent:
+                    continue
+                if previous["status"] == "complete" and previous.get("snapshot_id") == active:
+                    from .local_ontology import _read_semantics
+                    _read_semantics(connection, active)
+                    reused = {**previous, "outcome": "already_active", "submitted_requests_this_call": 0}
+                    if receipt["source_reading"] == "local_ocr":
+                        reused.update(ocr_pages_this_call=0, rendered_pages_this_call=0)
+                    return reused
+        if active != expected_snapshot:
+            raise ValueError("Entry changed; supply its expected active snapshot before generating a replacement")
+        connection.execute("INSERT INTO sro_ingestions VALUES (?, ?, ?, ?, ?)",
+            (receipt["run_id"], fingerprint, collection, name, canonical_json(receipt).decode()))
+        if source_bytes is not None:
+            connection.execute("INSERT INTO sro_ingestion_files VALUES (?, ?, ?)", (receipt["run_id"], "source.bin", source_bytes))
+    return None
+
+
+def _save_vocabulary(database, receipt, report):
+    raw = canonical_json(report)
+    if len(raw) > 2 * MAX_RESPONSE_BYTES:
+        raise ValueError("Vocabulary report exceeds its review budget")
+    receipt["vocabulary_report_sha256"] = sha256(raw)
+    _save_run(database, receipt, [("vocabulary.json", raw)])
+
+
+def _finish_proposal(database, root, receipt, inputs, response, version, expected_snapshot):
+    try:
+        manifest, files = render_semantic_proposal(inputs, model=receipt["model"], response=response,
+                                                   version=version, vocabulary_policy=REGISTRY)
+    except VocabularyConflict as error:
+        receipt.update(status="failed", failure_reason="vocabulary_conflict", error_type=type(error).__name__)
+        _save_vocabulary(database, receipt, error.diagnostic)
+        return receipt
+    _save_snapshot(root / "proposal", files, manifest)
+    registry = json.loads(files["review.json"])["vocabulary_resolution"]
+    receipt["vocabulary"] = {key: value for key, value in registry.items() if key != "repetitions"}
+    if registry["repetitions"]:
+        _save_vocabulary(database, receipt, registry)
+    if manifest["proposal_status"] == "abstained":
+        receipt.update(status="abstained", stage="complete", claim_count=0)
+        _save_run(database, receipt, [("review.json", files["review.json"])])
+        return receipt
+    receipt.update(stage="activating", proposed_snapshot_id=manifest["semantic_snapshot_id"])
+    _save_run(database, receipt)
+    completed = {}
+
+    def commit_receipt(connection, imported):
+        completed.update(receipt, status="complete", stage="complete", snapshot_id=imported["snapshot_id"],
+            claim_count=manifest["claim_count"], archive_id=imported["archive_id"], outcome=imported["outcome"],
+            readback_verified=True, review_status="unreviewed")
+        updated = connection.execute("UPDATE sro_ingestions SET receipt=? WHERE run_id=?",
+            (canonical_json(completed).decode(), receipt["run_id"]))
+        if updated.rowcount != 1:
+            raise ValueError("Ontology ingestion receipt disappeared")
+
+    import_ontology(root / "proposal", database, collection=receipt["collection"], name=receipt["name"],
+                    expected_snapshot=expected_snapshot, _on_commit=commit_receipt)
+    return completed
 
 
 def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="default", name=None,
@@ -139,46 +240,20 @@ def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="
             inputs = None if visual else _source_bundle(data, source.name, root)
             request = (visual_request(data, source.name, model, "inventory", version=INVENTORY_VERSION) if visual
                        else proposal_request(inputs, model=model, version=proposal_version))
-            fingerprint_data = {"version": 1, "source_name": source.name, "source_sha256": sha256(data),
-                "provider": provider, "request": request, "proposal_instructions": INSTRUCTIONS_V2,
-                "proposal_schema": proposal_schema(version=proposal_version)}
-        else:
-            # Compute identity before rendering or OCR. A matching active run needs neither.
-            from .semantic_proposals import ProposalConfig
-            config = ProposalConfig(version=proposal_version, model=model, max_output_tokens=24000)
-            fingerprint_data = {"version": 2, "plan": plan, "provider": provider, "proposal_config": config.model_dump(),
-                "proposal_instructions": proposal_instructions(proposal_version), "proposal_schema": proposal_schema(version=proposal_version)}
-        fingerprint = sha256(canonical_json(fingerprint_data))
+        fingerprint = _request_key(source.name, sha256(data), provider, model, request, plan)
         receipt = {"version": 1, "run_id": uuid4().hex, "status": "prepared", "stage": "prepared",
             "collection": collection, "name": name, "source_name": source.name, "source_sha256": sha256(data),
             "model": model, "provider": "host_callable" if complete is not None else "openai",
-            "adapter_id": provider,
+            "adapter_id": provider, "vocabulary_policy": REGISTRY, "proposal_version": proposal_version,
             "planned_model_requests": 2 if visual else 1, "submitted_requests": 0,
             "automatic_retries": 0, "source_reading": "local_ocr" if plan is not None else "visual_model" if visual else "local_embedded_text",
             "semantic_validation": "not_performed", "warnings": (
                 [] if plan is not None else ["Image readings and regions are unverified model candidates."] if visual else reading["warnings"]), "stages": []}
         if plan is not None:
             receipt.update(ocr_plan=plan, ocr_pages_read=0, rendered_pages=0)
-        with closing(sqlite3.connect(database, timeout=30)) as connection, connection:
-            connection.execute("BEGIN IMMEDIATE")
-            _schema(connection, create=True)
-            _runs(connection, create=True)
-            current = connection.execute("SELECT active_snapshot_id FROM sro_entries WHERE collection=? AND name=?", (collection, name)).fetchone()
-            active = current[0] if current else None
-            if active is not None:
-                for saved, in connection.execute("SELECT receipt FROM sro_ingestions WHERE request_key=? AND collection=? AND name=?",
-                                                (fingerprint, collection, name)):
-                    previous = json.loads(saved)
-                    if previous["status"] == "complete" and previous.get("snapshot_id") == active:
-                        from .local_ontology import _read_semantics
-                        _read_semantics(connection, active)
-                        return {**previous, "outcome": "already_active", "submitted_requests_this_call": 0,
-                                **({"ocr_pages_this_call": 0, "rendered_pages_this_call": 0} if plan is not None else {})}
-            if active != expected_snapshot:
-                raise ValueError("Entry changed; supply its expected active snapshot before generating a replacement")
-            connection.execute("INSERT INTO sro_ingestions VALUES (?, ?, ?, ?, ?)",
-                (receipt["run_id"], fingerprint, collection, name, canonical_json(receipt).decode()))
-            connection.execute("INSERT INTO sro_ingestion_files VALUES (?, ?, ?)", (receipt["run_id"], "source.bin", data))
+        reused = _reserve_ingestion(database, receipt, fingerprint, expected_snapshot, data)
+        if reused is not None:
+            return reused
         first_stage = "visual" if visual else "semantics"
         if request is not None:
             _save_run(database, receipt, [(first_stage + "-request.json", canonical_json(request))])
@@ -256,27 +331,7 @@ def ingest_ontology_source(source, database, *, model="gpt-6-luna", collection="
                 inputs = _source_bundle(data, source.name, root, visual_response=result, model=model)
                 request = proposal_request(inputs, model=model, version=proposal_version)
             response = submit("semantics", request, saved=not visual)
-            manifest, files = render_semantic_proposal(inputs, model=model, response=response, version=proposal_version)
-            _save_snapshot(root / "proposal", files, manifest)
-            if manifest["proposal_status"] == "abstained":
-                receipt.update(status="abstained", stage="complete", claim_count=0)
-                _save_run(database, receipt, [("review.json", files["review.json"])])
-                return receipt
-            receipt.update(stage="activating", proposed_snapshot_id=manifest["semantic_snapshot_id"])
-            _save_run(database, receipt)
-            completed = {}
-            def commit_receipt(connection, imported):
-                completed.update(receipt)
-                completed.update(status="complete", stage="complete", snapshot_id=imported["snapshot_id"],
-                    claim_count=manifest["claim_count"], archive_id=imported["archive_id"], outcome=imported["outcome"],
-                    readback_verified=True, review_status="unreviewed")
-                updated = connection.execute("UPDATE sro_ingestions SET receipt=? WHERE run_id=?",
-                    (canonical_json(completed).decode(), receipt["run_id"]))
-                if updated.rowcount != 1:
-                    raise ValueError("Ontology ingestion receipt disappeared")
-            import_ontology(root / "proposal", database, collection=collection, name=name,
-                            expected_snapshot=expected_snapshot, _on_commit=commit_receipt)
-            return completed
+            return _finish_proposal(database, root, receipt, inputs, response, proposal_version, expected_snapshot)
         except httpx.HTTPStatusError as error:
             receipt.update(status="failed" if error.response.status_code < 500 else "unknown",
                 failure_reason="model_request_failed", error_type=type(error).__name__)

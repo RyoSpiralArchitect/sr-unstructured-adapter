@@ -7,8 +7,9 @@ model request/response receipts. No graph server, vector service, Fabric or Foun
 is needed. The model does not learn weights: it reuses the stored interpretations
 through three read-only tools.
 
-The [Luna/OCR development observation](ocr-ontology-2026-11-03.md) records a
-successful image ingestion, the retained mixed-PDF failure and DB-only reuse.
+The [Luna/OCR development observation](ocr-ontology-2026-11-03.md) records the
+original image and mixed-PDF runs. The [recovery example](#recover-a-rejected-vocabulary)
+shows how the saved mixed-PDF response was subsequently registered.
 
 ## From a raw source
 
@@ -261,6 +262,47 @@ Source/semantic SQL rows, archive, document activation and successful ingestion
 receipt commit together. An entry changed during model execution makes activation
 fail; its response remains available for diagnosis. Credentials, provider errors
 and document text are not copied into public exception messages.
+
+### Recover a rejected vocabulary
+
+Ingestion compiles model vocabulary declarations locally before registering a
+proposal. It groups terms by their exact IRI within that proposal. Repeated
+declarations with the same kind and label produce one term. Its description
+contains each distinct nonempty note verbatim, in Unicode order, separated by a
+blank line. `status` and the proposal review list every original declaration,
+including its position and description. Differing descriptions remain available
+for review alongside the claims that use the term.
+
+If the same IRI has different kinds or labels, the run returns `vocabulary_conflict`.
+`status` shows both declarations and the conflicting fields. The existing entry
+remains active. The same checks apply to classes, relations, roles and individuals
+across text, image and OCR inputs. Claim IDs, evidence, argument selectors and
+role constraints still pass through the semantic validator.
+
+To reprocess an earlier run that received a complete semantic response but failed
+validation, use its original run ID. Recovery verifies the archived source,
+request and response hashes, rebuilds the **identical** semantic request locally,
+and records a separate attempt linked to the original. It uses the `ontology`
+extra to rebuild portable source tables. It makes zero model, OCR or rendering
+calls. Text sources, saved visual inventories and saved OCR pages are supported.
+
+```bash
+sr-adapt knowledge ontology recover <original-run-id> --database ontology.sqlite
+sr-adapt knowledge ontology status <recovery-run-id> --database ontology.sqlite
+```
+
+Recovery uses the original collection and document name. If a different version
+is active, add `--expected-snapshot <current-version>` to replace it. Repeating a
+completed recovery for the same active entry returns its existing run ID. The
+failed receipt and original response remain available by the original run ID.
+
+In the synthetic mixed-PDF case, Luna declared `urn:sr:proposed:condition` twice
+with the label `条件`, once for a table and once for an exception. Replaying that
+response produced 18 terms from 19 declarations. All 7 original claims, 10
+expressions and 14 exact text anchors were verified. The two notes are retrievable
+from SQLite. One fresh `gpt-6-luna` call with the byte-identical request also
+registered 7 candidate claims, this time with 19 distinct terms. These counts
+describe the two runs on this fixture.
 
 Existing completed bundles can also be imported without a model call:
 

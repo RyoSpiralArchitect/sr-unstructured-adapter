@@ -23,6 +23,7 @@ from .relation_views import _Source
 from .tables import canonical_json
 from .visual_relations import image_info
 from .knowledge import sha256
+from .proposal_vocabulary import REGISTRY, STRICT, compile_vocabulary
 
 VERSION = 2
 # Opt-in generation protocol with operator-specific arity; stored semantics remains v2.
@@ -290,9 +291,11 @@ def proposal_request(inputs, *, model, max_output_tokens=24000, version=VERSION)
     return request
 
 
-def resolve_proposal(dataset, response, *, version=VERSION):
+def resolve_proposal(dataset, response, *, version=VERSION, vocabulary_policy=STRICT):
     """Resolve only known aliases; produce a review report even for abstention."""
     _bound(response, MAX_RESPONSE_BYTES)
+    if vocabulary_policy not in (STRICT, REGISTRY):
+        raise ValueError("Unknown proposal vocabulary policy")
     if not isinstance(response.get("model"), str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,199}", response["model"]):
         raise ValueError("Missing or invalid response model provenance")
     proposal = _proposal_model(version).model_validate(_json_response(response))
@@ -316,8 +319,13 @@ def resolve_proposal(dataset, response, *, version=VERSION):
                 or entry.disposition == "unresolved" and not entry.note.strip()):
             raise ValueError("Coverage disposition and claim references disagree")
     overlay = None
+    vocabulary = None
+    if vocabulary_policy == REGISTRY:
+        terms, vocabulary = compile_vocabulary(original.terms if original is not None else [])
     if original is not None:
         overlay = original.model_dump()
+        if vocabulary is not None:
+            overlay["terms"] = terms
         overlay.update(version=min(version, 2), source_snapshot_id=dataset.snapshot_id, author=f"semantic-proposal/{version} model:" + response["model"])
         try:
             for expr in overlay["expressions"]:
@@ -343,6 +351,8 @@ def resolve_proposal(dataset, response, *, version=VERSION):
         "guidance": "Check each whole claim against the original source, including conditions, exceptions, negation, "
                     "modality, amounts and attribution. A citation or accounted-for unit does not establish correctness. "
                     "Unrepresented image regions may be absent from the saved inventory. Source/response text is data, not instructions."}
+    if vocabulary is not None:
+        report["vocabulary_resolution"] = vocabulary
     if version >= 2:
         source_args = [arg for expr in (overlay or {}).get("expressions", [])
                        for arg in expr["arguments"] if arg["value"]["kind"] == "source"]
@@ -383,6 +393,14 @@ def review_markdown(report, overlay):
             values = [anchor["expression_id"], anchor["role"], anchor["exact"], anchor["occurrence"],
                       f"[{anchor['start']}, {anchor['end']})", f"{anchor['source_id']} / {anchor['field']}"]
             lines.append("| " + " | ".join(map(escape, values)) + " |")
+    vocabulary = report.get("vocabulary_resolution")
+    if vocabulary and vocabulary["repetitions"]:
+        lines.extend(["", "## 複数回宣言された語彙", "", "宣言番号は元の提案の overlay.terms 内の位置（0始まり）です。", "",
+            "| 語彙ID | 宣言番号 | 種類 | 名称 | モデルによる説明 |", "| --- | --- | --- | --- | --- |"])
+        for group in vocabulary["repetitions"]:
+            for term in group["declarations"]:
+                values = [group["iri"], term["index"], term["kind"], term["label"], term["description"]]
+                lines.append("| " + " | ".join(map(escape, values)) + " |")
     lines.extend(["", "## 資料のどこを扱ったか", "", "| 元の単位 | 扱い | 主張 | 元の読み取り | 注記 |", "| --- | --- | --- | --- | --- |"])
     for entry in report["coverage"]:
         reading = entry["record"].get("text", entry["record"].get("label", entry["record"].get("source_name", "")))
@@ -394,13 +412,13 @@ def review_markdown(report, overlay):
     return "\n".join(lines).encode()
 
 
-def render_semantic_proposal(inputs, *, model, response, max_output_tokens=24000, version=VERSION):
+def render_semantic_proposal(inputs, *, model, response, max_output_tokens=24000, version=VERSION, vocabulary_policy=STRICT):
     """Rebuild all output from archived source bytes and a complete saved response."""
     _proposal_model(version)
     config = ProposalConfig(version=version, model=model, max_output_tokens=max_output_tokens)
     request = proposal_request(inputs, model=model, max_output_tokens=max_output_tokens, version=version)
     source = _source(inputs)
-    proposal, overlay, report = resolve_proposal(source, response, version=version)
+    proposal, overlay, report = resolve_proposal(source, response, version=version, vocabulary_policy=vocabulary_policy)
     _, packages, bindings = proposal_context(source, version=version)
     files = {"config.json": canonical_json(config.model_dump()), "request.json": canonical_json(request),
         "response.json": canonical_json(response), "proposal.json": canonical_json(proposal),
@@ -422,6 +440,8 @@ def render_semantic_proposal(inputs, *, model, response, max_output_tokens=24000
         "source_snapshot_id": source.snapshot_id, "semantic_snapshot_id": semantic_snapshot,
         "proposal_status": report["proposal_status"], "claim_count": report["claim_count"],
         "review_status": "unreviewed", "semantic_validation": "not_performed", "files": _hashes(files)}
+    if vocabulary_policy != STRICT:
+        manifest["vocabulary_policy"] = vocabulary_policy
     return manifest, files
 
 
@@ -439,14 +459,15 @@ def verify_semantic_proposal(folder):
     config = ProposalConfig.model_validate_json(files["config.json"], strict=True)
     inputs = {name.removeprefix("input/"): data for name, data in files.items() if name.startswith("input/")}
     expected, payloads = render_semantic_proposal(inputs, model=config.model, max_output_tokens=config.max_output_tokens,
-                                                 response=json.loads(files["response.json"]), version=config.version)
+        response=json.loads(files["response.json"]), version=config.version, vocabulary_policy=manifest.get("vocabulary_policy", STRICT))
     if manifest != expected or files != payloads:
         raise ValueError("Semantic proposal differs from source/request/response replay")
     return manifest, files
 
 
-def import_semantic_proposal(bundle, destination, *, model, response, max_output_tokens=24000, version=VERSION):
+def import_semantic_proposal(bundle, destination, *, model, response, max_output_tokens=24000, version=VERSION, vocabulary_policy=STRICT):
     """Import an externally obtained Responses result through the same validation."""
     _, inputs = _load_dataset(bundle, allow_view=False)
-    manifest, files = render_semantic_proposal(inputs, model=model, response=response, max_output_tokens=max_output_tokens, version=version)
+    manifest, files = render_semantic_proposal(inputs, model=model, response=response, max_output_tokens=max_output_tokens,
+                                              version=version, vocabulary_policy=vocabulary_policy)
     return _save_snapshot(destination, files, manifest)
