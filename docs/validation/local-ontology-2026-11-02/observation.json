@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "date": "2026-11-02",
+  "purpose": "synthetic development integration smoke, not extraction-quality evaluation",
+  "model": "gpt-5.5",
+  "response_model": "gpt-5.5-2026-04-23",
+  "synthetic_only": true,
+  "customer_data_used": false,
+  "generation_requests": 7,
+  "generation_runs": [
+    {
+      "run_id": "93f2e08c659541bfac3e30dbf636311d",
+      "source_name": "synthetic-policy.docx",
+      "status": "complete",
+      "stage": "complete",
+      "submitted_requests": 1,
+      "snapshot_id": "9801873f2e9c3abdd66fcf511f2a86dff98ec48d913396de181078245af51f33",
+      "claim_count": 4,
+      "error_type": null
+    },
+    {
+      "run_id": "cf8b312407ea4068aabdb8a5a16e577b",
+      "source_name": "synthetic-map.png",
+      "status": "failed",
+      "stage": "visual_validating",
+      "submitted_requests": 1,
+      "snapshot_id": null,
+      "claim_count": null,
+      "error_type": "ValidationError"
+    },
+    {
+      "run_id": "8349787c807046a287b9912d87025441",
+      "source_name": "synthetic-map.png",
+      "status": "failed",
+      "stage": "semantics_validating",
+      "submitted_requests": 2,
+      "snapshot_id": null,
+      "claim_count": null,
+      "error_type": "ValidationError"
+    },
+    {
+      "run_id": "5cf4d98a467440d3a61d80a42424c74d",
+      "source_name": "synthetic-policy.docx",
+      "status": "complete",
+      "stage": "complete",
+      "submitted_requests": 1,
+      "snapshot_id": "5c2fc3ff859e7fff465ca657d4c7474607cb35d42ab969001077f450ba8cde00",
+      "claim_count": 4,
+      "error_type": null
+    },
+    {
+      "run_id": "c02ed5bbe6f04373a9fd5e7312b42fe9",
+      "source_name": "synthetic-map.png",
+      "status": "complete",
+      "stage": "complete",
+      "submitted_requests": 2,
+      "snapshot_id": "b8fc7ffca06173bd9210670f69f41ccfb2eefae6ab14e86c42aa80c466805917",
+      "claim_count": 11,
+      "error_type": null
+    }
+  ],
+  "active_entries": [
+    {
+      "name": "synthetic-map.png",
+      "snapshot_id": "b8fc7ffca06173bd9210670f69f41ccfb2eefae6ab14e86c42aa80c466805917",
+      "source_snapshot_id": "2c6bb0e226522cda2c893a3bfd049abfe1002ed0b2c992a552732468bb9001c1",
+      "term_count": 26,
+      "claim_count": 11,
+      "profile": "relation_semantics/2",
+      "argument_anchors": 21,
+      "semantic_rows": 182,
+      "source_sha256": "4e94970809ec79fe88bffb877f18fff7f63c76a369f2ca5d53d163269b5b9bd4"
+    },
+    {
+      "name": "synthetic-policy.docx",
+      "snapshot_id": "5c2fc3ff859e7fff465ca657d4c7474607cb35d42ab969001077f450ba8cde00",
+      "source_snapshot_id": "8a17a87f2bf0faaa7b208732f0e99220464c949f0e8b72a80a07ac7a3dbd4340",
+      "term_count": 22,
+      "claim_count": 4,
+      "profile": "relation_semantics/2",
+      "argument_anchors": 17,
+      "semantic_rows": 123,
+      "source_sha256": "95aa93155b5ee5a91da8f9650aa8dc04e17a5e9260a36f9b7f9e5241f2075470"
+    }
+  ],
+  "initial_failures": [
+    {
+      "run_id": "cf8b312407ea4068aabdb8a5a16e577b",
+      "reason": "Legacy direct visual proposals used one evidence ID where two distinct endpoints are required."
+    },
+    {
+      "run_id": "8349787c807046a287b9912d87025441",
+      "reason": "Semantic proposal v2 produced an implies expression with three operands."
+    }
+  ],
+  "reuse": {
+    "model_requests": 7,
+    "tool_calls": [
+      {
+        "name": "search_ontology",
+        "status": "complete",
+        "reference": null
+      },
+      {
+        "name": "list_ontologies",
+        "status": "complete",
+        "reference": null
+      },
+      {
+        "name": "search_ontology",
+        "status": "complete",
+        "reference": null
+      },
+      {
+        "name": "inspect_ontology",
+        "status": "complete",
+        "reference": {
+          "collection": "default",
+          "name": "synthetic-policy.docx",
+          "snapshot_id": "5c2fc3ff859e7fff465ca657d4c7474607cb35d42ab969001077f450ba8cde00",
+          "kind": "claim",
+          "id": "c1"
+        }
+      },
+      {
+        "name": "search_ontology",
+        "status": "complete",
+        "reference": null
+      },
+      {
+        "name": "search_ontology",
+        "status": "complete",
+        "reference": null
+      }
+    ],
+    "answer_received": true,
+    "initial_tool_loop_limit": 6,
+    "finalization_requests": 1,
+    "basis": "copied SQLite only; no input directory passed to model tools",
+    "limitation": "Model submitted multi-keyword queries to literal search and inspected only c1. Answer distinguishes other claims as uninspected and refers to original source context.",
+    "answer_sha256": "19ca62ce24b34d2d1a70be38f6bdebc998cfab0416aa38a831db04995fe6471b"
+  },
+  "automatic_retries": 0,
+  "semantic_validation": "not_performed",
+  "inference_performed": false,
+  "offline_tests": {
+    "passed": 1341,
+    "skipped": 1,
+    "warnings": 3,
+    "new_tests": 32
+  },
+  "wheel_reuse": {
+    "outside_checkout": true,
+    "pyarrow_imports_blocked": true,
+    "entries_verified": 2,
+    "claims_traced": 15,
+    "original_sources_recovered": 2
+  }
+}

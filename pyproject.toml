@@ -23,6 +23,8 @@ dependencies = [
 [project.optional-dependencies]
 tables = ["pdfplumber>=0.11,<0.12"]
 lakehouse = ["pyarrow>=18"]
+ontology = ["pyarrow>=18"]
+ocr = ["pypdfium2>=5.0,<6"]
 azure = ["azure-storage-file-datalake>=12.16,<13", "azure-identity>=1.17,<2"]
 foundry = ["azure-identity>=1.17,<2"]
 fabric = ["azure-identity>=1.17,<2", "pyarrow>=18"]
@@ -39,6 +41,7 @@ dev = [
     "reportlab>=4.0",
     "pdfplumber>=0.11,<0.12",
     "pyarrow>=18",
+    "pypdfium2>=5.0,<6",
     "rdflib>=7",
     "azure-storage-file-datalake>=12.16,<13",
 ]
@@ -60,7 +63,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-sr_adapter = ["native/*.cpp", "recipes/*.yaml", "configs/tenants/*.yaml"]
+sr_adapter = ["native/*.cpp", "native/*.swift", "recipes/*.yaml", "configs/tenants/*.yaml"]
 
 [tool.ruff]
 target-version = "py310"
