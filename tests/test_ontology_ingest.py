@@ -109,7 +109,7 @@ def test_plan_never_calls_model_and_cli_exposes_local_tools(tmp_path, capsys):
     assert main(["knowledge", "ontology", "status", result["run_id"], "--database", str(db)]) == 0
     assert json.loads(capsys.readouterr().out)["stored_files"]
     assert main(["knowledge", "ontology", "tools", "--database", str(db), "--collections", "default"]) == 0
-    assert len(json.loads(capsys.readouterr().out)["tools"]) == 3
+    assert {tool["name"] for tool in json.loads(capsys.readouterr().out)["tools"]} == {"list_ontologies", "search_ontology", "inspect_ontology", "compare_ontology_claims"}
 
 
 @pytest.mark.parametrize("failure,expected", [("timeout", "unknown"), ("429", "failed"), ("500", "unknown"),
