@@ -117,7 +117,12 @@ def test_expression_arguments_preserve_conditions_without_importing_linked_scope
             "package_id": dataset.package_ids[0],
             "operator": "atom",
             "predicate": NS + "Stopped",
-            "arguments": [],
+            "arguments": [
+                {
+                    "role": NS + "actor",
+                    "value": {"kind": "unknown", "reason": "unidentified"},
+                }
+            ],
         }
     )
     changed["claims"][0]["expression_id"] = "about-rule"
