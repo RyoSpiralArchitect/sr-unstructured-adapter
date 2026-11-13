@@ -38,6 +38,11 @@ def prepare_ontology_reread(database, *, reference, node_id, padding=24):
         visited.add(identity)
         expression = expressions[identity]
         pending.extend(expression["operands"])
+        pending.extend(
+            a["value"]["expression_id"]
+            for a in expression["arguments"]
+            if a["value"]["kind"] == "expression"
+        )
         bound.update(
             a["value"]["node_id"]
             for a in expression["arguments"]
