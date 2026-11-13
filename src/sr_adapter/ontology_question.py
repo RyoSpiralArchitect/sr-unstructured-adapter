@@ -213,6 +213,11 @@ def answer_ontology_question(
                         )
                     if (
                         result.get("status") == "complete"
+                        and name == "compare_ontology_claims"
+                    ):
+                        discovered.update(_key(ref) for ref in result["references"])
+                    if (
+                        result.get("status") == "complete"
                         and name == "inspect_ontology"
                     ):
                         inspections[page_key] = result

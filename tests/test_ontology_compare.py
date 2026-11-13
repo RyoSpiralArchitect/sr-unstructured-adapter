@@ -15,6 +15,56 @@ from test_local_ontology import saved as saved_fixture, narrative  # noqa: F401
 saved = saved_fixture
 
 
+def test_question_loop_can_inspect_both_comparison_references(saved, tmp_path):
+    from sr_adapter.ontology_question import answer_ontology_question
+
+    db = tmp_path / "db"
+    import_ontology(saved[1], db)
+    refs = [h["reference"] for h in search_ontology(db, kind="claim")["hits"]]
+    args = {
+        "collection": "default",
+        **{
+            f"{side}_{k}": ref[k]
+            for side, ref in zip(("left", "right"), refs)
+            for k in ("name", "snapshot_id", "id")
+        },
+    }
+    calls = []
+
+    def complete(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return {
+                "actions": [{"name": "compare_ontology_claims", "arguments": args}],
+                "answer": None,
+            }
+        if len(calls) == 2:
+            assert not request["evidence"]["entries"]
+            return {
+                "actions": request["history"][0]["result"]["inspect"],
+                "answer": None,
+            }
+        inspected = unpack_ontology_context(request["evidence"])
+        assert [v["reference"] for v in inspected] == refs
+        return {
+            "actions": [],
+            "answer": {
+                "text": "Both sources retained; priority unresolved.",
+                "citations": refs,
+            },
+        }
+
+    result = answer_ontology_question(
+        db,
+        collections=("default",),
+        question="Compare the claims",
+        complete=complete,
+        destination=tmp_path / "question",
+    )
+    assert result["status"] == "complete" and result["inspection_count"] == 2
+    assert result["linked_citations"] == refs
+
+
 def test_compare_keeps_primary_dissent_and_both_complete_scopes(saved, tmp_path):
     db = tmp_path / "db"
     import_ontology(saved[1], db)

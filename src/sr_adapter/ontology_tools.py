@@ -104,7 +104,7 @@ class OntologyTools(RelationEvidenceTools):
         if name not in {definition["name"] for definition in self.definitions()}:
             return _failure(
                 "unknown_tool",
-                "Use list_ontologies, search_ontology or inspect_ontology.",
+                "Use list_ontologies, search_ontology, inspect_ontology or compare_ontology_claims.",
             )
         invalid = self._validate(name, arguments)
         if invalid is not None:

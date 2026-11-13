@@ -30,3 +30,12 @@ Tests cover explicit dissent, distinct primary versus connected scope, changed
 versions/definitions/context, allowlists, response budgets and database immutability.
 The comparison describes stored interpretations; it is not automatic semantic
 conflict detection or an authority resolver.
+
+## Question-loop integration
+
+`answer_ontology_question` exposes the comparison tool alongside discovery,
+search and inspection. A successful comparison registers its two verified
+references for follow-up inspection. Comparison alone does not make a citation
+linked: the model still needs to inspect each source before citing it. This
+preserves both the paired comparison and each complete source scope in the
+session history and packed evidence.
