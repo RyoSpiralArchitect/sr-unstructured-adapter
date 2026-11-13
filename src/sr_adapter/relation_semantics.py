@@ -200,11 +200,10 @@ def resolve_text_selector(text, selector):
     selector = TextSelector.model_validate(selector)
     if not isinstance(text, str):
         raise ValueError("A text selector requires saved text")
-    start = -1
-    for _ in range(selector.occurrence + 1):
-        start = text.find(selector.exact, start + 1)
-        if start < 0:
-            raise ValueError("Text selector occurrence does not exist in the exact source reading")
+    from .native.selector import find_text_occurrence
+    start = find_text_occurrence(text, selector.exact, selector.occurrence)
+    if start < 0:
+        raise ValueError("Text selector occurrence does not exist in the exact source reading")
     return {"exact": selector.exact, "occurrence": selector.occurrence,
             "start": start, "end": start + len(selector.exact)}
 
