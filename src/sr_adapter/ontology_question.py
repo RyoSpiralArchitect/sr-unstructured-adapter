@@ -75,6 +75,7 @@ def answer_ontology_question(
     ):
         if type(value) is not int or not lower <= value <= upper:
             raise ValueError("Invalid question-loop budget")
+    collections = tuple(collections)
     target_sources = validate_target_sources(target_sources)
     if target_sources and any(
         s["collection"] not in collections for s in target_sources

@@ -10,10 +10,11 @@ from test_local_ontology import saved as saved_fixture, narrative  # noqa: F401
 saved = saved_fixture
 
 
+@pytest.mark.parametrize("iterable_collections", [False, True])
 @pytest.mark.parametrize("targeted", [False, True])
 @pytest.mark.parametrize("use_handles", [False, True])
 def test_question_uses_discovery_inspection_and_keeps_db_unchanged(
-    saved, tmp_path, use_handles, targeted
+    saved, tmp_path, use_handles, targeted, iterable_collections
 ):
     db = tmp_path / "onto.db"
     import_ontology(saved[1], db)
@@ -73,7 +74,7 @@ def test_question_uses_discovery_inspection_and_keeps_db_unchanged(
 
     result = answer_ontology_question(
         db,
-        collections=("default",),
+        collections=iter(["default"]) if iterable_collections else ("default",),
         question="Who handles it?",
         target_sources=scope,
         complete=complete,
