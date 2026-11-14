@@ -10,7 +10,10 @@ from test_local_ontology import saved as saved_fixture, narrative  # noqa: F401
 saved = saved_fixture
 
 
-def test_question_uses_discovery_inspection_and_keeps_db_unchanged(saved, tmp_path):
+@pytest.mark.parametrize("use_handles", [False, True])
+def test_question_uses_discovery_inspection_and_keeps_db_unchanged(
+    saved, tmp_path, use_handles
+):
     db = tmp_path / "onto.db"
     import_ontology(saved[1], db)
     original = db.read_bytes()
@@ -18,7 +21,13 @@ def test_question_uses_discovery_inspection_and_keeps_db_unchanged(saved, tmp_pa
 
     def complete(request):
         calls.append(request)
+        contract = request["response_contract"]
+        assert contract["max_actions_per_turn"] == 8
+        assert contract["allowed_actions_this_turn"] == min(
+            8, request["remaining"]["tool_calls"]
+        )
         if len(calls) == 1:
+            assert contract["citation_catalog"] == {}
             return {
                 "actions": [
                     {
@@ -40,7 +49,9 @@ def test_question_uses_discovery_inspection_and_keeps_db_unchanged(saved, tmp_pa
             "actions": [],
             "answer": {
                 "text": "Source-local candidate with dissent.",
-                "citations": [ref],
+                "citations": [next(iter(contract["citation_catalog"]))]
+                if use_handles
+                else [ref],
             },
         }
 
@@ -53,6 +64,10 @@ def test_question_uses_discovery_inspection_and_keeps_db_unchanged(saved, tmp_pa
     )
     assert result["status"] == "complete" and result["inspection_count"] == 1
     assert result["model_calls"] == 3 and result["tool_calls"] == 2
+    assert isinstance(result["answer"]["citations"][0], dict)
+    assert isinstance(
+        result["raw_answer"]["citations"][0], str if use_handles else dict
+    )
     assert db.read_bytes() == original
     assert (
         len(
@@ -121,6 +136,39 @@ def test_budget_stops_without_retry_and_failure_retains_response(saved, tmp_path
         complete=lambda request: {"unexpected": "response"},
     )
     assert result["status"] == "failed" and (tmp_path / "bad/response-00.json").exists()
+
+
+@pytest.mark.parametrize("count", [8, 9])
+def test_per_turn_limit_is_advertised_and_enforced_before_tools(saved, tmp_path, count):
+    db = tmp_path / "db"
+    import_ontology(saved[1], db)
+    seen = []
+
+    def complete(request):
+        seen.append(request)
+        contract = request["response_contract"]
+        assert contract["allowed_actions_this_turn"] == 8
+        assert contract["response_schema"]["properties"]["actions"]["maxItems"] == 8
+        return {
+            "actions": [{"name": "list_ontologies", "arguments": {}}] * count,
+            "answer": None,
+        }
+
+    result = answer_ontology_question(
+        db,
+        collections=("default",),
+        question="q",
+        destination=tmp_path / "run",
+        max_rounds=1,
+        complete=complete,
+    )
+    assert len(seen) == 1
+    if count == 8:
+        assert result["reason"] == "round_budget" and result["tool_calls"] == 8
+    else:
+        assert result["reason"] == "action_limit" and result["tool_calls"] == 0
+        assert result["requested_actions"] == 9 and result["allowed_actions"] == 8
+        assert json.loads((tmp_path / "run/response-00.json").read_bytes())["actions"]
 
 
 def test_session_pins_catalog_before_model_changes_original(saved, tmp_path):
