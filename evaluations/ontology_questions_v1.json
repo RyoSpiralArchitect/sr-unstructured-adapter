@@ -1,0 +1,801 @@
+{
+  "version": 1,
+  "id": "atlas-questions-v1",
+  "collection": "cross-format",
+  "source_units": {
+    "A1": "資料Aは融資運用部の現行手順である。対象はLoanSystem L-01の申請A。適用対象期間は2026-05-01から2026-06-30まで。",
+    "A2": "資料Aの「Atlas」は融資審査システムの名称であり、人の組織ではない。",
+    "A3": "融資運用部の記載：融資額が100万円以下の場合、審査部による審査が必要である。",
+    "A4": "融資運用部の記載：反社確認が未完了の場合、融資を実行してはならない。",
+    "A5": "資料Bとの審査担当および未完了時の実行可否の不一致は未解決であり、優先資料は未決定である。最終承認者の氏名は記載されていない。",
+    "B1": "資料Bは監査部の改定案であり、未承認である。対象はLoanSystem L-01の申請A。適用対象期間は2026-05-01から2026-06-30まで。",
+    "B2": "資料Bの「Atlas」は監査審査チームの名称であり、システムではない。",
+    "B3": "監査部の改定案：融資額が100万円以下の場合、部長による審査が必要である。この案は未承認である。",
+    "B4": "監査部の改定案：緊急時に限り、反社確認が未完了でも融資実行を許可する。この例外案は未承認である。",
+    "B5": "資料Aとの審査担当および未完了時の実行可否の不一致は未解決であり、優先資料は未決定である。最終承認者の氏名は記載されていない。"
+  },
+  "corpus": [
+    {
+      "name": "atlas-policy-a.docx",
+      "snapshot_id": "ae8165e236b7a863bf9a0db74f5b14e61f6b60e6abd0ffaf778e484d9016bed2",
+      "source_sha256": "379570cf368097acbc198aae651ebb92d07bf7c0b9918166bce1506b22a074d8"
+    },
+    {
+      "name": "atlas-policy-a.pdf",
+      "snapshot_id": "7d916e125fb4b5a4d60a02d4ab03250609387e3f2ebef9ada2dca54bdceed0db",
+      "source_sha256": "9e1399ab5e31abb4f1dde1f2443a87a3be6c40c908a23fc105a160d719bcdc3e"
+    },
+    {
+      "name": "atlas-policy-a.png",
+      "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+      "source_sha256": "26d2701d6bde8865c1b645696adee9b8bae4ea903d2505bc364d70d19eadd86a"
+    },
+    {
+      "name": "atlas-policy-b.docx",
+      "snapshot_id": "01072ae42ca7c75657bcf22b45125ecedddb99d49ff77171f2e774683309c358",
+      "source_sha256": "7cd5f5fabdd19a505b7c22288c354ce0cb8c4a0b8beda12077d7fb846f8d8b43"
+    },
+    {
+      "name": "atlas-policy-b.pdf",
+      "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+      "source_sha256": "904ad68b892a5faa26abf9e2ecb3318cfdf9fd2418462980a49a8fc16395ec12"
+    },
+    {
+      "name": "atlas-policy-b.png",
+      "snapshot_id": "8ce5fcecaa2bc640cd707becb70e855c39f4e18813bb424c8724e7adbf9ba127",
+      "source_sha256": "d95f55c6721432188240f2ce320169861e32e50ef35da71b4b3d930d57784d1a"
+    }
+  ],
+  "questions": [
+    {
+      "id": "identity-1",
+      "category": "identity",
+      "question": "atlas-policy-a.pdfとatlas-policy-b.docxのAtlasは、それぞれ何を指しますか。同じ対象として扱えますか。",
+      "evidence_groups": [
+        {
+          "label": "a.pdf:identity",
+          "source_unit": "A2",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.pdf",
+              "snapshot_id": "7d916e125fb4b5a4d60a02d4ab03250609387e3f2ebef9ada2dca54bdceed0db",
+              "kind": "claim",
+              "id": "c-atlas-description"
+            }
+          ]
+        },
+        {
+          "label": "b.docx:identity",
+          "source_unit": "B2",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.docx",
+              "snapshot_id": "01072ae42ca7c75657bcf22b45125ecedddb99d49ff77171f2e774683309c358",
+              "kind": "claim",
+              "id": "c_atlas_team_name"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "Aは融資審査システム、Bは監査審査チームと資料別に説明する。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "同じ表記でも同一対象とみなさない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "Atlasを両資料共通の組織またはシステムと断定する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "identity-2",
+      "category": "identity",
+      "question": "atlas-policy-a.docxとatlas-policy-b.pngのAtlasを一つの組織として統合してよいですか。両資料の定義を示してください。",
+      "evidence_groups": [
+        {
+          "label": "a.docx:identity",
+          "source_unit": "A2",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.docx",
+              "snapshot_id": "ae8165e236b7a863bf9a0db74f5b14e61f6b60e6abd0ffaf778e484d9016bed2",
+              "kind": "claim",
+              "id": "claim-atlas-system-name"
+            }
+          ]
+        },
+        {
+          "label": "b.png:identity",
+          "source_unit": "B2",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.png",
+              "snapshot_id": "8ce5fcecaa2bc640cd707becb70e855c39f4e18813bb424c8724e7adbf9ba127",
+              "kind": "claim",
+              "id": "c_atlas_description"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "Aはシステムで組織ではなく、Bはチームであると区別する。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "一つの組織への統合を支持しない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "ラベル一致だけを理由に同一の組織だと断定する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "identity-3",
+      "category": "identity",
+      "question": "atlas-policy-a.pngとatlas-policy-b.pdfでAtlasの意味が違うのは、システムがチームに改称されたからですか。資料から言える範囲で説明してください。",
+      "evidence_groups": [
+        {
+          "label": "a.png:identity",
+          "source_unit": "A2",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.png",
+              "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+              "kind": "claim",
+              "id": "c-atlas-system"
+            }
+          ]
+        },
+        {
+          "label": "b.pdf:identity",
+          "source_unit": "B2",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.pdf",
+              "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+              "kind": "claim",
+              "id": "c_atlas_designation"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "AのシステムとBのチームという別の意味を説明する。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "改称や組織変更の経緯は資料から確認できないと述べる。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "改称・組織変更・同一実体の履歴を創作する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "condition-1",
+      "category": "condition",
+      "question": "atlas-policy-a.pdfとatlas-policy-b.docxでは、LoanSystem L-01の申請Aの融資額がちょうど100万円の場合、誰による審査が必要とされていますか。",
+      "evidence_groups": [
+        {
+          "label": "a.pdf:review",
+          "source_unit": "A3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.pdf",
+              "snapshot_id": "7d916e125fb4b5a4d60a02d4ab03250609387e3f2ebef9ada2dca54bdceed0db",
+              "kind": "claim",
+              "id": "c-review-required-conditionally"
+            }
+          ]
+        },
+        {
+          "label": "b.docx:review",
+          "source_unit": "B3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.docx",
+              "snapshot_id": "01072ae42ca7c75657bcf22b45125ecedddb99d49ff77171f2e774683309c358",
+              "kind": "claim",
+              "id": "c_amount_review_required"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "100万円ちょうどは100万円以下に含まれる。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "Aは審査部、Bの未承認案は部長による審査と区別する。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "審査担当を入れ替える、またはBを承認済みの規則として扱う。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "condition-2",
+      "category": "condition",
+      "question": "atlas-policy-a.docxとatlas-policy-b.pngでは、緊急時で反社確認が未完了の場合の融資実行をどう記載していますか。",
+      "evidence_groups": [
+        {
+          "label": "a.docx:execution",
+          "source_unit": "A4",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.docx",
+              "snapshot_id": "ae8165e236b7a863bf9a0db74f5b14e61f6b60e6abd0ffaf778e484d9016bed2",
+              "kind": "claim",
+              "id": "claim-conditional-execution-prohibited"
+            }
+          ]
+        },
+        {
+          "label": "b.png:execution",
+          "source_unit": "B4",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.png",
+              "snapshot_id": "8ce5fcecaa2bc640cd707becb70e855c39f4e18813bb424c8724e7adbf9ba127",
+              "kind": "claim",
+              "id": "c_emergency_exception"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "Aの未完了時の禁止を維持する。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "Bは緊急時に限る許可案で、未承認であると述べる。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "Bの例外をAにも適用する、または実行してよいと一律に指示する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "condition-3",
+      "category": "condition",
+      "question": "atlas-policy-a.pngとatlas-policy-b.pdfを読むと、通常時でも反社確認未完了のまま融資実行を許可できると書かれていますか。",
+      "evidence_groups": [
+        {
+          "label": "a.png:execution",
+          "source_unit": "A4",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.png",
+              "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+              "kind": "claim",
+              "id": "c-execution-prohibited"
+            }
+          ]
+        },
+        {
+          "label": "b.pdf:execution",
+          "source_unit": "B4",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.pdf",
+              "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+              "kind": "claim",
+              "id": "c_emergency_exception"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "Aは反社確認未完了の場合の実行を禁止している。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "Bの許可案は緊急時限定かつ未承認なので、通常時の許可根拠にはならない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "Bが通常時の禁止を明文で定めたと推測する、または緊急条件を落として許可する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "revision-1",
+      "category": "revision",
+      "question": "atlas-policy-a.pdfとatlas-policy-b.docxのどちらが現行手順で、どちらが未承認案ですか。BがAを置き換えたと言えますか。",
+      "evidence_groups": [
+        {
+          "label": "a.pdf:status",
+          "source_unit": "A1",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.pdf",
+              "snapshot_id": "7d916e125fb4b5a4d60a02d4ab03250609387e3f2ebef9ada2dca54bdceed0db",
+              "kind": "claim",
+              "id": "c-procedure-scope"
+            }
+          ]
+        },
+        {
+          "label": "b.docx:status",
+          "source_unit": "B1",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.docx",
+              "snapshot_id": "01072ae42ca7c75657bcf22b45125ecedddb99d49ff77171f2e774683309c358",
+              "kind": "claim",
+              "id": "c_proposal_status"
+            }
+          ]
+        },
+        {
+          "label": "a.pdf:priority",
+          "source_unit": "A5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.pdf",
+              "snapshot_id": "7d916e125fb4b5a4d60a02d4ab03250609387e3f2ebef9ada2dca54bdceed0db",
+              "kind": "claim",
+              "id": "c-disagreement-unresolved"
+            }
+          ]
+        },
+        {
+          "label": "b.docx:priority",
+          "source_unit": "B5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.docx",
+              "snapshot_id": "01072ae42ca7c75657bcf22b45125ecedddb99d49ff77171f2e774683309c358",
+              "kind": "claim",
+              "id": "c_priority_undetermined"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "Aは現行手順、Bは監査部の未承認改定案である。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "資料間の優先順位は未決定で、Bによる置換は確認できない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "改定案という呼び名だけでBが承認・適用済みだと扱う。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "revision-2",
+      "category": "revision",
+      "question": "atlas-policy-a.docxとatlas-policy-b.pngの審査担当が食い違うとき、現行手順であるAが優先すると資料から確定できますか。",
+      "evidence_groups": [
+        {
+          "label": "a.docx:review",
+          "source_unit": "A3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.docx",
+              "snapshot_id": "ae8165e236b7a863bf9a0db74f5b14e61f6b60e6abd0ffaf778e484d9016bed2",
+              "kind": "claim",
+              "id": "claim-conditional-review-required"
+            }
+          ]
+        },
+        {
+          "label": "b.png:review",
+          "source_unit": "B3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.png",
+              "snapshot_id": "8ce5fcecaa2bc640cd707becb70e855c39f4e18813bb424c8724e7adbf9ba127",
+              "kind": "claim",
+              "id": "c_conditional_review"
+            }
+          ]
+        },
+        {
+          "label": "a.docx:priority",
+          "source_unit": "A5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.docx",
+              "snapshot_id": "ae8165e236b7a863bf9a0db74f5b14e61f6b60e6abd0ffaf778e484d9016bed2",
+              "kind": "claim",
+              "id": "claim-priority-undecided"
+            }
+          ]
+        },
+        {
+          "label": "b.png:priority",
+          "source_unit": "B5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.png",
+              "snapshot_id": "8ce5fcecaa2bc640cd707becb70e855c39f4e18813bb424c8724e7adbf9ba127",
+              "kind": "claim",
+              "id": "c_priority_undecided"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "審査部と部長という資料別の記述を未承認の限定付きで示す。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "資料中の優先資料未決定という記載を保持する。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "AまたはBを優先資料として確定する、あるいは勝手に統一ルールを作る。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "revision-3",
+      "category": "revision",
+      "question": "atlas-policy-a.pngとatlas-policy-b.pdfの対象期間を比べると、審査担当の違いは別の適用期間の話として解消できますか。",
+      "evidence_groups": [
+        {
+          "label": "a.png:period",
+          "source_unit": "A1",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.png",
+              "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+              "kind": "claim",
+              "id": "c-document-period"
+            }
+          ]
+        },
+        {
+          "label": "b.pdf:period",
+          "source_unit": "B1",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.pdf",
+              "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+              "kind": "claim",
+              "id": "c_scope"
+            }
+          ]
+        },
+        {
+          "label": "a.png:review",
+          "source_unit": "A3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.png",
+              "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+              "kind": "claim",
+              "id": "c-review-required"
+            }
+          ]
+        },
+        {
+          "label": "b.pdf:review",
+          "source_unit": "B3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.pdf",
+              "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+              "kind": "claim",
+              "id": "c_review_requirement"
+            }
+          ]
+        },
+        {
+          "label": "a.png:priority",
+          "source_unit": "A5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.png",
+              "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+              "kind": "claim",
+              "id": "c-priority-undecided"
+            }
+          ]
+        },
+        {
+          "label": "b.pdf:priority",
+          "source_unit": "B5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.pdf",
+              "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+              "kind": "claim",
+              "id": "c_priority_undetermined"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "両資料とも2026-05-01から2026-06-30を対象としている。"
+        },
+        {
+          "id": "required-2",
+          "kind": "required",
+          "description": "期間差だけでは食い違いを解消できず、優先順位は未決定のままとする。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "存在しない改定日・期間差を作って食い違いを解消する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "unknown-1",
+      "category": "unknown",
+      "question": "atlas-policy-a.pdfとatlas-policy-b.docxから、申請Aの最終承認者の氏名を特定できますか。",
+      "evidence_groups": [
+        {
+          "label": "a.pdf:approver",
+          "source_unit": "A5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.pdf",
+              "snapshot_id": "7d916e125fb4b5a4d60a02d4ab03250609387e3f2ebef9ada2dca54bdceed0db",
+              "kind": "claim",
+              "id": "c-approver-name-unknown"
+            }
+          ]
+        },
+        {
+          "label": "b.docx:approver",
+          "source_unit": "B5",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.docx",
+              "snapshot_id": "01072ae42ca7c75657bcf22b45125ecedddb99d49ff77171f2e774683309c358",
+              "kind": "claim",
+              "id": "c_approver_name_unknown"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "両資料で最終承認者の氏名は記載されておらず、特定できない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "個人名を作る、または審査担当や文書作成部署を最終承認者と同一視する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "unknown-2",
+      "category": "unknown",
+      "question": "atlas-policy-a.docxとatlas-policy-b.pngでは、100万円を超える申請Aの審査担当は誰ですか。",
+      "evidence_groups": [
+        {
+          "label": "a.docx:review",
+          "source_unit": "A3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.docx",
+              "snapshot_id": "ae8165e236b7a863bf9a0db74f5b14e61f6b60e6abd0ffaf778e484d9016bed2",
+              "kind": "claim",
+              "id": "claim-conditional-review-required"
+            }
+          ]
+        },
+        {
+          "label": "b.png:review",
+          "source_unit": "B3",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.png",
+              "snapshot_id": "8ce5fcecaa2bc640cd707becb70e855c39f4e18813bb424c8724e7adbf9ba127",
+              "kind": "claim",
+              "id": "c_conditional_review"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "記載された担当条件は100万円以下であり、超過時の担当は資料だけでは特定できない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "100万円以下の担当を超過時にも外挿する、または担当が存在しないと断定する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    },
+    {
+      "id": "unknown-3",
+      "category": "unknown",
+      "question": "atlas-policy-a.pngとatlas-policy-b.pdfから、2026-07-01以降に適用される申請Aの手順を決められますか。",
+      "evidence_groups": [
+        {
+          "label": "a.png:period",
+          "source_unit": "A1",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-a.png",
+              "snapshot_id": "15c30137aec46e00aa5d04da3bb5fc8234a976702b725cf201c77c9ad183760a",
+              "kind": "claim",
+              "id": "c-document-period"
+            }
+          ]
+        },
+        {
+          "label": "b.pdf:period",
+          "source_unit": "B1",
+          "acceptable_references": [
+            {
+              "collection": "cross-format",
+              "name": "atlas-policy-b.pdf",
+              "snapshot_id": "195b8d164ca4419c5cd9495939d417f35844a071bb06a00b4b357261c0ed4fb0",
+              "kind": "claim",
+              "id": "c_scope"
+            }
+          ]
+        }
+      ],
+      "rubric": [
+        {
+          "id": "required-1",
+          "kind": "required",
+          "description": "記載された対象期間は2026-06-30までで、7月1日以降の適用手順は確認できない。"
+        },
+        {
+          "id": "forbidden-1",
+          "kind": "forbidden",
+          "description": "終了後にも自動延長される、Bが自動承認される、または手順が存在しないと断定する。"
+        },
+        {
+          "id": "grounding",
+          "kind": "required",
+          "description": "資料ごとの重要な記述が、その資料に属する引用済みinspectionの内容（関連する主張・原文コンテキストを含む）によって裏付けられている。片側だけを引用して両資料の定義や条件を断定しない。厳密な主張IDの一致だけで支持の有無を決めない。"
+        }
+      ]
+    }
+  ],
+  "claim_ceiling": "Handwritten synthetic development set, not held-out bank-document accuracy. Evidence groups measure exact primary-reference coverage, not semantic correctness or all content visible in source_context. A forbidden criterion passes only when the forbidden assertion is absent."
+}
