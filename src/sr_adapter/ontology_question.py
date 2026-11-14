@@ -10,7 +10,12 @@ from tempfile import TemporaryDirectory
 
 from .knowledge_store import atomic_json
 from .ontology_context import pack_ontology_context
-from .ontology_response import MAX_ACTIONS_PER_TURN, resolve_answer, response_contract
+from .ontology_response import (
+    MAX_ACTIONS_PER_TURN,
+    resolve_answer,
+    response_contract,
+    validate_target_sources,
+)
 from .ontology_tools import OntologyTools
 from .tables import canonical_json
 
@@ -21,6 +26,7 @@ GUIDANCE = (
     "establish identity. Preserve conditions, negation, draft status, unknowns and unresolved priority. "
     "Tool failures or unvisited pages are gaps, not evidence of absence. Cite only inspected references. "
     "Use the exact documents named in the question; another format or similarly named document is not interchangeable. "
+    "When target_sources are set, cite each target in citations; other sources belong only in supplemental_citations. Continue searching for counterevidence across allowed collections. "
     "Copy citation handle strings from response_contract.citation_catalog into answer.citations; "
     "do not construct or combine reference fields. Follow response_contract.response_schema and "
     "response_contract.allowed_actions_this_turn. A valid handle identifies evidence, not proof of a claim. "
@@ -39,6 +45,7 @@ def answer_ontology_question(
     question,
     complete,
     destination,
+    target_sources=None,
     max_rounds=8,
     max_tool_calls=24,
     max_inspections=20,
@@ -68,6 +75,11 @@ def answer_ontology_question(
     ):
         if type(value) is not int or not lower <= value <= upper:
             raise ValueError("Invalid question-loop budget")
+    target_sources = validate_target_sources(target_sources)
+    if target_sources and any(
+        s["collection"] not in collections for s in target_sources
+    ):
+        raise ValueError("Target source outside allowed collections")
     configured = OntologyTools(
         database, tuple(collections), max_results=10, max_response_bytes=1024 * 1024
     )
@@ -115,6 +127,7 @@ def answer_ontology_question(
                     "response_contract": response_contract(
                         inspections.values(),
                         remaining_tool_calls=max_tool_calls - receipt["tool_calls"],
+                        target_sources=target_sources,
                     ),
                     "remaining": {
                         "rounds": max_rounds - turn,
@@ -154,16 +167,27 @@ def answer_ontology_question(
                     if (
                         actions
                         or type(answer) is not dict
-                        or set(answer) != {"text", "citations"}
+                        or set(answer)
+                        not in (
+                            {"text", "citations"},
+                            {"text", "citations", "supplemental_citations"}
+                            if target_sources is not None
+                            else {"text", "citations"},
+                        )
                     ):
                         raise ValueError("A final answer must have no actions")
                     if (
                         not isinstance(answer["text"], str)
                         or not answer["text"].strip()
                         or type(answer["citations"]) is not list
+                        or type(answer.get("supplemental_citations", [])) is not list
                     ):
                         raise ValueError("Invalid final answer")
-                    receipt.update(resolve_answer(answer, inspections.values()))
+                    receipt.update(
+                        resolve_answer(
+                            answer, inspections.values(), target_sources=target_sources
+                        )
+                    )
                     break
                 if not actions:
                     raise ValueError("No actions or answer")

@@ -10,18 +10,34 @@ from test_local_ontology import saved as saved_fixture, narrative  # noqa: F401
 saved = saved_fixture
 
 
+@pytest.mark.parametrize("targeted", [False, True])
 @pytest.mark.parametrize("use_handles", [False, True])
 def test_question_uses_discovery_inspection_and_keeps_db_unchanged(
-    saved, tmp_path, use_handles
+    saved, tmp_path, use_handles, targeted
 ):
     db = tmp_path / "onto.db"
     import_ontology(saved[1], db)
+    from sr_adapter.local_ontology import list_ontologies
+
+    entry = list_ontologies(db)["entries"][0]
+    scope = (
+        [
+            {
+                "collection": "default",
+                "name": entry["name"],
+                "snapshot_id": entry["snapshot_id"],
+            }
+        ]
+        if targeted
+        else None
+    )
     original = db.read_bytes()
     calls = []
 
     def complete(request):
         calls.append(request)
         contract = request["response_contract"]
+        assert contract["target_sources"] == scope
         assert contract["max_actions_per_turn"] == 8
         assert contract["allowed_actions_this_turn"] == min(
             8, request["remaining"]["tool_calls"]
@@ -59,6 +75,7 @@ def test_question_uses_discovery_inspection_and_keeps_db_unchanged(
         db,
         collections=("default",),
         question="Who handles it?",
+        target_sources=scope,
         complete=complete,
         destination=tmp_path / "run",
     )

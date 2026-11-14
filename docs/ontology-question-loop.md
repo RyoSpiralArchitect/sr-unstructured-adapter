@@ -79,3 +79,22 @@ The paired evaluator shares this contract and resolver in both arms. The
 all-evidence arm issues handles for all provided inspections and advertises zero
 available actions. Each revised implementation requires a newly frozen run;
 prior inputs, receipts and scores must not be rewritten.
+
+## Explicit target sources
+
+Call `answer_ontology_question(..., target_sources=[{"collection": "local",
+"name": "policy.pdf", "snapshot_id": "<exact snapshot>"}])` to constrain primary
+citations. The host supplies this scope explicitly; it is not inferred from
+question wording. Each target must have a primary citation for completion.
+Search and inspection remain available across the allowed collections.
+
+The contract separates `citation_catalog` (target sources) from
+`supplemental_catalog` (other inspected sources). The answer may include
+`supplemental_citations` for contrary or supporting evidence. Supplemental
+citations never satisfy the target citation requirement. Their role describes
+provenance, not whether their content truly contradicts the target.
+Out-of-scope primary citations and missing target citations retain readable
+answers with `needs_review`; the receiver never silently changes their role.
+Omitting `target_sources` preserves unrestricted legacy behavior. Luna settings
+are unchanged. This scoped entrance has local regression coverage; a new live
+comparison has not yet been performed after the prior provider rejection.
