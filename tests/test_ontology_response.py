@@ -90,3 +90,46 @@ def test_contract_tracks_remaining_budget_and_only_exposes_inspected_handles(
         ]
         == "needs_review"
     )
+
+
+def test_target_scope_keeps_counterevidence_separate():
+    from sr_adapter.ontology_response import source_scope
+
+    a, b = inspection(), inspection(name="other.docx")
+    scope = [source_scope(a["reference"])]
+    contract = response_contract([a, b], remaining_tool_calls=8, target_sources=scope)
+    primary = next(iter(contract["citation_catalog"]))
+    other = next(iter(contract["supplemental_catalog"]))
+    good = resolve_answer(
+        {
+            "text": "A says X; B disagrees",
+            "citations": [primary],
+            "supplemental_citations": [other],
+        },
+        [a, b],
+        target_sources=scope,
+    )
+    assert good["status"] == "complete"
+    assert good["linked_citations"] == [a["reference"]]
+    assert good["supplemental_citations"] == [b["reference"]]
+    wrong = resolve_answer(
+        {"text": "A says X", "citations": [other]}, [a, b], target_sources=scope
+    )
+    assert wrong["status"] == "needs_review"
+    assert not wrong["linked_citations"]
+    assert wrong["answer"]["text"] == "A says X"
+    missing = resolve_answer(
+        {"text": "only B", "citations": [], "supplemental_citations": [other]},
+        [a, b],
+        target_sources=scope,
+    )
+    assert missing["status"] == "needs_review"
+    assert any(
+        i["code"] == "target_source_not_cited" for i in missing["citation_issues"]
+    )
+
+
+@pytest.mark.parametrize("scope", [[], [{}], [{"name": "x"}]])
+def test_incomplete_target_scopes_are_rejected(scope):
+    with pytest.raises(ValueError):
+        response_contract([], remaining_tool_calls=8, target_sources=scope)
