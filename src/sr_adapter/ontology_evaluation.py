@@ -21,6 +21,7 @@ from .local_ontology import (
 )
 from .ontology_context import pack_ontology_context, unpack_ontology_context
 from .ontology_question import GUIDANCE, answer_ontology_question
+from .ontology_response import resolve_answer, response_contract
 from .tables import canonical_json
 
 MODEL = "gpt-6-luna"
@@ -285,6 +286,7 @@ def run_evaluation_cell(root, protocol_id, question_id, arm, *, complete):
             )
         else:
             packed = _read(root / "all-evidence.json")
+            inspections = unpack_ontology_context(packed)
             response = invoke(
                 {
                     "guidance": protocol["guidance"],
@@ -292,6 +294,9 @@ def run_evaluation_cell(root, protocol_id, question_id, arm, *, complete):
                     "tools": [],
                     "history": [],
                     "evidence": packed,
+                    "response_contract": response_contract(
+                        inspections, remaining_tool_calls=0
+                    ),
                     "remaining": {"rounds": 1, "tool_calls": 0, "inspections": 0},
                 }
             )
@@ -310,15 +315,7 @@ def run_evaluation_cell(root, protocol_id, question_id, arm, *, complete):
                 or type(answer["citations"]) is not list
             ):
                 raise ValueError("Invalid final answer")
-            linked = [r for r in answer["citations"] if _key(r) in provided]
-            unlinked = [r for r in answer["citations"] if _key(r) not in provided]
-            result = {
-                "status": "complete" if linked and not unlinked else "needs_review",
-                "answer": answer,
-                "linked_citations": linked,
-                "unlinked_citations": unlinked,
-                "tool_calls": 0,
-            }
+            result = {**resolve_answer(answer, inspections), "tool_calls": 0}
     except Exception as error:
         result = {"status": "failed", "error_type": type(error).__name__}
     usage = (

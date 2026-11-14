@@ -5,7 +5,7 @@
 and an exclusive output directory. The callback receives tool definitions,
 history and losslessly packed inspected evidence. It returns either
 `{"actions":[{"name":"search_ontology","arguments":{"collection":"default","query":"approval"}}],"answer":null}`
-or `{"actions":[],"answer":{"text":"…","citations":[<pinned reference>]}}`.
+or `{"actions":[],"answer":{"text":"…","citations":["ref_<issued handle>"]}}`.
 
 A private SQLite backup pins the session. Discovery references gate inspection;
 only actually inspected references are linked to the answer. Readable answers
@@ -40,3 +40,42 @@ counterevidence recall remain **unverified**; local deterministic tests cover
 successful discovery/inspection/citation flow, backup isolation, budgets and
 failure retention. Artifacts are under
 `/Users/ryohiga/SpiralReality/artifacts/ontology-four-pr-20261113/`.
+
+## Shared limits and citation handles
+
+Each callback now receives `response_contract`, with the per-turn action ceiling
+(eight), `allowed_actions_this_turn` (the smaller of that ceiling and the remaining
+tool budget), a `citation_catalog`, and a provider-neutral `response_schema`.
+The receiver uses the same ceiling; a nine-action response is retained and fails
+with `reason=action_limit`, `requested_actions`, and `allowed_actions`, before
+executing any action in that batch. There are still no automatic retries.
+Hosts may use the schema for generation; supplying it in the request does not
+itself enable a provider's structured-output enforcement. Receiver validation
+also enforces that final answers have no actions.
+
+The preferred final response is:
+
+```json
+{"actions":[],"answer":{"text":"Source-specific answer","citations":["ref_<copy the complete issued handle>"]}}
+```
+
+Copy handles from `response_contract.citation_catalog`. Each maps to an exact
+collection, document name, snapshot, kind, and ID. Handles are deterministic
+SHA-256 values of canonical references, independent of catalog ordering, and
+only resolve against evidence provided in the current session. Search results
+alone do not issue citation handles. Identical names/IDs in other documents or
+snapshots do not authorize retargeting. Models should select the exact documents
+named in the question, even when another format contains similar text.
+
+The saved `answer.citations` and `linked_citations` contain expanded references
+for existing consumers. `raw_answer` retains the returned handles. Unknown
+handles remain unlinked with `citation_issues` and a readable `needs_review`
+answer. Exact legacy reference objects remain supported for old callbacks, even
+though the preferred generation schema asks for strings. Neither a valid handle
+nor a matching reference establishes semantic support: selecting a valid handle
+from the wrong source can still occur and requires review.
+
+The paired evaluator shares this contract and resolver in both arms. The
+all-evidence arm issues handles for all provided inspections and advertises zero
+available actions. Each revised implementation requires a newly frozen run;
+prior inputs, receipts and scores must not be rewritten.

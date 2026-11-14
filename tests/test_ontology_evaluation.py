@@ -91,7 +91,10 @@ def final(refs):
     return {"actions": [], "answer": {"text": "Fixture answer", "citations": refs}}
 
 
-def test_frozen_pair_is_gold_blind_ordered_and_preserves_complete_denominator(prepared):
+@pytest.mark.parametrize("use_handles", [False, True])
+def test_frozen_pair_is_gold_blind_ordered_and_preserves_complete_denominator(
+    prepared, use_handles
+):
     root, identity, refs, suite = prepared
     calls = []
 
@@ -101,9 +104,13 @@ def test_frozen_pair_is_gold_blind_ordered_and_preserves_complete_denominator(pr
         assert "FALSE_MERGE_SENTINEL" not in json.dumps(wire)
         calls.append(wire)
         request = wire["input"]
+        contract = request["response_contract"]
         if not request["tools"]:
             assert request["evidence"]["entries"]
-            return envelope(final(refs))
+            assert contract["allowed_actions_this_turn"] == 0
+            return envelope(
+                final(list(contract["citation_catalog"]) if use_handles else refs)
+            )
         if not request["history"]:
             return envelope(
                 {
@@ -129,7 +136,9 @@ def test_frozen_pair_is_gold_blind_ordered_and_preserves_complete_denominator(pr
                     "answer": None,
                 }
             )
-        return envelope(final(refs))
+        return envelope(
+            final(list(contract["citation_catalog"]) if use_handles else refs)
+        )
 
     with pytest.raises(ValueError, match="order"):
         run_evaluation_cell(root, identity, "q-0", "retrieval", complete=complete)

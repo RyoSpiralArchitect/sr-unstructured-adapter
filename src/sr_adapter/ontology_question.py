@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 
 from .knowledge_store import atomic_json
 from .ontology_context import pack_ontology_context
+from .ontology_response import MAX_ACTIONS_PER_TURN, resolve_answer, response_contract
 from .ontology_tools import OntologyTools
 from .tables import canonical_json
 
@@ -19,6 +20,10 @@ GUIDANCE = (
     "Seek other documents and contrary conditions before choosing an answer. Equal labels/IRIs do not "
     "establish identity. Preserve conditions, negation, draft status, unknowns and unresolved priority. "
     "Tool failures or unvisited pages are gaps, not evidence of absence. Cite only inspected references. "
+    "Use the exact documents named in the question; another format or similarly named document is not interchangeable. "
+    "Copy citation handle strings from response_contract.citation_catalog into answer.citations; "
+    "do not construct or combine reference fields. Follow response_contract.response_schema and "
+    "response_contract.allowed_actions_this_turn. A valid handle identifies evidence, not proof of a claim. "
     "Return actions [{name, arguments}] to continue, or answer {text, citations} with actions=[] to finish. When remaining.rounds is 1, finish using inspected evidence and state missing evidence explicitly."
 )
 
@@ -82,6 +87,7 @@ def answer_ontology_question(
             "tool_calls": max_tool_calls,
             "inspections": max_inspections,
             "context_bytes": max_context_bytes,
+            "actions_per_turn": MAX_ACTIONS_PER_TURN,
         },
     }
     atomic_json(root / "receipt.json", receipt)
@@ -106,6 +112,10 @@ def answer_ontology_question(
                     "tools": tools.definitions(),
                     "history": history,
                     "evidence": pack_ontology_context(list(inspections.values())),
+                    "response_contract": response_contract(
+                        inspections.values(),
+                        remaining_tool_calls=max_tool_calls - receipt["tool_calls"],
+                    ),
                     "remaining": {
                         "rounds": max_rounds - turn,
                         "tool_calls": max_tool_calls - receipt["tool_calls"],
@@ -130,8 +140,16 @@ def answer_ontology_question(
                 if type(response) is not dict or set(response) != {"actions", "answer"}:
                     raise ValueError("Expected actions and answer")
                 actions, answer = response["actions"], response["answer"]
-                if type(actions) is not list or len(actions) > 8:
-                    raise ValueError("Use up to eight actions per turn")
+                if type(actions) is not list:
+                    receipt.update(reason="invalid_actions_type")
+                    raise ValueError("Actions must be a list")
+                if len(actions) > MAX_ACTIONS_PER_TURN:
+                    receipt.update(
+                        reason="action_limit",
+                        requested_actions=len(actions),
+                        allowed_actions=MAX_ACTIONS_PER_TURN,
+                    )
+                    raise ValueError("Per-turn action limit exceeded")
                 if answer is not None:
                     if (
                         actions
@@ -145,26 +163,7 @@ def answer_ontology_question(
                         or type(answer["citations"]) is not list
                     ):
                         raise ValueError("Invalid final answer")
-                    inspected_refs = {
-                        _key(v["reference"]) for v in inspections.values()
-                    }
-                    linked = [
-                        r for r in answer["citations"] if _key(r) in inspected_refs
-                    ]
-                    unlinked = [
-                        r for r in answer["citations"] if _key(r) not in inspected_refs
-                    ]
-                    receipt.update(
-                        status="complete"
-                        if linked and not unlinked
-                        else "needs_review",
-                        answer=answer,
-                        linked_citations=linked,
-                        unlinked_citations=unlinked,
-                        evidence_status="linked"
-                        if linked and not unlinked
-                        else "unlinked",
-                    )
+                    receipt.update(resolve_answer(answer, inspections.values()))
                     break
                 if not actions:
                     raise ValueError("No actions or answer")

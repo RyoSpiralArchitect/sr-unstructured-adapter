@@ -48,7 +48,7 @@ def main():
                 {
                     "role": "system",
                     "content": request["guidance"]
-                    + " Respond with a JSON object containing actions and answer. arguments is a JSON object. Final citations use collection,name,snapshot_id,kind,id.",
+                    + " Respond with a JSON object containing actions and answer. arguments is a JSON object. Final citations copy handle strings from response_contract.citation_catalog.",
                 },
                 {"role": "user", "content": canonical_json(request).decode()},
             ],
